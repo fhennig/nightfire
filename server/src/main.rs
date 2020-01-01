@@ -7,6 +7,7 @@ use yaml_rust::YamlLoader;
 
 type Pin = u32;
 type PinValue = f32;
+type LightId = String;
 
 pub trait PinHandler {
     fn pin_update(&mut self, pin: Pin, value: PinValue);
@@ -15,18 +16,6 @@ pub trait PinHandler {
 pub struct PinModel {
     pin_values: HashMap<Pin, PinValue>,
     handlers: Vec<Box<dyn PinHandler>>,
-}
-
-pub struct TestThingie {
-    handlers: Vec<Box<dyn PinHandler>>
-}
-
-impl TestThingie {
-    fn function(&mut self) {
-        for handler in &mut self.handlers {
-            handler.pin_update(1, 1.0);
-        }
-    }
 }
 
 impl PinModel {
@@ -51,16 +40,39 @@ impl PinModel {
     }
 }
 
+pub struct Color {
+    r: PinValue,
+    g: PinValue,
+    b: PinValue,
+}
+
+pub struct Light {
+    r_pin: Pin,
+    g_pin: Pin,
+    b_pin: Pin,
+}
+
 pub struct LightModel {
-    pin_model: PinModel
+    light_map: HashMap<LightId, Light>,
+    pin_model: PinModel,
 }
 
 impl LightModel {
-    pub fn new(pin_model: PinModel) -> LightModel {
+    pub fn new(pin_model: PinModel, lights: Vec<(LightId, Light)>) -> LightModel {
+        let mut map = HashMap::new();
+        for (light_id, light) in lights {
+            map.insert(light_id, light);
+        }
         let model = LightModel {
-            pin_model: pin_model
+            light_map: map,
+            pin_model: pin_model,
         };
         model
+    }
+
+    pub fn set_light(&mut self, light_id: LightId, color: Color) {
+        let light = self.light_map.get(&light_id).unwrap();
+        self.pin_model.set_pin(light.r_pin, color.r);
     }
 }
 
