@@ -12,13 +12,25 @@ pub trait PinHandler {
     fn pin_update(&mut self, pin: Pin, value: PinValue);
 }
 
-pub struct PinModel<'a> {
+pub struct PinModel {
     pin_values: HashMap<Pin, PinValue>,
-    handlers: Vec<Box<&'a mut dyn PinHandler>>,
+    handlers: Vec<Box<dyn PinHandler>>,
 }
 
-impl PinModel<'_> {
-    pub fn new(pins: Vec<Pin>, handlers: Vec<Box<&mut dyn PinHandler>>) -> PinModel {
+pub struct TestThingie {
+    handlers: Vec<Box<dyn PinHandler>>
+}
+
+impl TestThingie {
+    fn function(&mut self) {
+        for handler in &mut self.handlers {
+            handler.pin_update(1, 1.0);
+        }
+    }
+}
+
+impl PinModel {
+    pub fn new(pins: Vec<Pin>, handlers: Vec<Box<dyn PinHandler>>) -> PinModel {
         let map = HashMap::new();
         let mut model = PinModel {
             pin_values: map,
@@ -36,6 +48,19 @@ impl PinModel<'_> {
         for listener in &mut self.handlers {
             listener.pin_update(pin, value);
         }
+    }
+}
+
+pub struct LightModel {
+    pin_model: PinModel
+}
+
+impl LightModel {
+    pub fn new(pin_model: PinModel) -> LightModel {
+        let model = LightModel {
+            pin_model: pin_model
+        };
+        model
     }
 }
 
@@ -70,5 +95,5 @@ fn main() {
     println!("{:?}", conf);
 
     let mut pi_blaster = PiBlaster::new("/dev/pi-blaster".to_string());
-    let pin_model = PinModel::new(vec![1, 2, 3], vec![Box::new(&mut pi_blaster)]);
+    let mut pin_model = PinModel::new(vec![1, 2, 3], vec![Box::new(pi_blaster)]);
 }
