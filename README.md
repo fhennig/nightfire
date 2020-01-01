@@ -12,3 +12,21 @@ Next steps:
 ## Builing for arm
 
     cargo build --release --target armv7-unknown-linux-gnueabihf --bin lumi
+
+## GraphQL API
+
+I want different "modes" and each mode has settings
+
+Modes:
+- Set all lights at once to one color
+- Set each light individually
+- a "fire" mode that has glowing red yellow and orange tones
+  - optionally supports different colors too
+- a bpm blink mode
+
+The software could load with each mode with default parameters.
+Then there is a mutation to change the active mode.
+Each mode also has a mutation to change the parameters.
+
+In the UI there is a control to change the active mode, and each mode
+has it's own controls as well to select the parameters.
