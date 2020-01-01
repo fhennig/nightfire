@@ -81,7 +81,7 @@ pub struct PiBlaster {
 }
 
 impl PiBlaster {
-    pub fn new(path: String) -> PiBlaster {
+    pub fn new(path: &String) -> PiBlaster {
         PiBlaster {
             outfile: OpenOptions::new().write(true).open(path).unwrap(),
         }
@@ -98,6 +98,7 @@ impl PinHandler for PiBlaster {
 }
 
 pub struct Conf {
+    pub pi_blaster_path: String,
     pub lights: Vec<(LightId, Light)>,
 }
 
@@ -124,7 +125,11 @@ impl Conf {
                 )
             })
             .collect();
-        Conf { lights: lights }
+        let pi_blaster_path = conf["pi-blaster"].as_str().unwrap().to_string();
+        Conf {
+            lights: lights,
+            pi_blaster_path: pi_blaster_path,
+        }
     }
 
     pub fn all_pins(&self) -> Vec<Pin> {
@@ -140,7 +145,8 @@ impl Conf {
 
 fn main() {
     let conf = Conf::new("conf.yaml".to_string());
-    let pi_blaster = PiBlaster::new("/dev/pi-blaster".to_string());
+    let pi_blaster = PiBlaster::new(&conf.pi_blaster_path);
     let pin_model = PinModel::new(conf.all_pins(), vec![Box::new(pi_blaster)]);
     let light_model = LightModel::new(pin_model, conf.lights);
+    print!("Hello World!")
 }

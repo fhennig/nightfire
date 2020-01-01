@@ -1,4 +1,4 @@
-pi-blaster: /dev/pi-blaster
+pi-blaster: pi-blaster
 lights:
   light1:
     r: 14
