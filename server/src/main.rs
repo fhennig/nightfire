@@ -5,7 +5,7 @@ use std::io::Write;
 use std::vec::Vec;
 use yaml_rust::YamlLoader;
 
-type Pin = u32;
+type Pin = i64;
 type PinValue = f32;
 type LightId = String;
 
@@ -97,15 +97,39 @@ impl PinHandler for PiBlaster {
     }
 }
 
+pub struct Conf {
+    lights: Vec<(LightId, Light)>,
+}
+
+impl Conf {
+    pub fn new(path: String) -> Conf {
+        let yaml_str = read_to_string(path).unwrap();
+
+        let docs = YamlLoader::load_from_str(&yaml_str).unwrap();
+        let conf = &docs[0];
+        let lights = conf["lights"]
+            .as_hash()
+            .unwrap()
+            .iter()
+            .map(|entry| {
+                let light_id: LightId = entry.0.as_str().unwrap().to_string();
+                let pin_map = entry.1;
+                (
+                    light_id,
+                    Light {
+                        r_pin: pin_map["r"].as_i64().unwrap(),
+                        g_pin: pin_map["g"].as_i64().unwrap(),
+                        b_pin: pin_map["b"].as_i64().unwrap(),
+                    },
+                )
+            })
+            .collect();
+        Conf { lights: lights }
+    }
+}
+
 fn main() {
-    println!("Hello, world!");
-
-    let yaml_str = read_to_string("conf.yaml").unwrap();
-
-    let docs = YamlLoader::load_from_str(&yaml_str).unwrap();
-    let conf = &docs[0];
-    println!("{:?}", conf);
-
+    let conf = Conf::new("conf.yaml".to_string());
     let mut pi_blaster = PiBlaster::new("/dev/pi-blaster".to_string());
     let mut pin_model = PinModel::new(vec![1, 2, 3], vec![Box::new(pi_blaster)]);
 }
