@@ -1,0 +1,17 @@
+lights:
+  light1:
+    r: 14
+    g: 15
+    b: 18
+  light2:
+    r: 23
+    g: 25
+    b: 24
+  light3:
+    r: 17
+    g: 27
+    b: 22
+  light4:
+    r: 10
+    g: 9
+    b: 11
