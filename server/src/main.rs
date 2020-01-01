@@ -98,7 +98,7 @@ impl PinHandler for PiBlaster {
 }
 
 pub struct Conf {
-    lights: Vec<(LightId, Light)>,
+    pub lights: Vec<(LightId, Light)>,
 }
 
 impl Conf {
@@ -126,10 +126,21 @@ impl Conf {
             .collect();
         Conf { lights: lights }
     }
+
+    pub fn all_pins(&self) -> Vec<Pin> {
+        let mut pins = Vec::new();
+        for (_, light) in &self.lights {
+            pins.push(light.r_pin);
+            pins.push(light.g_pin);
+            pins.push(light.b_pin);
+        }
+        pins
+    }
 }
 
 fn main() {
     let conf = Conf::new("conf.yaml".to_string());
-    let mut pi_blaster = PiBlaster::new("/dev/pi-blaster".to_string());
-    let mut pin_model = PinModel::new(vec![1, 2, 3], vec![Box::new(pi_blaster)]);
+    let pi_blaster = PiBlaster::new("/dev/pi-blaster".to_string());
+    let pin_model = PinModel::new(conf.all_pins(), vec![Box::new(pi_blaster)]);
+    let light_model = LightModel::new(pin_model, conf.lights);
 }
