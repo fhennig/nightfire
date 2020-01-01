@@ -68,4 +68,7 @@ fn main() {
     let docs = YamlLoader::load_from_str(&yaml_str).unwrap();
     let conf = &docs[0];
     println!("{:?}", conf);
+
+    let mut pi_blaster = PiBlaster::new("/dev/pi-blaster".to_string());
+    let pin_model = PinModel::new(vec![1, 2, 3], vec![Box::new(&mut pi_blaster)]);
 }
