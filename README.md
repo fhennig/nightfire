@@ -30,3 +30,17 @@ Each mode also has a mutation to change the parameters.
 
 In the UI there is a control to change the active mode, and each mode
 has it's own controls as well to select the parameters.
+
+Every mode has a couple of functions:
+- initialize: sets the inital parameter values
+- activate: should set the pins according to the parameters.  Could
+  optionally take parameters as well.  There could be specific
+  behaviour for certain state transitions.
+- deactivate: does something too
+- teardown?
+
+The question is, if I have some lights setup, and then switch to a
+mode, should it somehow keep my lights or should it not?  I.e. how
+much shared state is there?  If I have four individual colors set and
+then switch to "single color mode", what happens?
+

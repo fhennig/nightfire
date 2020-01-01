@@ -1,5 +1,6 @@
 extern crate yaml_rust;
 mod conf;
+mod graphql;
 mod models;
 mod piblaster;
 use crate::conf::Conf;
