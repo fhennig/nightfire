@@ -4,14 +4,24 @@ So far I implemented reading a YAML config and setting lights with
 pi-blaster.
 
 Next steps:
-- Setup instructions/Makefile to compile for RPi.
-- Add config option for the pi-blaster file and the config file
-- Add the graphQL interface (design it first?)
-  - Setup HTTP-server
+- Add client code to the repo
+- Make Iron serve the js code.
   
 ## Builing for arm
 
     cargo build --release --target armv7-unknown-linux-gnueabihf --bin lumi
+    
+## System Dependencies
+- pi-blaster
+- nginx
+    
+## Installation
+
+Put binary in /usr/local/bin/lumi
+Put web files in /usr/local/lib/lumi/web/*
+Put a systemd unit file in /etc/systemd/system/lumi.service
+Put an nginx file in the correct place
+Put the config file in /etc/lumi/conf.yaml
 
 ## GraphQL API
 

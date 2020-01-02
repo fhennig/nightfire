@@ -1,0 +1,13 @@
+[Unit]
+Description=The Lumi light server
+
+[Service]
+Type=simple
+Environment=RUST_BACKTRACE=1
+ExecStart=/usr/local/bin/lumi
+
+[Install]
+After=pi-blaster.service
+Requires=pi-blaster.service
+Before=nginx.service
+WantedBy=multi-user.target
