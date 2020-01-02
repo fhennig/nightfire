@@ -8,7 +8,7 @@ import { ApolloProvider, useQuery, useMutation } from '@apollo/react-hooks';
 import { gql } from "apollo-boost";
 
 const client = new ApolloClient({
-  uri: 'http://light-pi/graphql',
+  uri: '/graphql',
 });
 
 const SET_LIGHT = gql`
@@ -41,7 +41,7 @@ const ColorControl = (props) => {
   };
 
   return (
-    <div className="light-control" style={{width: 400 + 'px'}}>
+    <div className="light-control" style={{maxWidth: 400 + 'px', width: 100 + '%'}}>
       {state.lightId}
       <ul>
         <li><Slider min={0} max={1} step={0.01} value={state.r} onChange={handleRedChange} onChangeComplete={handleSlideFinished}/></li>
