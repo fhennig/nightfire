@@ -1,5 +1,8 @@
 use std::collections::HashMap;
 use std::vec::Vec;
+use std::fs::{File, OpenOptions};
+use std::io::Write;
+
 
 pub type Pin = i64;
 pub type PinValue = f64;
@@ -23,7 +26,7 @@ pub trait PinHandler {
 
 pub struct PinModel {
     pin_values: HashMap<Pin, PinValue>,
-    handlers: Vec<Box<dyn PinHandler>>,
+    outfile: File,
 }
 
 /// The PinModel models the pins that we have and the actual values on
@@ -31,11 +34,11 @@ pub struct PinModel {
 /// It has handlers, which then take care of setting the actual values
 /// in the hardware (PiBlaster).
 impl PinModel {
-    pub fn new(pins: Vec<Pin>, handlers: Vec<Box<dyn PinHandler>>) -> PinModel {
+    pub fn new(pins: Vec<Pin>, path: &String) -> PinModel {
         let map = HashMap::new();
         let mut model = PinModel {
             pin_values: map,
-            handlers: handlers,
+            outfile: OpenOptions::new().write(true).open(path).unwrap(),
         };
         for pin in pins {
             let value = 0f64;
@@ -46,9 +49,10 @@ impl PinModel {
 
     pub fn set_pin(&mut self, pin: Pin, value: PinValue) {
         self.pin_values.insert(pin, value);
-        for listener in &mut self.handlers {
-            listener.pin_update(pin, value);
-        }
+        let s = format!("{}={}\n", pin, value);
+        let s = s.as_bytes();
+        self.outfile.write_all(s);
+        self.outfile.sync_data();
     }
 
     pub fn get_pin(&self, pin: Pin) -> PinValue {
@@ -91,7 +95,7 @@ impl LightModel {
         Color {
             r: self.pin_model.get_pin(light.r_pin),
             g: self.pin_model.get_pin(light.g_pin),
-            b: self.pin_model.get_pin(light.b_pin), 
+            b: self.pin_model.get_pin(light.b_pin),
         }
     }
 }
