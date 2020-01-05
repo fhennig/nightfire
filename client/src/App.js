@@ -25,7 +25,6 @@ const ColorControl = (props) => {
 
   const handleRedChange = (value) => {
     setState(update(state, {r: {$set: value}}));
-    console.log("Updating red:", state);
   };
 
   const handleGreenChange = (value) => {
@@ -41,7 +40,7 @@ const ColorControl = (props) => {
   };
 
   return (
-    <div className="light-control" style={{maxWidth: 400 + 'px', width: 100 + '%'}}>
+    <div className="light-control">
       {state.lightId}
       <ul>
         <li><Slider min={0} max={1} step={0.01} value={state.r} onChange={handleRedChange} onChangeComplete={handleSlideFinished}/></li>
