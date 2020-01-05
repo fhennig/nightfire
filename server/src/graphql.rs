@@ -1,4 +1,4 @@
-use crate::models::{Color as ColorModel, LightModel};
+use crate::models::{Color as ColorModel, State};
 use iron::prelude::*;
 use juniper::FieldResult;
 use juniper_iron::GraphQLHandler;
@@ -26,7 +26,7 @@ struct Light {
 }
 
 pub struct Context {
-    light_model: Arc<Mutex<LightModel>>,
+    state: Arc<Mutex<State>>,
 }
 
 impl juniper::Context for Context {}
@@ -41,7 +41,7 @@ struct Query;
 )]
 impl Query {
     fn lights(context: &Context) -> FieldResult<Vec<Light>> {
-        let light_model = context.light_model.lock().unwrap();
+        let light_model = &mut context.state.lock().unwrap().light_model;
         let light_ids = light_model.all_light_ids();
         let mut lights = Vec::new();
         for light_id in &light_ids {
@@ -66,7 +66,7 @@ struct Mutation;
 )]
 impl Mutation {
     fn setLight(context: &Context, id: String, color: NewColor) -> FieldResult<Light> {
-        let mut light_model = context.light_model.lock().unwrap();
+        let mut light_model = &mut context.state.lock().unwrap().light_model;
         light_model.set_light(
             &id,
             &ColorModel {
@@ -87,28 +87,27 @@ impl Mutation {
 }
 
 struct ContextFactory {
-    light_model: Arc<Mutex<LightModel>>,
+    state: Arc<Mutex<State>>,
 }
 
 impl ContextFactory {
-    fn new(light_model: Arc<Mutex<LightModel>>) -> ContextFactory {
+    fn new(state: Arc<Mutex<State>>) -> ContextFactory {
         ContextFactory {
-            light_model: light_model,
+            state: state,
         }
     }
 
     fn create_context(&self, _: &mut Request) -> IronResult<Context> {
         Ok(Context {
-            light_model: Arc::clone(&self.light_model),
+            state: Arc::clone(&self.state),
         })
     }
 }
 
-pub fn serve(light_model: LightModel) {
+pub fn serve(state: Arc<Mutex<State>>) {
     let mut mount = Mount::new();
 
-    let light_model = Arc::new(Mutex::new(light_model));
-    let context_factory = ContextFactory::new(light_model);
+    let context_factory = ContextFactory::new(state);
 
     let graphql_endpoint =
         GraphQLHandler::new(move |x| context_factory.create_context(x), Query, Mutation);

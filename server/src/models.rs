@@ -99,3 +99,7 @@ impl LightModel {
         }
     }
 }
+
+pub struct State {
+    pub light_model: LightModel,
+}
