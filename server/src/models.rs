@@ -1,8 +1,7 @@
 use std::collections::HashMap;
-use std::vec::Vec;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
-
+use std::vec::Vec;
 
 pub type Pin = i64;
 pub type PinValue = f64;
