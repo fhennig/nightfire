@@ -1,8 +1,10 @@
 use crate::models::{Color as ColorModel, State};
-use iron::prelude::*;
+use iron::{Iron, IronResult, Request};
 use juniper::FieldResult;
 use juniper_iron::GraphQLHandler;
 use mount::Mount;
+use staticfile::Static;
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 
 #[derive(juniper::GraphQLObject)]
@@ -92,9 +94,7 @@ struct ContextFactory {
 
 impl ContextFactory {
     fn new(state: Arc<Mutex<State>>) -> ContextFactory {
-        ContextFactory {
-            state: state,
-        }
+        ContextFactory { state: state }
     }
 
     fn create_context(&self, _: &mut Request) -> IronResult<Context> {
@@ -105,16 +105,14 @@ impl ContextFactory {
 }
 
 pub fn serve(state: Arc<Mutex<State>>) {
-    let mut mount = Mount::new();
-
     let context_factory = ContextFactory::new(state);
 
     let graphql_endpoint =
         GraphQLHandler::new(move |x| context_factory.create_context(x), Query, Mutation);
 
+    let mut mount = Mount::new();
     mount.mount("/graphql", graphql_endpoint);
+    mount.mount("/", Static::new(Path::new("site")));
 
-    let chain = Chain::new(mount);
-
-    Iron::new(chain).http("0.0.0.0:3000").unwrap();
+    Iron::new(mount).http("0.0.0.0:3000").unwrap();
 }
