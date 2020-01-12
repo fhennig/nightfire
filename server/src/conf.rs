@@ -1,15 +1,30 @@
-use crate::models::{Light, LightId, Pin};
+use crate::models::{LightId, Pin};
 use std::fs::read_to_string;
+use std::path::Path;
 use std::vec::Vec;
 use yaml_rust::YamlLoader;
 
 pub struct Conf {
     pub pi_blaster_path: String,
-    pub lights: Vec<(LightId, Light)>,
+    pub lights: Vec<(LightId, Pin, Pin, Pin)>,
 }
 
 impl Conf {
+    /// Iterates through a couple of paths to find a config file.
+    pub fn find_path() -> Option<&'static Path> {
+        let paths = vec![Path::new("conf.yaml"), Path::new("/etc/lumi/conf.yaml")];
+        let mut found_config_path: Option<&Path> = None;
+        for path in paths {
+            if path.exists() {
+                found_config_path = Some(path);
+                break;
+            }
+        }
+        found_config_path
+    }
+
     pub fn new(path: &str) -> Conf {
+        // TODO accept path here
         let yaml_str = read_to_string(path).unwrap();
 
         let docs = YamlLoader::load_from_str(&yaml_str).unwrap();
@@ -23,11 +38,9 @@ impl Conf {
                 let pin_map = entry.1;
                 (
                     light_id,
-                    Light {
-                        r_pin: pin_map["r"].as_i64().unwrap(),
-                        g_pin: pin_map["g"].as_i64().unwrap(),
-                        b_pin: pin_map["b"].as_i64().unwrap(),
-                    },
+                    pin_map["r"].as_i64().unwrap(),
+                    pin_map["g"].as_i64().unwrap(),
+                    pin_map["b"].as_i64().unwrap(),
                 )
             })
             .collect();
@@ -40,10 +53,10 @@ impl Conf {
 
     pub fn all_pins(&self) -> Vec<Pin> {
         let mut pins = Vec::new();
-        for (_, light) in &self.lights {
-            pins.push(light.r_pin);
-            pins.push(light.g_pin);
-            pins.push(light.b_pin);
+        for (_, r, g, b) in &self.lights {
+            pins.push(*r);
+            pins.push(*g);
+            pins.push(*b);
         }
         pins
     }

@@ -1,31 +1,12 @@
-use crate::models::{Color as ColorModel, State};
+use crate::models::Color as ColorModel;
+use crate::state::State;
 use iron::{Iron, IronResult, Request};
 use juniper::FieldResult;
-use juniper_iron::GraphQLHandler;
+use juniper_iron::{GraphQLHandler, GraphiQLHandler};
 use mount::Mount;
 use staticfile::Static;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
-
-#[derive(juniper::GraphQLObject)]
-struct Color {
-    r: f64,
-    g: f64,
-    b: f64,
-}
-
-#[derive(juniper::GraphQLInputObject)]
-struct NewColor {
-    r: f64,
-    g: f64,
-    b: f64,
-}
-
-#[derive(juniper::GraphQLObject)]
-struct Light {
-    id: String,
-    color: Color,
-}
 
 pub struct Context {
     state: Arc<Mutex<State>>,
@@ -41,50 +22,35 @@ struct Query;
     // needs access to the context.
     Context = Context,
 )]
-impl Query {
-    fn lights(context: &Context) -> FieldResult<Vec<Light>> {
-        let light_model = &mut context.state.lock().unwrap().light_model;
-        let light_ids = light_model.all_light_ids();
-        let mut lights = Vec::new();
-        for light_id in &light_ids {
-            let color = light_model.get_light(light_id);
-            lights.push(Light {
-                id: (*light_id).clone(),
-                color: Color {
-                    r: color.r,
-                    g: color.g,
-                    b: color.b,
-                },
-            });
-        }
-        Ok(lights)
-    }
+impl Query {}
+
+#[derive(juniper::GraphQLInputObject)]
+struct ManualModeLightSetting {
+    id: String,
+    r: Option<f64>,
+    g: Option<f64>,
+    b: Option<f64>,
 }
 
 struct Mutation;
 
-#[juniper::object(
-    Context = Context,
-)]
+#[juniper::object(Context = Context)]
 impl Mutation {
-    fn setLight(context: &Context, id: String, color: NewColor) -> FieldResult<Light> {
-        let mut light_model = &mut context.state.lock().unwrap().light_model;
-        light_model.set_light(
-            &id,
-            &ColorModel {
-                r: color.r,
-                g: color.g,
-                b: color.b,
-            },
-        );
-        Ok(Light {
-            id: id,
-            color: Color {
-                r: color.r,
-                g: color.g,
-                b: color.b,
-            },
-        })
+    fn manualMode(
+        context: &Context,
+        settings: Option<Vec<ManualModeLightSetting>>,
+    ) -> FieldResult<String> {
+        let result = match settings {
+            Some(light_settings) => {
+                let mut state = context.state.lock().unwrap();
+                for ls in light_settings {
+                    state.manual_mode.set_color(&ls.id, ls.r, ls.g, ls.b);
+                }
+                Ok("Ok".to_string())
+            }
+            None => Ok("Ok".to_string()),
+        };
+        result
     }
 }
 
@@ -107,12 +73,18 @@ impl ContextFactory {
 pub fn serve(state: Arc<Mutex<State>>) {
     let context_factory = ContextFactory::new(state);
 
-    let graphql_endpoint =
-        GraphQLHandler::new(move |x| context_factory.create_context(x), Query, Mutation);
+    let graphql_endpoint = GraphQLHandler::new(
+        move |req| context_factory.create_context(req),
+        Query,
+        Mutation,
+    );
 
     let mut mount = Mount::new();
+    
     mount.mount("/graphql", graphql_endpoint);
+    let graphiql = GraphiQLHandler::new("/graphql");
+    mount.mount("/graphiql", graphiql);
     mount.mount("/", Static::new(Path::new("site")));
 
-    Iron::new(mount).http("0.0.0.0:3000").unwrap();
+    Iron::new(mount).http("127.0.0.1:3000").unwrap();
 }

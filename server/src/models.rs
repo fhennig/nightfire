@@ -2,6 +2,9 @@ use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::vec::Vec;
+use std::sync::{Arc, Mutex};
+use std::cell::Cell;
+use std::ops::DerefMut;
 
 pub type Pin = i64;
 pub type PinValue = f64;
@@ -11,16 +14,6 @@ pub struct Color {
     pub r: PinValue,
     pub g: PinValue,
     pub b: PinValue,
-}
-
-pub struct Light {
-    pub r_pin: Pin,
-    pub g_pin: Pin,
-    pub b_pin: Pin,
-}
-
-pub trait PinHandler {
-    fn pin_update(&mut self, pin: Pin, value: PinValue);
 }
 
 pub struct PinModel {
@@ -47,6 +40,7 @@ impl PinModel {
     }
 
     pub fn set_pin(&mut self, pin: Pin, value: PinValue) {
+        // TODO don't set if value is identical to current value
         self.pin_values.insert(pin, value);
         let s = format!("{}={}\n", pin, value);
         let s = s.as_bytes();
@@ -59,46 +53,61 @@ impl PinModel {
     }
 }
 
-pub struct LightModel {
-    light_map: HashMap<LightId, Light>,
-    pin_model: PinModel,
+pub struct Light {
+    pin_model: Arc<Mutex<PinModel>>,
+    pub r_pin: Pin,
+    pub g_pin: Pin,
+    pub b_pin: Pin,
 }
 
-/// A model that allows to set each light individually.
-impl LightModel {
-    pub fn new(pin_model: PinModel, lights: Vec<(LightId, Light)>) -> LightModel {
+impl Light {
+    pub fn new(pin_model: Arc<Mutex<PinModel>>, r_pin: Pin, g_pin: Pin, b_pin: Pin) -> Light {
+        Light {
+            pin_model: pin_model,
+            r_pin: r_pin,
+            g_pin: g_pin,
+            b_pin: b_pin,
+        }
+    }
+
+    pub fn set_r(&self, value: PinValue) {
+        let mut pin_model = self.pin_model.lock().unwrap();
+        pin_model.set_pin(self.r_pin, value);
+    }
+
+    pub fn set_g(&self, value: PinValue) {
+        let mut pin_model = self.pin_model.lock().unwrap();
+        pin_model.set_pin(self.g_pin, value);
+    }
+
+    pub fn set_b(&self, value: PinValue) {
+        let mut pin_model = self.pin_model.lock().unwrap();
+        pin_model.set_pin(self.b_pin, value);
+    }
+}
+
+pub struct Lights {
+    light_map: HashMap<LightId, Light>,
+}
+
+impl Lights {
+    pub fn new(lights: Vec<(&LightId, Light)>) -> Lights {
         let mut map = HashMap::new();
         for (light_id, light) in lights {
-            map.insert(light_id, light);
+            map.insert(String::from(light_id.as_str()), light);
         }
-        let model = LightModel {
-            light_map: map,
-            pin_model: pin_model,
-        };
-        model
+        Lights { light_map: map }
     }
 
-    pub fn all_light_ids(&self) -> Vec<LightId> {
-        self.light_map.keys().map(|k| (*k).clone()).collect()
-    }
-
-    pub fn set_light(&mut self, light_id: &LightId, color: &Color) {
-        let light = self.light_map.get(light_id).unwrap();
-        self.pin_model.set_pin(light.r_pin, color.r);
-        self.pin_model.set_pin(light.g_pin, color.g);
-        self.pin_model.set_pin(light.b_pin, color.b);
-    }
-
-    pub fn get_light(&self, light_id: &LightId) -> Color {
-        let light = self.light_map.get(light_id).unwrap();
-        Color {
-            r: self.pin_model.get_pin(light.r_pin),
-            g: self.pin_model.get_pin(light.g_pin),
-            b: self.pin_model.get_pin(light.b_pin),
+    pub fn get_all_ids(&self) -> Vec<&LightId> {
+        let mut ids = Vec::new();
+        for key in self.light_map.keys() {
+            ids.push(key);
         }
+        ids
     }
-}
 
-pub struct State {
-    pub light_model: LightModel,
+    pub fn get_light(&self, id: &LightId) -> &Light {
+        self.light_map.get(id).unwrap()
+    }
 }

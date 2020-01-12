@@ -1,4 +1,4 @@
-use crate::models::{Color, LightId, State};
+use crate::models::{Color, LightId};
 use rand::distributions::{Distribution, Uniform};
 use splines::{Interpolation, Key, Spline};
 use std::time::{Duration, SystemTime};

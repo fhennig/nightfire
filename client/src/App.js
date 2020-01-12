@@ -13,9 +13,7 @@ const client = new ApolloClient({
 
 const SET_LIGHT = gql`
   mutation SetLight($lightId: String!, $r: Float!, $g: Float!, $b: Float!) {
-    setLight(id: $lightId, color: {r: $r, g: $g, b: $b}) {
-      id
-    }
+    manualMode(settings: {id: $lightId, r: $r, g: $g, b: $b})
   }
 `;
 

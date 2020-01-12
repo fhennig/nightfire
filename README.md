@@ -1,7 +1,7 @@
 # lumi
 
-So far I implemented reading a YAML config and setting lights with
-pi-blaster.
+A server and web client to control RGB lights connected to a Raspberry
+Pi.
 
   
 ## Builing for arm
@@ -17,9 +17,11 @@ Copy the contents of the build directory to `/usr/local/lib/lumi/web/`.
 
     
 ## System Dependencies
+
 - pi-blaster
 - nginx
-    
+
+
 ## Installation
 
 - Put binary in `/usr/local/bin/lumi`
@@ -28,34 +30,67 @@ Copy the contents of the build directory to `/usr/local/lib/lumi/web/`.
 - Put the nginx file (`lumi`) in the correct place
 - Put the config file in `/etc/lumi/conf.yaml`
 
-## GraphQL API
 
-I want different "modes" and each mode has settings
+## Idea
 
-Modes:
-- Set all lights at once to one color
-- Set each light individually
-- a "fire" mode that has glowing red yellow and orange tones
-  - optionally supports different colors too
-- a bpm blink mode
+Neue Idee für die API:  Es gibt für jeden Mode einen Endpoint.  Der
+zum lichter setzen würde dann so umgebaut:
 
-The software could load with each mode with default parameters.
-Then there is a mutation to change the active mode.
-Each mode also has a mutation to change the parameters.
 
-In the UI there is a control to change the active mode, and each mode
-has it's own controls as well to select the parameters.
+mutation setLight {
+  manualMode(settings: [
+    {lightId: "light1", r: 1, g: 0, b: 1},
+    {lightId: "light2", r:0}]) {
+    ok
+  }
+}
 
-Every mode has a couple of functions:
-- initialize: sets the inital parameter values
-- activate: should set the pins according to the parameters.  Could
-  optionally take parameters as well.  There could be specific
-  behaviour for certain state transitions.
-- deactivate: does something too
-- teardown?
+Mit input-objekten die unterspezifiziert sein können.  Um den anderen
+mode zu setzen würde man dann aufrufen:
 
-The question is, if I have some lights setup, and then switch to a
-mode, should it somehow keep my lights or should it not?  I.e. how
-much shared state is there?  If I have four individual colors set and
-then switch to "single color mode", what happens?
+mutation pinkMode {
+  pinkPulse() {
+    ok
+  }
+}
 
+Das Ding ist, der manual mode braucht keine loop, der andere schon.
+
+Jeder mode braucht eine activate und deactivate funktion.  in der
+activate funktion kann der thread gespawnt werden und in der
+deactivate funktion wird er dann gestoppt und gejoint.  Timer oder
+ähnliches können gestoppt werden.
+
+Falls ein mode mit anderen settings gesetzt wird, und er schon
+aktiviert ist, werden die settings einfach on the fly geändert.
+
+zu jeder mutation für einen mode gibt es dann auch ein query mit dem
+man den zustand des modes abfragen kann.
+
+Jeder mode hat dabei aber seine eigenen farben etc und es wird
+nichts geteilt.  zB braucht der pink mode für jedes licht eine farbe,
+dann rechnet er da noch den envelope drauf und setzt die farbe.  Die
+farbe wird aber intern gespeichert.  Die gedimmte farbe wird dann in
+das light_model geschrieben.
+
+Ein MidiMode könnte dann in seinem thread auf irgendwelche midi
+signale lauschen.
+
+Things I want:
+- a "random walk" for color hue
+- a "beat" function for light intensity
+- a pulsating/heart beat function for light intensity
+- a rainbow function for color hue
+
+
+## TODO
+
+- Quality of Life improvements
+  - debug mode with UI instead of pi-blaster
+  - load config from different paths if one path is not set.
+  - maybe a local serving mode that serves the web stuff too (without
+    nginx).
+- Features
+  - Implement the modes in the states and the activate/deactivate
+    stuff
+  - Adapt the GraphQL API accordingly.
