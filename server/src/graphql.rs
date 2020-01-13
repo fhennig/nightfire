@@ -8,6 +8,12 @@ use staticfile::Static;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
+#[derive(juniper::GraphQLEnum)]
+enum MyResult {
+    Ok,
+    NotOk,
+}
+
 pub struct Context {
     state: Arc<Mutex<State>>,
 }
@@ -39,18 +45,25 @@ impl Mutation {
     fn manualMode(
         context: &Context,
         settings: Option<Vec<ManualModeLightSetting>>,
-    ) -> FieldResult<String> {
+    ) -> FieldResult<MyResult> {
+        let mut state = context.state.lock().unwrap();
+        state.activate_manual_mode();
         let result = match settings {
             Some(light_settings) => {
-                let mut state = context.state.lock().unwrap();
                 for ls in light_settings {
                     state.manual_mode.set_color(&ls.id, ls.r, ls.g, ls.b);
                 }
-                Ok("Ok".to_string())
+                Ok(MyResult::Ok)
             }
-            None => Ok("Ok".to_string()),
+            None => Ok(MyResult::Ok)
         };
         result
+    }
+
+    fn offMode(context: &Context) -> FieldResult<MyResult> {
+        let mut state = context.state.lock().unwrap();
+        state.activate_off_mode();
+        Ok(MyResult::Ok)
     }
 }
 

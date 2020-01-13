@@ -132,13 +132,22 @@ impl State {
         }
     }
 
-    pub fn activateOffMode(&mut self) {
+    pub fn activate_off_mode(&mut self) {
         if self.active_mode == self.off_mode.id {
             return;
         }
         let lights = self.deactivate();
         self.off_mode.activate(lights);
         self.active_mode = self.off_mode.id;
+    }
+
+    pub fn activate_manual_mode(&mut self) {
+        if self.active_mode == self.manual_mode.id {
+            return;
+        }
+        let lights = self.deactivate();
+        self.manual_mode.activate(lights);
+        self.active_mode = self.manual_mode.id;
     }
 
     fn deactivate(&mut self) -> Lights {
