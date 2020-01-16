@@ -1,11 +1,13 @@
 use crate::models::{Color, LightId, Lights, PinValue};
+use crate::effects::{PinkPulse};
 use std::cell::Cell;
 use std::collections::HashMap;
 
 #[derive(PartialEq, Copy)]
-enum Mode {
+pub enum Mode {
     OffMode,
     ManualMode,
+    PinkPulse,
 }
 
 impl Clone for Mode {
@@ -114,6 +116,7 @@ impl ManualMode {
 pub struct State {
     pub off_mode: OffMode,
     pub manual_mode: ManualMode,
+    pub pink_pulse: PinkPulse,
     active_mode: Mode,
 }
 
@@ -122,12 +125,15 @@ impl State {
         let mut off_mode = OffMode::new();
         let mut man_mode = ManualMode::new();
         man_mode.init(&lights);
+        let mut pink_pulse = PinkPulse::new();
+        pink_pulse.init(&lights);
         // set activate
         man_mode.activate(lights);
         let active_mode = man_mode.id;
         State {
             off_mode: off_mode,
             manual_mode: man_mode,
+            pink_pulse: pink_pulse,
             active_mode: active_mode,
         }
     }
@@ -150,10 +156,20 @@ impl State {
         self.active_mode = self.manual_mode.id;
     }
 
+    pub fn activate_pink_pulse(&mut self) {
+        if self.active_mode == self.pink_pulse.id {
+            return;
+        }
+        let lights = self.deactivate();
+        self.pink_pulse.activate(lights);
+        self.active_mode = self.pink_pulse.id;
+    }
+
     fn deactivate(&mut self) -> Lights {
         match self.active_mode {
             Mode::OffMode => self.off_mode.deactivate(),
             Mode::ManualMode => self.manual_mode.deactivate(),
+            Mode::PinkPulse => self.pink_pulse.deactivate(),
         }
     }
 }
