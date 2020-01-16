@@ -1,12 +1,10 @@
-use crate::models::{Color, LightId, Lights};
-use crate::state::{Mode, State};
-use rand::distributions::{Distribution, Uniform};
+use crate::models::{LightId, Lights};
+use crate::modes::Mode;
 use splines::{Interpolation, Key, Spline};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, SystemTime};
-use std::vec::Vec;
 use stoppable_thread::{spawn, StoppableHandle};
 
 struct PulseEnvelope {
@@ -90,7 +88,7 @@ impl PinkPulse {
             while !stopped.get() {
                 thread::sleep(p);
                 let state = looper_state.lock().unwrap();
-                let lights = state.lights.as_ref().unwrap();  // we know it's there
+                let lights = state.lights.as_ref().unwrap(); // we know it's there
                 for id in lights.get_all_ids() {
                     let light = lights.get_light(id);
                     let value = state.envelopes.get(id).unwrap().get_current_value();
@@ -103,6 +101,7 @@ impl PinkPulse {
         // TODO start the thread here.
     }
 
+    #[allow(unused_must_use)]
     pub fn deactivate(&mut self) -> Lights {
         // TODO stop thread
         self.looper.take().unwrap().stop().join();

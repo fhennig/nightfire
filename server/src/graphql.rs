@@ -1,4 +1,3 @@
-use crate::models::Color as ColorModel;
 use crate::state::State;
 use iron::{Iron, IronResult, Request};
 use juniper::FieldResult;

@@ -8,19 +8,15 @@ extern crate staticfile;
 extern crate yaml_rust;
 extern crate stoppable_thread;
 mod conf;
-mod effects;
 mod graphql;
 mod state;
 mod models;
+mod modes;
 use crate::conf::Conf;
-use crate::effects::PinkPulse;
 use crate::graphql::serve;
 use crate::models::{Light, Lights, PinModel};
 use crate::state::State;
 use std::sync::{Arc, Mutex};
-use std::cell::Cell;
-use std::thread;
-use std::time::Duration;
 
 fn main() {
     // read config

@@ -3,8 +3,6 @@ use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::vec::Vec;
 use std::sync::{Arc, Mutex};
-use std::cell::Cell;
-use std::ops::DerefMut;
 
 pub type Pin = i64;
 pub type PinValue = f64;
@@ -25,6 +23,8 @@ pub struct PinModel {
 /// each pin.  It supports setting and getting individual pin values.
 /// It has handlers, which then take care of setting the actual values
 /// in the hardware (PiBlaster).
+#[allow(dead_code)]
+#[allow(unused_must_use)]
 impl PinModel {
     pub fn new(pins: Vec<Pin>, path: &String) -> PinModel {
         let map = HashMap::new();
