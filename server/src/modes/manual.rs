@@ -1,11 +1,10 @@
 use crate::models::{Color, LightId, Lights, PinValue};
 use crate::modes::Mode;
-use std::cell::Cell;
 use std::collections::HashMap;
 
 pub struct ManualMode {
     pub id: Mode,
-    lights: Cell<Option<Lights>>,
+    lights: Option<Lights>,
     colors: HashMap<LightId, Color>,
 }
 
@@ -13,7 +12,7 @@ impl ManualMode {
     pub fn new() -> ManualMode {
         ManualMode {
             id: Mode::ManualMode,
-            lights: Cell::new(None),
+            lights: None,
             colors: HashMap::new(),
         }
     }
@@ -32,8 +31,8 @@ impl ManualMode {
             b: b.unwrap_or(current_color.b),
         };
         let light_id_copy = String::from(light_id.as_str());
-        if self.lights.get_mut().is_some() {
-            let lights = self.lights.get_mut().as_mut().unwrap();
+        if self.lights.is_some() {
+            let lights = self.lights.as_ref().unwrap();
             let light = lights.get_light(light_id);
             light.set_r(new_color.r);
             light.set_g(new_color.g);
@@ -56,8 +55,8 @@ impl ManualMode {
     }
 
     pub fn activate(&mut self, lights: Lights) {
-        self.lights.set(Some(lights));
-        let lights = self.lights.get_mut().as_mut().unwrap();
+        self.lights = Some(lights);
+        let lights = self.lights.as_ref().unwrap();
         for id in lights.get_all_ids() {
             let light = lights.get_light(id);
             let color = self.colors.get(id).unwrap();
@@ -68,6 +67,6 @@ impl ManualMode {
     }
 
     pub fn deactivate(&mut self) -> Lights {
-        self.lights.replace(None).unwrap()
+        self.lights.take().unwrap()
     }
 }
