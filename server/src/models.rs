@@ -1,12 +1,26 @@
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
+use std::hash::Hash;
 use std::io::Write;
-use std::vec::Vec;
 use std::sync::{Arc, Mutex};
+use std::vec::Vec;
 
 pub type Pin = i64;
 pub type PinValue = f64;
-pub type LightId = String;
+
+#[derive(juniper::GraphQLEnum, Debug, PartialEq, Eq, Hash, Copy, Clone)]
+pub enum LightId {
+    Top,
+    Bottom,
+    Left,
+    Right,
+}
+
+impl LightId {
+    pub fn all() -> Vec<LightId> {
+        vec![LightId::Top, LightId::Bottom, LightId::Left, LightId::Right]
+    }
+}
 
 pub struct Color {
     pub r: PinValue,
@@ -91,10 +105,10 @@ pub struct Lights {
 }
 
 impl Lights {
-    pub fn new(lights: Vec<(&LightId, Light)>) -> Lights {
+    pub fn new(lights: Vec<(LightId, Light)>) -> Lights {
         let mut map = HashMap::new();
         for (light_id, light) in lights {
-            map.insert(String::from(light_id.as_str()), light);
+            map.insert(light_id, light);
         }
         Lights { light_map: map }
     }

@@ -9,6 +9,16 @@ pub struct Conf {
     pub lights: Vec<(LightId, Pin, Pin, Pin)>,
 }
 
+fn str_to_light_id(str: &str) -> LightId {
+    match str.as_ref() {
+        "Top" => LightId::Top,
+        "Bottom" => LightId::Bottom,
+        "Left" => LightId::Left,
+        "Right" => LightId::Right,
+        _ => panic!(),
+    }
+}
+
 impl Conf {
     /// Iterates through a couple of paths to find a config file.
     pub fn find_path() -> Option<&'static Path> {
@@ -34,7 +44,7 @@ impl Conf {
             .unwrap()
             .iter()
             .map(|entry| {
-                let light_id: LightId = entry.0.as_str().unwrap().to_string();
+                let light_id = str_to_light_id(entry.0.as_str().unwrap());
                 let pin_map = entry.1;
                 (
                     light_id,

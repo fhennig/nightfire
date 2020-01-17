@@ -6,6 +6,7 @@ use mount::Mount;
 use staticfile::Static;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
+use crate::models::LightId;
 
 #[derive(juniper::GraphQLEnum)]
 enum MyResult {
@@ -31,7 +32,7 @@ impl Query {}
 
 #[derive(juniper::GraphQLInputObject)]
 struct ManualModeLightSetting {
-    id: String,
+    id: LightId,
     r: Option<f64>,
     g: Option<f64>,
     b: Option<f64>,
@@ -50,7 +51,7 @@ impl Mutation {
         let result = match settings {
             Some(light_settings) => {
                 for ls in light_settings {
-                    state.manual_mode.set_color(&ls.id, ls.r, ls.g, ls.b);
+                    state.manual_mode.set_color(ls.id, ls.r, ls.g, ls.b);
                 }
                 Ok(MyResult::Ok)
             }

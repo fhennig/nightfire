@@ -12,9 +12,7 @@ impl State {
     pub fn new(lights: Lights) -> State {
         let off_mode = OffMode::new();
         let mut man_mode = ManualMode::new();
-        man_mode.init(&lights);
-        let mut pink_pulse = PinkPulse::new();
-        pink_pulse.init(&lights);
+        let pink_pulse = PinkPulse::new();
         // set activate
         man_mode.activate(lights);
         let active_mode = man_mode.id;

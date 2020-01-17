@@ -30,7 +30,7 @@ fn main() {
     let lights = conf
         .lights
         .iter()
-        .map(|(id, r, g, b)| (id, Light::new(Arc::clone(&pin_model), *r, *g, *b)))
+        .map(|(id, r, g, b)| (*id, Light::new(Arc::clone(&pin_model), *r, *g, *b)))
         .collect();
     let lights = Lights::new(lights);
     let state = State::new(lights);

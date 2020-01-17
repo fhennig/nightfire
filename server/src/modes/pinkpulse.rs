@@ -59,23 +59,31 @@ pub struct PinkPulse {
 
 impl PinkPulse {
     pub fn new() -> PinkPulse {
+        let mut internal_state = InternalState {
+            lights: None,
+            envelopes: HashMap::new(),
+        };
+        internal_state.envelopes.insert(
+            LightId::Top,
+            PulseEnvelope::new(Duration::from_millis(2100)),
+        );
+        internal_state.envelopes.insert(
+            LightId::Left,
+            PulseEnvelope::new(Duration::from_millis(3300)),
+        );
+        internal_state.envelopes.insert(
+            LightId::Bottom,
+            PulseEnvelope::new(Duration::from_millis(3900)),
+        );
+        internal_state.envelopes.insert(
+            LightId::Right,
+            PulseEnvelope::new(Duration::from_millis(4700)),
+        );
+        
         PinkPulse {
             id: Mode::PinkPulse,
-            internal_state: Arc::new(Mutex::new(InternalState {
-                lights: None,
-                envelopes: HashMap::new(),
-            })),
+            internal_state: Arc::new(Mutex::new(internal_state)),
             looper: None,
-        }
-    }
-
-    pub fn init(&mut self, lights: &Lights) {
-        let mut internal_state = self.internal_state.lock().unwrap();
-        for id in lights.get_all_ids() {
-            internal_state.envelopes.insert(
-                String::from(id.as_str()),
-                PulseEnvelope::new(Duration::from_millis(2000)),
-            );
         }
     }
 

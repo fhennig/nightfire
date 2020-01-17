@@ -19,32 +19,28 @@ impl ManualMode {
 
     pub fn set_color(
         &mut self,
-        light_id: &LightId,
+        light_id: LightId,
         r: Option<PinValue>,
         g: Option<PinValue>,
         b: Option<PinValue>,
     ) {
-        let current_color = self.colors.get(light_id).unwrap();
+        let current_color = self.colors.get(&light_id).unwrap();
         let new_color = Color {
             r: r.unwrap_or(current_color.r),
             g: g.unwrap_or(current_color.g),
             b: b.unwrap_or(current_color.b),
         };
-        let light_id_copy = String::from(light_id.as_str());
         if self.lights.is_some() {
             let lights = self.lights.as_ref().unwrap();
-            let light = lights.get_light(light_id);
+            let light = lights.get_light(&light_id);
             light.set_r(new_color.r);
             light.set_g(new_color.g);
             light.set_b(new_color.b);
         }
-        self.colors.insert(light_id_copy, new_color);
-    }
-
-    pub fn init(&mut self, lights: &Lights) {
-        for id in lights.get_all_ids() {
+        self.colors.insert(light_id, new_color);
+        for id in LightId::all() {
             self.colors.insert(
-                String::from(id.as_str()),
+                id,
                 Color {
                     r: 0.,
                     g: 0.,
