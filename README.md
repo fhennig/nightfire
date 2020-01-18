@@ -3,6 +3,11 @@
 A server and web client to control RGB lights connected to a Raspberry
 Pi.
 
+It uses pi-blaster to set the lights.  A web UI is provided to set the
+lights, under the hood it provides a GraphQL API.
+
+Various modes are supported.
+
   
 ## Builing for arm
 
@@ -31,52 +36,46 @@ Copy the contents of the build directory to `/usr/local/lib/lumi/web/`.
 - Put the config file in `/etc/lumi/conf.yaml`
 
 
-## Idea
+## GraphQL API
 
-Neue Idee für die API:  Es gibt für jeden Mode einen Endpoint.  Der
-zum lichter setzen würde dann so umgebaut:
+The lights are controlled by modes.  At any time there is only one
+mode active.
+
+    mutation setLight {
+      manualMode(settings: [
+        {lightId: "light1", r: 1, g: 0, b: 1},
+        {lightId: "light2", r:0}]) {
+        ok
+      }
+    }
+
+This mutation would activate the manualMode, and update its settings.
+
+Different modes take different arguments, and arguments are frequently
+optional:
+
+    mutation pinkMode {
+      pinkPulse
+    }
 
 
-mutation setLight {
-  manualMode(settings: [
-    {lightId: "light1", r: 1, g: 0, b: 1},
-    {lightId: "light2", r:0}]) {
-    ok
-  }
-}
+## Internal workings
 
-Mit input-objekten die unterspezifiziert sein können.  Um den anderen
-mode zu setzen würde man dann aufrufen:
+There is a light struct that can only be owned by any single mode.
+The mode can then internally have a thread that continuously updates
+the light.
 
-mutation pinkMode {
-  pinkPulse() {
-    ok
-  }
-}
-
-Das Ding ist, der manual mode braucht keine loop, der andere schon.
-
-Jeder mode braucht eine activate und deactivate funktion.  in der
-activate funktion kann der thread gespawnt werden und in der
-deactivate funktion wird er dann gestoppt und gejoint.  Timer oder
-ähnliches können gestoppt werden.
-
-Falls ein mode mit anderen settings gesetzt wird, und er schon
-aktiviert ist, werden die settings einfach on the fly geändert.
+Every mode has an activate and deactivate function.  These can be used
+to start and stop a thread.  Any mode can also implement other methods
+that mutate internal state.
 
 zu jeder mutation für einen mode gibt es dann auch ein query mit dem
 man den zustand des modes abfragen kann.
 
-Jeder mode hat dabei aber seine eigenen farben etc und es wird
-nichts geteilt.  zB braucht der pink mode für jedes licht eine farbe,
-dann rechnet er da noch den envelope drauf und setzt die farbe.  Die
-farbe wird aber intern gespeichert.  Die gedimmte farbe wird dann in
-das light_model geschrieben.
 
-Ein MidiMode könnte dann in seinem thread auf irgendwelche midi
-signale lauschen.
+## Ideas
 
-Things I want:
+- Implement a midi mode that listens in a thread for midi signals.
 - a "random walk" for color hue
 - a "beat" function for light intensity
 - a pulsating/heart beat function for light intensity
@@ -85,12 +84,5 @@ Things I want:
 
 ## TODO
 
-- Quality of Life improvements
-  - debug mode with UI instead of pi-blaster
-  - load config from different paths if one path is not set.
-  - maybe a local serving mode that serves the web stuff too (without
-    nginx).
-- Features
-  - Implement the modes in the states and the activate/deactivate
-    stuff
-  - Adapt the GraphQL API accordingly.
+- move the palette color representation
+- implement query structure to query mode settings
