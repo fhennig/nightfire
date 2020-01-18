@@ -4,7 +4,8 @@ Description=The Lumi light server
 [Service]
 Type=simple
 Environment=RUST_BACKTRACE=1
-ExecStart=/usr/local/bin/lumi
+WorkingDirectory=/opt/lumi
+ExecStart=/opt/lumi/lumi
 
 [Install]
 After=pi-blaster.service
