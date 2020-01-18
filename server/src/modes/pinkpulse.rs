@@ -1,4 +1,4 @@
-use crate::models::{LightId, Lights};
+use crate::models::{LightId, Lights, Color};
 use crate::modes::Mode;
 use splines::{Interpolation, Key, Spline};
 use std::collections::HashMap;
@@ -100,9 +100,8 @@ impl PinkPulse {
                 for id in lights.get_all_ids() {
                     let light = lights.get_light(id);
                     let value = state.envelopes.get(id).unwrap().get_current_value();
-                    light.set_r(1.0 * value);
-                    light.set_g(0.1 * value);
-                    light.set_b(0.7 * value);
+                    let color = Color::new(1.0 * value, 0.1 * value, 0.7 * value);
+                    light.set_color(&color);
                 }
             }
         }));

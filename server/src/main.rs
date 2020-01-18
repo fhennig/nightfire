@@ -5,6 +5,7 @@ extern crate juniper;
 extern crate juniper_iron;
 extern crate log;
 extern crate mount;
+extern crate palette;
 extern crate rand;
 extern crate staticfile;
 extern crate stoppable_thread;

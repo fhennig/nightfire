@@ -4,6 +4,8 @@ use std::hash::Hash;
 use std::io::Write;
 use std::sync::{Arc, Mutex};
 use std::vec::Vec;
+use palette::encoding::Srgb;
+use palette::rgb::Rgb;
 
 pub type Pin = i64;
 pub type PinValue = f64;
@@ -20,12 +22,6 @@ impl LightId {
     pub fn all() -> Vec<LightId> {
         vec![LightId::Top, LightId::Bottom, LightId::Left, LightId::Right]
     }
-}
-
-pub struct Color {
-    pub r: PinValue,
-    pub g: PinValue,
-    pub b: PinValue,
 }
 
 pub struct PinModel {
@@ -74,6 +70,8 @@ pub struct Light {
     pub b_pin: Pin,
 }
 
+pub type Color = Rgb<Srgb, PinValue>;
+
 impl Light {
     pub fn new(pin_model: Arc<Mutex<PinModel>>, r_pin: Pin, g_pin: Pin, b_pin: Pin) -> Light {
         Light {
@@ -84,19 +82,11 @@ impl Light {
         }
     }
 
-    pub fn set_r(&self, value: PinValue) {
+    pub fn set_color(&self, color: &Color) {
         let mut pin_model = self.pin_model.lock().unwrap();
-        pin_model.set_pin(self.r_pin, value);
-    }
-
-    pub fn set_g(&self, value: PinValue) {
-        let mut pin_model = self.pin_model.lock().unwrap();
-        pin_model.set_pin(self.g_pin, value);
-    }
-
-    pub fn set_b(&self, value: PinValue) {
-        let mut pin_model = self.pin_model.lock().unwrap();
-        pin_model.set_pin(self.b_pin, value);
+        pin_model.set_pin(self.r_pin, color.red);
+        pin_model.set_pin(self.g_pin, color.green);
+        pin_model.set_pin(self.b_pin, color.blue);
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::models::Lights;
+use crate::models::{Lights, Color};
 use crate::modes::Mode;
 use std::cell::Cell;
 
@@ -18,10 +18,9 @@ impl OffMode {
     pub fn activate(&mut self, lights: Lights) {
         self.lights.set(Some(lights));
         let lights = self.lights.get_mut().as_ref().unwrap();
+        let black = Color::new(0.0, 0.0, 0.0);
         for id in lights.get_all_ids() {
-            lights.get_light(id).set_r(0.);
-            lights.get_light(id).set_g(0.);
-            lights.get_light(id).set_b(0.);
+            lights.get_light(id).set_color(&black);
         }
     }
 
