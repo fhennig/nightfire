@@ -1,2 +1,4 @@
+conf.yaml
+site
 /target
 **/*.rs.bk
