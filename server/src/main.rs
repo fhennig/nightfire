@@ -7,6 +7,8 @@ extern crate rand;
 extern crate staticfile;
 extern crate yaml_rust;
 extern crate stoppable_thread;
+extern crate log;
+extern crate env_logger;
 mod conf;
 mod graphql;
 mod state;
@@ -19,6 +21,7 @@ use crate::state::State;
 use std::sync::{Arc, Mutex};
 
 fn main() {
+    env_logger::init();
     // read config
     let conf_path = Conf::find_path();
     let conf = match conf_path {

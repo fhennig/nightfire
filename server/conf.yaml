@@ -1,18 +1,18 @@
-pi-blaster: /dev/pi-blaster
+pi-blaster: pi-blaster
 lights:
-  light1:
+  Top:
     r: 14
     g: 15
     b: 18
-  light2:
+  Bottom:
     r: 23
     g: 25
     b: 24
-  light3:
+  Left:
     r: 17
     g: 27
     b: 22
-  light4:
+  Right:
     r: 10
     g: 9
     b: 11

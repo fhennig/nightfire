@@ -15,7 +15,7 @@ fn str_to_light_id(str: &str) -> LightId {
         "Bottom" => LightId::Bottom,
         "Left" => LightId::Left,
         "Right" => LightId::Right,
-        _ => panic!(),
+        other => panic!("Unknown light ID: {}", other),
     }
 }
 
