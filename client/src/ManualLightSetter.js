@@ -32,11 +32,11 @@ export default function ManualLightSetter(props) {
   };
 
   return (
-    <div className="light-control">
+    <React.Fragment>
       <Title>{state.lightId}</Title>
         <Slider min={0} max={1} step={0.01} value={state.r} onChange={handleRedChange} onChangeCommitted={handleSlideFinished}/>
         <Slider min={0} max={1} step={0.01} value={state.g} onChange={handleGreenChange} onChangeCommitted={handleSlideFinished}/>
         <Slider min={0} max={1} step={0.01} value={state.b} onChange={handleBlueChange} onChangeCommitted={handleSlideFinished}/>
-    </div>
+    </React.Fragment>
   )
 }
