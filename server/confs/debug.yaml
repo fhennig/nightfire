@@ -1,4 +1,5 @@
 pi-blaster: pi-blaster
+address: 127.0.0.1:3000
 lights:
   Top:
     r: 14

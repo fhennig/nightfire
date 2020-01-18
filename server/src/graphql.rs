@@ -89,7 +89,7 @@ impl ContextFactory {
     }
 }
 
-pub fn serve(state: Arc<Mutex<State>>) {
+pub fn serve(address: String, state: Arc<Mutex<State>>) {
     let context_factory = ContextFactory::new(state);
 
     let graphql_endpoint = GraphQLHandler::new(
@@ -105,5 +105,5 @@ pub fn serve(state: Arc<Mutex<State>>) {
     mount.mount("/graphiql", graphiql);
     mount.mount("/", Static::new(Path::new("site")));
 
-    Iron::new(mount).http("127.0.0.1:3000").unwrap();
+    Iron::new(mount).http(address.as_str()).unwrap();
 }

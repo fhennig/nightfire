@@ -59,5 +59,5 @@ fn main() {
     });
 */
     // this is serving the GraphQL endpoint
-    serve(Arc::clone(&state));
+    serve(conf.address, Arc::clone(&state));
 }

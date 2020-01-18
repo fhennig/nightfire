@@ -7,6 +7,7 @@ use yaml_rust::YamlLoader;
 pub struct Conf {
     pub pi_blaster_path: String,
     pub lights: Vec<(LightId, Pin, Pin, Pin)>,
+    pub address: String,
 }
 
 fn str_to_light_id(str: &str) -> LightId {
@@ -55,9 +56,11 @@ impl Conf {
             })
             .collect();
         let pi_blaster_path = conf["pi-blaster"].as_str().unwrap().to_string();
+        let address = conf["address"].as_str().unwrap().to_string();
         Conf {
             lights: lights,
             pi_blaster_path: pi_blaster_path,
+            address: address,
         }
     }
 
