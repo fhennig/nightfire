@@ -4,7 +4,8 @@ import './index.css';
 import Dashboard from "./Dashboard";
 import * as serviceWorker from './serviceWorker';
 import ApolloClient from 'apollo-boost';
-import { ApolloProvider } from '@apollo/react-hooks';
+import {ApolloProvider} from '@apollo/react-hooks';
+import {BrowserRouter as Router} from "react-router-dom";
 
 const client = new ApolloClient({
   uri: '/graphql',
@@ -12,7 +13,9 @@ const client = new ApolloClient({
 
 ReactDOM.render(
   <ApolloProvider client={client}>
-    <Dashboard />
+    <Router>
+      <Dashboard/>
+    </Router>
   </ApolloProvider>,
   document.getElementById('root')
 );

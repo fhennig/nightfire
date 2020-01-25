@@ -12,7 +12,7 @@ const SET_LIGHT = gql`
 `;
 
 export default function ManualLightSetter(props) {
-  const [setLight, { data }] = useMutation(SET_LIGHT);
+  const [setLight] = useMutation(SET_LIGHT);
   const [state, setState] = useState({lightId: props.lightId, "r": 0, g: 0, b: 0});
 
   const handleRedChange = (event, newValue) => {
