@@ -73,6 +73,12 @@ impl Mutation {
         state.activate_pink_pulse();
         Ok(MyResult::Ok)
     }
+
+    fn rainbow(context: &Context) -> FieldResult<MyResult> {
+        let mut state = context.state.lock().unwrap();
+        state.activate_rainbow();
+        Ok(MyResult::Ok)
+    }
 }
 
 struct ContextFactory {
