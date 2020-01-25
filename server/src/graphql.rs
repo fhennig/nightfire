@@ -1,12 +1,14 @@
+use crate::models::LightId;
 use crate::state::State;
-use iron::{Iron, IronResult, Request};
+use iron::middleware::Handler;
+use iron::status;
+use iron::{Iron, IronResult, Request, Response};
 use juniper::FieldResult;
 use juniper_iron::{GraphQLHandler, GraphiQLHandler};
 use mount::Mount;
 use staticfile::Static;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
-use crate::models::LightId;
 
 #[derive(juniper::GraphQLEnum)]
 enum MyResult {
@@ -55,7 +57,7 @@ impl Mutation {
                 }
                 Ok(MyResult::Ok)
             }
-            None => Ok(MyResult::Ok)
+            None => Ok(MyResult::Ok),
         };
         result
     }
@@ -89,6 +91,30 @@ impl ContextFactory {
     }
 }
 
+struct AppHandler {
+    root_handler: Static,
+}
+
+impl AppHandler {
+    fn new() -> AppHandler {
+        AppHandler {
+            root_handler: Static::new(Path::new("site")),
+        }
+    }
+}
+
+impl Handler for AppHandler {
+    fn handle(&self, req: &mut Request) -> IronResult<Response> {
+        let response = self.root_handler.handle(req);
+        match response {
+            Err(_) => {
+                Ok(Response::with((status::Ok, Path::new("site/index.html"))))
+            }
+            other => other,
+        }
+    }
+}
+
 pub fn serve(address: String, state: Arc<Mutex<State>>) {
     let context_factory = ContextFactory::new(state);
 
@@ -99,11 +125,11 @@ pub fn serve(address: String, state: Arc<Mutex<State>>) {
     );
 
     let mut mount = Mount::new();
-    
+
     mount.mount("/graphql", graphql_endpoint);
     let graphiql = GraphiQLHandler::new("/graphql");
     mount.mount("/graphiql", graphiql);
-    mount.mount("/", Static::new(Path::new("site")));
+    mount.mount("/", AppHandler::new());
 
     Iron::new(mount).http(address.as_str()).unwrap();
 }
