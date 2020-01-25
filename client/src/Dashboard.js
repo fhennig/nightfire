@@ -23,7 +23,8 @@ import BrushIcon from "@material-ui/icons/Brush";
 import ManualMode from "./views/ManualMode";
 import FavoriteIcon from "@material-ui/icons/Favorite";
 import PinkPulseMode from "./views/PinkPulseMode";
-
+import RainbowMode from "./views/RainbowMode";
+import LooksIcon from '@material-ui/icons/Looks';
 
 
 export default function Dashboard() {
@@ -31,6 +32,7 @@ export default function Dashboard() {
   const offModePath = "/mode/off";
   const manualModePath = "/mode/manual";
   const pinkPulseModePath = "/mode/pinkpulse";
+  const rainbowModePath = "/mode/rainbow";
 
   const classes = useStyles();
   const [open, setOpen] = React.useState(true);
@@ -96,6 +98,12 @@ export default function Dashboard() {
             </ListItemIcon>
             <ListItemText primary="Pink Pulse"/>
           </ListItem>
+          <ListItem button component={Link} to={rainbowModePath}>
+            <ListItemIcon>
+              <LooksIcon />
+            </ListItemIcon>
+            <ListItemText primary="Rainbow"/>
+          </ListItem>
         </List>
       </Drawer>
       <main className={classes.content}>
@@ -105,6 +113,7 @@ export default function Dashboard() {
             <Route path={offModePath} component={OffMode}/>
             <Route path={manualModePath} component={ManualMode}/>
             <Route path={pinkPulseModePath} component={PinkPulseMode}/>
+            <Route path={rainbowModePath} component={RainbowMode}/>
           </Switch>
         </Container>
       </main>
