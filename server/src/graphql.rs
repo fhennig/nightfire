@@ -40,6 +40,12 @@ struct ManualModeLightSetting {
     b: Option<f64>,
 }
 
+#[derive(juniper::GraphQLInputObject)]
+struct Coordinate {
+    x: f64,
+    y: f64,
+}
+
 struct Mutation;
 
 #[juniper::object(Context = Context)]
@@ -79,6 +85,18 @@ impl Mutation {
         state.activate_rainbow();
         Ok(MyResult::Ok)
     }
+
+    fn lightsource(context: &Context, pos: Option<Coordinate>) -> FieldResult<MyResult> {
+        let mut state = context.state.lock().unwrap();
+        state.activate_lightsource();
+        // set position
+        match pos {
+            Some(pos) => state.lightsource.set_pos(pos.x, pos.y),
+            None => (),
+        }
+        // result
+        Ok(MyResult::Ok)
+    }
 }
 
 struct ContextFactory {
@@ -113,9 +131,7 @@ impl Handler for AppHandler {
     fn handle(&self, req: &mut Request) -> IronResult<Response> {
         let response = self.root_handler.handle(req);
         match response {
-            Err(_) => {
-                Ok(Response::with((status::Ok, Path::new("site/index.html"))))
-            }
+            Err(_) => Ok(Response::with((status::Ok, Path::new("site/index.html")))),
             other => other,
         }
     }

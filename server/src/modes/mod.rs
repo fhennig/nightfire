@@ -1,11 +1,13 @@
-mod pinkpulse;
-mod off;
+mod lightsource;
 mod manual;
+mod off;
+mod pinkpulse;
 mod rainbow;
-pub use pinkpulse::PinkPulse;
-pub use off::OffMode;
 pub use manual::ManualMode;
+pub use off::OffMode;
+pub use pinkpulse::PinkPulse;
 pub use rainbow::Rainbow;
+pub use lightsource::LightSourceMode;
 
 #[derive(PartialEq, Copy)]
 pub enum Mode {
@@ -13,6 +15,7 @@ pub enum Mode {
     ManualMode,
     PinkPulse,
     Rainbow,
+    LightSource,
 }
 
 impl Clone for Mode {

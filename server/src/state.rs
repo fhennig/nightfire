@@ -1,11 +1,12 @@
 use crate::models::Lights;
-use crate::modes::{ManualMode, Mode, OffMode, PinkPulse, Rainbow};
+use crate::modes::{LightSourceMode, ManualMode, Mode, OffMode, PinkPulse, Rainbow};
 
 pub struct State {
     pub off_mode: OffMode,
     pub manual_mode: ManualMode,
     pub pink_pulse: PinkPulse,
     pub rainbow: Rainbow,
+    pub lightsource: LightSourceMode,
     active_mode: Mode,
 }
 
@@ -15,6 +16,7 @@ impl State {
         let mut man_mode = ManualMode::new();
         let pink_pulse = PinkPulse::new();
         let rainbow = Rainbow::new();
+        let lightsource = LightSourceMode::new();
         // set activate
         man_mode.activate(lights);
         let active_mode = man_mode.id;
@@ -23,6 +25,7 @@ impl State {
             manual_mode: man_mode,
             pink_pulse: pink_pulse,
             rainbow: rainbow,
+            lightsource: lightsource,
             active_mode: active_mode,
         }
     }
@@ -63,12 +66,23 @@ impl State {
         self.active_mode = self.rainbow.id;
     }
 
+    pub fn activate_lightsource(&mut self) {
+        if self.active_mode == self.lightsource.id {
+            return;
+        }
+        let lights = self.deactivate();
+        self.lightsource.activate(lights);
+        self.active_mode = self.lightsource.id;
+
+    }
+
     fn deactivate(&mut self) -> Lights {
         match self.active_mode {
             Mode::OffMode => self.off_mode.deactivate(),
             Mode::ManualMode => self.manual_mode.deactivate(),
             Mode::PinkPulse => self.pink_pulse.deactivate(),
             Mode::Rainbow => self.rainbow.deactivate(),
+            Mode::LightSource => self.lightsource.deactivate(),
         }
     }
 }
