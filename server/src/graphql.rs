@@ -1,4 +1,4 @@
-use crate::models::LightId;
+use crate::lightid::LightId;
 use crate::state::State;
 use iron::middleware::Handler;
 use iron::status;

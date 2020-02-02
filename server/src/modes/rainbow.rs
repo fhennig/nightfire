@@ -1,6 +1,7 @@
-use crate::models::{Color, LightId, Lights, PinValue};
+use crate::lightid::LightId;
+use crate::models::{Color, Lights, PinValue};
 use crate::modes::Mode;
-use palette::{Hsv, RgbHue, FromColor};
+use palette::{FromColor, Hsv, RgbHue};
 use splines::{Interpolation, Key, Spline};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};

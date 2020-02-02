@@ -1,4 +1,5 @@
-use crate::models::{LightId, Pin};
+use crate::models::Pin;
+use crate::lightid::LightId;
 use std::fs::read_to_string;
 use std::path::Path;
 use std::vec::Vec;

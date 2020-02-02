@@ -1,4 +1,5 @@
-use crate::models::{Color, LightId, Lights, PinValue};
+use crate::models::{Color, Lights, PinValue};
+use crate::lightid::LightId;
 use crate::modes::Mode;
 use log::{debug, info};
 use std::collections::HashMap;

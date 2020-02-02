@@ -1,28 +1,14 @@
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
-use std::hash::Hash;
 use std::io::Write;
 use std::sync::{Arc, Mutex};
 use std::vec::Vec;
 use palette::encoding::Srgb;
 use palette::rgb::Rgb;
+use crate::lightid::LightId;
 
 pub type Pin = i64;
 pub type PinValue = f64;
-
-#[derive(juniper::GraphQLEnum, Debug, PartialEq, Eq, Hash, Copy, Clone)]
-pub enum LightId {
-    Top,
-    Bottom,
-    Left,
-    Right,
-}
-
-impl LightId {
-    pub fn all() -> Vec<LightId> {
-        vec![LightId::Top, LightId::Bottom, LightId::Left, LightId::Right]
-    }
-}
 
 pub struct PinModel {
     pin_values: HashMap<Pin, PinValue>,

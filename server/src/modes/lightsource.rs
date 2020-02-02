@@ -1,4 +1,5 @@
-use crate::models::{Color, LightId, Lights};
+use crate::lightid::LightId;
+use crate::models::{Color, Lights};
 use crate::modes::Mode;
 use palette::{FromColor, Hsv, RgbHue};
 use splines::{Interpolation, Key, Spline};

@@ -1,4 +1,5 @@
-use crate::models::{LightId, Lights, Color};
+use crate::lightid::LightId;
+use crate::models::{Color, Lights};
 use crate::modes::Mode;
 use splines::{Interpolation, Key, Spline};
 use std::collections::HashMap;
@@ -79,7 +80,7 @@ impl PinkPulse {
             LightId::Right,
             PulseEnvelope::new(Duration::from_millis(4700)),
         );
-        
+
         PinkPulse {
             id: Mode::PinkPulse,
             internal_state: Arc::new(Mutex::new(internal_state)),

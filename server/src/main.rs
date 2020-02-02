@@ -15,6 +15,7 @@ mod graphql;
 mod models;
 mod modes;
 mod state;
+mod lightid;
 use crate::conf::Conf;
 use crate::graphql::serve;
 use crate::models::{Light, Lights, PinModel};
