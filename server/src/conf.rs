@@ -1,4 +1,4 @@
-use crate::models::Pin;
+use crate::piblaster::Pin;
 use crate::lightid::LightId;
 use std::fs::read_to_string;
 use std::path::Path;
