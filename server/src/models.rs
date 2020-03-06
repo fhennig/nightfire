@@ -1,11 +1,15 @@
+use crate::lightid::LightId;
+use crate::state::State;
+use palette::encoding::Srgb;
+use palette::rgb::Rgb;
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::Duration;
 use std::vec::Vec;
-use palette::encoding::Srgb;
-use palette::rgb::Rgb;
-use crate::lightid::LightId;
+use stoppable_thread::{spawn, StoppableHandle};
 
 pub type Pin = i64;
 pub type PinValue = f64;
@@ -19,7 +23,6 @@ pub struct PinModel {
 /// each pin.  It supports setting and getting individual pin values.
 /// It has handlers, which then take care of setting the actual values
 /// in the hardware (PiBlaster).
-#[allow(dead_code)]
 #[allow(unused_must_use)]
 impl PinModel {
     pub fn new(pins: Vec<Pin>, path: &String) -> PinModel {
@@ -42,10 +45,6 @@ impl PinModel {
         let s = s.as_bytes();
         self.outfile.write_all(s);
         self.outfile.sync_data();
-    }
-
-    pub fn get_pin(&self, pin: Pin) -> PinValue {
-        self.pin_values[&pin]
     }
 }
 
@@ -89,15 +88,24 @@ impl Lights {
         Lights { light_map: map }
     }
 
-    pub fn get_all_ids(&self) -> Vec<&LightId> {
-        let mut ids = Vec::new();
-        for key in self.light_map.keys() {
-            ids.push(key);
-        }
-        ids
+    pub fn set_light(&mut self, id: &LightId, color: &Color) {
+        self.light_map.get(id).unwrap().set_color(&color);
     }
+}
 
-    pub fn get_light(&self, id: &LightId) -> &Light {
-        self.light_map.get(id).unwrap()
-    }
+pub fn start_update_loop(
+    mut lights: Lights,
+    state: Arc<Mutex<State>>,
+) -> StoppableHandle<Lights> {
+    spawn(move |stopped| {
+        let p = Duration::from_millis(30);
+        while !stopped.get() {
+            thread::sleep(p);
+            for id in LightId::all() {
+                let color = state.lock().unwrap().get_color(&id);
+                lights.set_light(&id, &color);
+            }
+        }
+        lights
+    })
 }

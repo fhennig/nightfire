@@ -1,12 +1,10 @@
-use crate::models::{Color, Lights, PinValue};
 use crate::lightid::LightId;
+use crate::models::{Color, PinValue};
 use crate::modes::Mode;
-use log::{debug, info};
 use std::collections::HashMap;
 
 pub struct ManualMode {
     pub id: Mode,
-    lights: Option<Lights>,
     colors: HashMap<LightId, Color>,
 }
 
@@ -14,7 +12,6 @@ impl ManualMode {
     pub fn new() -> ManualMode {
         let mut m = ManualMode {
             id: Mode::ManualMode,
-            lights: None,
             colors: HashMap::new(),
         };
         for id in LightId::all() {
@@ -36,27 +33,10 @@ impl ManualMode {
             g.unwrap_or(current_color.green),
             b.unwrap_or(current_color.blue),
         );
-        if self.lights.is_some() {
-            let lights = self.lights.as_ref().unwrap();
-            let light = lights.get_light(&light_id);
-            light.set_color(&new_color);
-        }
         self.colors.insert(light_id, new_color);
     }
 
-    pub fn activate(&mut self, lights: Lights) {
-        info!("activating ------------");
-        self.lights = Some(lights);
-        let lights = self.lights.as_ref().unwrap();
-        for id in lights.get_all_ids() {
-            let light = lights.get_light(id);
-            debug!("{:?}", id);
-            let color = self.colors.get(id).unwrap();
-            light.set_color(color);
-        }
-    }
-
-    pub fn deactivate(&mut self) -> Lights {
-        self.lights.take().unwrap()
+    pub fn get_color(&self, light_id: &LightId) -> Color {
+        *self.colors.get(light_id).unwrap()
     }
 }

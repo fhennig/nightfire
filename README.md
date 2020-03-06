@@ -1,19 +1,35 @@
 # lumi
 
-A server and web client to control RGB lights connected to a Raspberry
-Pi.
+A server to control RGB lights connected to a Raspberry Pi.  It
+includes a web interface and a couple of light animation modes.
 
 It uses pi-blaster to set the lights.  A web UI is provided to set the
 lights, under the hood it provides a GraphQL API.
 
 Various modes are supported.
 
+## Architecture
+
+The server consists of various actors reading and writing a shared
+state.  The lights are set in a thread which reads the color of the
+lights from the state.  The state generates the color dynamically from
+its internal state.
+
+In other threads the state is modified to change the color of the
+lights.  One thread runs a web server which serves a GraphQL API that
+allows to modify the state.  A web frontend that interfaces with the
+API is also provided.
+
+### TODO
+
+
+## Building and Installing
   
-## Builing for arm
+### Builing for arm
 
     cargo build --release --target armv7-unknown-linux-gnueabihf --bin lumi
     
-## Build the Website
+### Build the Website
 
     cd client
     npm start build
@@ -21,13 +37,13 @@ Various modes are supported.
 Copy the contents of the build directory to `/usr/local/lib/lumi/web/`.
 
     
-## System Dependencies
+### System Dependencies
 
 - pi-blaster
 - nginx
 
 
-## Installation
+### Installation
 
 - Put binary in `/usr/local/bin/lumi`
 - Put web files in `/usr/local/lib/lumi/web/`
@@ -78,11 +94,13 @@ man den zustand des modes abfragen kann.
 - Implement a midi mode that listens in a thread for midi signals.
 - a "random walk" for color hue
 - a "beat" function for light intensity
-- a pulsating/heart beat function for light intensity
-- a rainbow function for color hue
 
 
 ## TODO
 
-- move the palette color representation
-- implement query structure to query mode settings
+Light source mode.
+
+Have a mode that has an internal (x, y) coordinate of a light source,
+and a function to calculate light intensity at distance.  Then set
+the light intensity of every stripe according to its distance to the
+light source.

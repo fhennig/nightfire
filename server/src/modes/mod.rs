@@ -9,7 +9,7 @@ pub use pinkpulse::PinkPulse;
 pub use rainbow::Rainbow;
 pub use lightsource::LightSourceMode;
 
-#[derive(PartialEq, Copy)]
+#[derive(juniper::GraphQLEnum, PartialEq, Copy)]
 pub enum Mode {
     OffMode,
     ManualMode,

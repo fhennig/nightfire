@@ -1,5 +1,6 @@
 use crate::lightid::LightId;
 use crate::state::State;
+use crate::modes::Mode;
 use iron::middleware::Handler;
 use iron::status;
 use iron::{Iron, IronResult, Request, Response};
@@ -55,7 +56,7 @@ impl Mutation {
         settings: Option<Vec<ManualModeLightSetting>>,
     ) -> FieldResult<MyResult> {
         let mut state = context.state.lock().unwrap();
-        state.activate_manual_mode();
+        state.activate(Mode::ManualMode);
         let result = match settings {
             Some(light_settings) => {
                 for ls in light_settings {
@@ -70,25 +71,25 @@ impl Mutation {
 
     fn offMode(context: &Context) -> FieldResult<MyResult> {
         let mut state = context.state.lock().unwrap();
-        state.activate_off_mode();
+        state.activate(Mode::OffMode);
         Ok(MyResult::Ok)
     }
 
     fn pinkPulse(context: &Context) -> FieldResult<MyResult> {
         let mut state = context.state.lock().unwrap();
-        state.activate_pink_pulse();
+        state.activate(Mode::PinkPulse);
         Ok(MyResult::Ok)
     }
 
     fn rainbow(context: &Context) -> FieldResult<MyResult> {
         let mut state = context.state.lock().unwrap();
-        state.activate_rainbow();
+        state.activate(Mode::Rainbow);
         Ok(MyResult::Ok)
     }
 
     fn lightsource(context: &Context, pos: Option<Coordinate>) -> FieldResult<MyResult> {
         let mut state = context.state.lock().unwrap();
-        state.activate_lightsource();
+        state.activate(Mode::LightSource);
         // set position
         match pos {
             Some(pos) => state.lightsource.set_pos(pos.x, pos.y),

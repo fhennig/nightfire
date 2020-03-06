@@ -18,7 +18,7 @@ mod state;
 mod lightid;
 use crate::conf::Conf;
 use crate::graphql::serve;
-use crate::models::{Light, Lights, PinModel};
+use crate::models::{Light, Lights, PinModel, start_update_loop};
 use crate::state::State;
 use std::sync::{Arc, Mutex};
 
@@ -39,8 +39,8 @@ fn main() {
         .map(|(id, r, g, b)| (*id, Light::new(Arc::clone(&pin_model), *r, *g, *b)))
         .collect();
     let lights = Lights::new(lights);
-    let state = State::new(lights);
-    let state = Arc::new(Mutex::new(state));
+    let state = Arc::new(Mutex::new(State::new()));
+    start_update_loop(lights, Arc::clone(&state));
     // this is serving the GraphQL endpoint
     serve(conf.address, Arc::clone(&state));
 }

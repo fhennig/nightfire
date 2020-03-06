@@ -1,5 +1,5 @@
 use crate::lightid::LightId;
-use crate::models::{Color, Lights};
+use crate::models::Color;
 use crate::modes::Mode;
 use palette::{FromColor, Hsv, RgbHue};
 use splines::{Interpolation, Key, Spline};
@@ -32,7 +32,6 @@ pub struct LightSourceMode {
     pub id: Mode,
     position: Coordinate,
     spline: Spline<f64, f64>,
-    lights: Option<Lights>,
 }
 
 impl Positionable for LightSourceMode {
@@ -51,32 +50,16 @@ impl LightSourceMode {
                 Key::new(0.5, 0.1, Interpolation::Linear),
                 Key::new(1., 0., Interpolation::Linear),
             ]),
-            lights: None,
-        }
-    }
-
-    fn set_lights(&self) {
-        for light_id in LightId::all() {
-            let dist = distance(&light_id, self);
-            let value = self.spline.clamped_sample(dist).unwrap();
-            let light = self.lights.as_ref().unwrap().get_light(&light_id);
-            light.set_color(&Color::from_hsv(Hsv::new(RgbHue::from(0.), 1., value)));
         }
     }
 
     pub fn set_pos(&mut self, x: f64, y: f64) {
         self.position = Coordinate(x, y);
-        self.set_lights();
     }
 
-    pub fn activate(&mut self, lights: Lights) {
-        // take the lights
-        self.lights = Some(lights);
-        // set the lights according to internal state
-        self.set_lights();
-    }
-
-    pub fn deactivate(&mut self) -> Lights {
-        self.lights.take().unwrap()
+    pub fn get_color(&self, light_id: &LightId) -> Color {
+        let dist = distance(light_id, self);
+        let value = self.spline.clamped_sample(dist).unwrap();
+        Color::from_hsv(Hsv::new(RgbHue::from(0.), 1., value))
     }
 }
