@@ -1,3 +1,5 @@
+use crate::lightid::LightId;
+use crate::models::{Color, PinValue};
 use crate::state::State;
 use piston_window::*;
 use std::sync::{Arc, Mutex};
@@ -16,12 +18,15 @@ pub fn run_piston_thread(state: Arc<Mutex<State>>) {
         // TODO drwa window
         window.draw_2d(&e, |c, g, _| {
             clear([0.5, 0.5, 0.5, 1.0], g);
-            rectangle(
-                [1.0, 0.0, 0.0, 1.0],     // red
-                [0.0, 0.0, 100.0, 100.0], // rectangle
-                c.transform,
-                g,
-            );
+            for (i, id) in LightId::all().iter().enumerate() {
+                let color = state.lock().unwrap().get_color(&id);
+                rectangle(
+                    [color.red as f32, color.green as f32, color.blue as f32, 1.0],
+                    [(i as f64) * 50.0, 0.0, 50.0, 100.0], // rectangle
+                    c.transform,
+                    g,
+                );
+            }
         });
     }
 }
