@@ -15,7 +15,6 @@ pub fn run_piston_thread(state: Arc<Mutex<State>>) {
         .unwrap();
     let p = Duration::from_millis(30);
     while let Some(e) = window.next() {
-        // TODO drwa window
         window.draw_2d(&e, |c, g, _| {
             clear([0.5, 0.5, 0.5, 1.0], g);
             for (i, id) in LightId::all().iter().enumerate() {

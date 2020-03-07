@@ -1,4 +1,4 @@
-pi-blaster: pi-blaster
+pi-blaster: /dev/null
 address: 127.0.0.1:3000
 lights:
   Top:
