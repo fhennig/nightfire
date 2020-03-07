@@ -30,7 +30,6 @@ pub fn run_piston_thread(state: Arc<Mutex<State>>) {
 
             rectangle(color, stripe, transform, g);
 
-            
             let color = state.lock().unwrap().get_color(&LightId::Bottom);
             let color = [color.red as f32, color.green as f32, color.blue as f32, 1.0];
 
@@ -42,7 +41,6 @@ pub fn run_piston_thread(state: Arc<Mutex<State>>) {
 
             rectangle(color, stripe, transform, g);
 
-            
             let color = state.lock().unwrap().get_color(&LightId::Left);
             let color = [color.red as f32, color.green as f32, color.blue as f32, 1.0];
 
@@ -54,8 +52,7 @@ pub fn run_piston_thread(state: Arc<Mutex<State>>) {
 
             rectangle(color, stripe, transform, g);
 
-            
-            let color = state.lock().unwrap().get_color(&LightId::Bottom);
+            let color = state.lock().unwrap().get_color(&LightId::Right);
             let color = [color.red as f32, color.green as f32, color.blue as f32, 1.0];
 
             let transform = c
