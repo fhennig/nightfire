@@ -1,9 +1,9 @@
 use crate::lightid::LightId;
-use crate::state::State;
 use crate::modes::Mode;
+use crate::state::State;
 use iron::middleware::Handler;
 use iron::status;
-use iron::{Iron, IronResult, Request, Response};
+use iron::{Iron, IronResult, Listening, Request, Response};
 use juniper::FieldResult;
 use juniper_iron::{GraphQLHandler, GraphiQLHandler};
 use mount::Mount;
@@ -138,7 +138,7 @@ impl Handler for AppHandler {
     }
 }
 
-pub fn serve(address: String, state: Arc<Mutex<State>>) {
+pub fn serve(address: String, state: Arc<Mutex<State>>) -> Listening {
     let context_factory = ContextFactory::new(state);
 
     let graphql_endpoint = GraphQLHandler::new(
@@ -153,6 +153,6 @@ pub fn serve(address: String, state: Arc<Mutex<State>>) {
     let graphiql = GraphiQLHandler::new("/graphql");
     mount.mount("/graphiql", graphiql);
     mount.mount("/", AppHandler::new());
-
-    Iron::new(mount).http(address.as_str()).unwrap();
+    println!("Starting GraphQL server");
+    Iron::new(mount).http(address.as_str()).unwrap()
 }
