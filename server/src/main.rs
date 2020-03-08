@@ -11,6 +11,7 @@ extern crate rand;
 extern crate staticfile;
 extern crate stoppable_thread;
 extern crate yaml_rust;
+extern crate hidapi;
 mod conf;
 mod graphql;
 mod lightid;
@@ -19,11 +20,13 @@ mod modes;
 mod piblaster;
 mod piston;
 mod state;
+mod controller;
 use crate::conf::Conf;
 use crate::graphql::serve;
 use crate::piblaster::{start_piblaster_thread, Light, Lights, PinModel};
 use crate::piston::run_piston_thread;
 use crate::state::State;
+use crate::controller::read_controller;
 use clap::{App, Arg, ArgMatches};
 use std::io::{self, Read};
 use std::sync::{Arc, Mutex};
@@ -58,6 +61,8 @@ fn main() {
     };
     // setup state
     let state = Arc::new(Mutex::new(State::new()));
+    // run controller
+    let controller = read_controller(Arc::clone(&state));
     // start piblaster
     let piblaster = start_piblaster_thread(init_pin_setting(&conf), Arc::clone(&state));
     // start GraphQL endpoint server
