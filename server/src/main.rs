@@ -30,6 +30,7 @@ use crate::controller::read_controller;
 use clap::{App, Arg, ArgMatches};
 use std::io::{self, Read};
 use std::sync::{Arc, Mutex};
+use std::{thread, time};
 
 fn get_args() -> ArgMatches<'static> {
     App::new("lumi")
@@ -72,8 +73,11 @@ fn main() {
     if matches.is_present("debug") {
         run_piston_thread(Arc::clone(&state));
     } else {
-        let mut buffer = String::new();
-        io::stdin().read_to_string(&mut buffer);
+        // a silly loop to keep the thread open
+        loop {
+            let dur = time::Duration::from_millis(10000);
+            thread::sleep(dur);
+        }
     }
     graphql.close();
     piblaster.stop();

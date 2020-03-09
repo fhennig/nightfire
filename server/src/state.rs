@@ -19,7 +19,7 @@ impl State {
         let rainbow = Rainbow::new();
         let lightsource = LightSourceMode::new();
         // set activate
-        let active_mode = man_mode.id;
+        let active_mode = lightsource.id;
         State {
             off_mode: off_mode,
             manual_mode: man_mode,
