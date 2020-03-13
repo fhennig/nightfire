@@ -1,10 +1,6 @@
 use crate::lightid::LightId;
-use crate::models::{Color, PinValue};
+use crate::models::{Color};
 use crate::modes::Mode;
-use palette::encoding::linear::Linear;
-use palette::encoding::Srgb;
-use palette::rgb::Rgb;
-use palette::{FromColor, GetHue, Hsv, LinSrgb, RgbHue};
 use splines::{Interpolation, Key, Spline};
 
 #[derive(Copy, Clone)]

@@ -28,7 +28,6 @@ use crate::piston::run_piston_thread;
 use crate::state::State;
 use crate::controller::read_controller;
 use clap::{App, Arg, ArgMatches};
-use std::io::{self, Read};
 use std::sync::{Arc, Mutex};
 use std::{thread, time};
 
@@ -49,6 +48,7 @@ fn init_pin_setting(conf: &Conf) -> Lights {
     Lights::new(lights)
 }
 
+#[allow(unused_variables)]
 fn main() {
     // start logging
     env_logger::init();

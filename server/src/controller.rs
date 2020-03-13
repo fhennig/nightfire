@@ -13,7 +13,7 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
             println!("Trying to connect to a controller ...");
 
             let (VID, PID) = (1356, 616);
-            let mut api = hidapi::HidApi::new().unwrap();
+            let mut api = HidApi::new().unwrap();
             let mut found = false;
             while !found {
                 api.refresh_devices();
@@ -47,7 +47,7 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
                         let mut state = state.lock().unwrap();
                         state.controller_mode.set_pos(x, y);
                         // TODO make this calculation an angle
-                        let color = Color::new(r, g, (((1.0 - g) + (1.0 - r)) / 2.0));
+                        let color = Color::new(r, g, ((1.0 - g) + (1.0 - r)) / 2.0);
                         state.controller_mode.set_basecolor(color);
                     }
                     Err(e) => {
