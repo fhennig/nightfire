@@ -30,7 +30,7 @@ impl PinModel {
             outfile: OpenOptions::new().write(true).open(path).unwrap(),
         };
         for pin in pins {
-            let value = 0f64;
+            let value = 0.0;
             model.set_pin(pin, value);
         }
         model
