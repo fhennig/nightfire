@@ -1,4 +1,4 @@
-mod lightsource;
+mod controllermode;
 mod manual;
 mod off;
 mod pinkpulse;
@@ -7,7 +7,7 @@ pub use manual::ManualMode;
 pub use off::OffMode;
 pub use pinkpulse::PinkPulse;
 pub use rainbow::Rainbow;
-pub use lightsource::LightSourceMode;
+pub use controllermode::ControllerMode;
 
 #[derive(juniper::GraphQLEnum, PartialEq, Copy)]
 pub enum Mode {
@@ -15,7 +15,7 @@ pub enum Mode {
     ManualMode,
     PinkPulse,
     Rainbow,
-    LightSource,
+    Controller,
 }
 
 impl Clone for Mode {

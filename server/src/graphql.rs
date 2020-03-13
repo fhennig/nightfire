@@ -87,12 +87,12 @@ impl Mutation {
         Ok(MyResult::Ok)
     }
 
-    fn lightsource(context: &Context, pos: Option<Coordinate>) -> FieldResult<MyResult> {
+    fn controller(context: &Context, pos: Option<Coordinate>) -> FieldResult<MyResult> {
         let mut state = context.state.lock().unwrap();
-        state.activate(Mode::LightSource);
+        state.activate(Mode::Controller);
         // set position
         match pos {
-            Some(pos) => state.lightsource.set_pos(pos.x, pos.y),
+            Some(pos) => state.controller_mode.set_pos(pos.x, pos.y),
             None => (),
         }
         // result

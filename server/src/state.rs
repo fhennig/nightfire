@@ -1,13 +1,13 @@
 use crate::models::Color;
 use crate::lightid::LightId;
-use crate::modes::{LightSourceMode, ManualMode, Mode, OffMode, PinkPulse, Rainbow};
+use crate::modes::{ControllerMode, ManualMode, Mode, OffMode, PinkPulse, Rainbow};
 
 pub struct State {
     pub off_mode: OffMode,
     pub manual_mode: ManualMode,
     pub pink_pulse: PinkPulse,
     pub rainbow: Rainbow,
-    pub lightsource: LightSourceMode,
+    pub controller_mode: ControllerMode,
     active_mode: Mode,
 }
 
@@ -17,15 +17,15 @@ impl State {
         let man_mode = ManualMode::new();
         let pink_pulse = PinkPulse::new();
         let rainbow = Rainbow::new();
-        let lightsource = LightSourceMode::new();
+        let controller_mode = ControllerMode::new();
         // set activate
-        let active_mode = lightsource.id;
+        let active_mode = controller_mode.id;
         State {
             off_mode: off_mode,
             manual_mode: man_mode,
             pink_pulse: pink_pulse,
             rainbow: rainbow,
-            lightsource: lightsource,
+            controller_mode: controller_mode,
             active_mode: active_mode,
         }
     }
@@ -43,7 +43,7 @@ impl State {
             Mode::ManualMode => self.manual_mode.get_color(light_id),
             Mode::PinkPulse => self.pink_pulse.get_color(light_id),
             Mode::Rainbow => self.rainbow.get_color(light_id),
-            Mode::LightSource => self.lightsource.get_color(light_id),
+            Mode::Controller => self.controller_mode.get_color(light_id),
         }
     }
 }

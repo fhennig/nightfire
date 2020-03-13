@@ -31,23 +31,23 @@ fn distance(a: &dyn Positionable, b: &dyn Positionable) -> f64 {
     ((a.0 - b.0).powi(2) + (a.1 - b.1).powi(2)).sqrt()
 }
 
-pub struct LightSourceMode {
+pub struct ControllerMode {
     pub id: Mode,
     position: Coordinate,
     color: Color,
     spline: Spline<f64, f64>,
 }
 
-impl Positionable for LightSourceMode {
+impl Positionable for ControllerMode {
     fn pos(&self) -> Coordinate {
         self.position
     }
 }
 
-impl LightSourceMode {
-    pub fn new() -> LightSourceMode {
-        LightSourceMode {
-            id: Mode::LightSource,
+impl ControllerMode {
+    pub fn new() -> ControllerMode {
+        ControllerMode {
+            id: Mode::Controller,
             position: Coordinate(0.0, 0.0),
             color: Color::new(0.0, 0.0, 0.0),
             spline: Spline::from_vec(vec![
