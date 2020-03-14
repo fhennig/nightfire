@@ -1,6 +1,7 @@
 use crate::lightid::LightId;
 use crate::modes::Mode;
 use crate::state::State;
+use crate::models::Coordinate;
 use iron::middleware::Handler;
 use iron::status;
 use iron::{Iron, IronResult, Listening, Request, Response};
@@ -42,7 +43,7 @@ struct ManualModeLightSetting {
 }
 
 #[derive(juniper::GraphQLInputObject)]
-struct Coordinate {
+struct GQLCoordinate {
     x: f64,
     y: f64,
 }
@@ -87,12 +88,12 @@ impl Mutation {
         Ok(MyResult::Ok)
     }
 
-    fn controller(context: &Context, pos: Option<Coordinate>) -> FieldResult<MyResult> {
+    fn controller(context: &Context, pos: Option<GQLCoordinate>) -> FieldResult<MyResult> {
         let mut state = context.state.lock().unwrap();
         state.activate(Mode::Controller);
         // set position
         match pos {
-            Some(pos) => state.controller_mode.mask.set_pos(pos.x, pos.y),
+            Some(pos) => state.controller_mode.mask.set_pos(Coordinate(pos.x, pos.y)),
             None => (),
         }
         // result

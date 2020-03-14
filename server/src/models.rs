@@ -9,6 +9,8 @@ pub type Color = Rgb<Linear<Srgb>, PinValue>;
 #[derive(Copy, Clone)]
 pub struct Coordinate(pub f64, pub f64);
 
+// TODO implement "get_angle" on coordinate.
+
 pub trait Positionable {
     fn pos(&self) -> Coordinate;
 }
@@ -25,8 +27,8 @@ pub struct Mask {
 }
 
 impl Mask {
-    pub fn set_pos(&mut self, x: f64, y: f64) {
-        self.position = Coordinate(x, y);
+    pub fn set_pos(&mut self, pos: Coordinate) {
+        self.position = pos;
     }
 
     fn get_value(&self, pos: &dyn Positionable) -> f64 {

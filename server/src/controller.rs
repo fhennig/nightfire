@@ -1,4 +1,4 @@
-use crate::models::Color;
+use crate::models::{Color, Coordinate};
 use crate::state::State;
 use hidapi::HidApi;
 use std::sync::{Arc, Mutex};
@@ -7,8 +7,7 @@ use stoppable_thread::{spawn, StoppableHandle};
 
 #[allow(dead_code)]
 struct Controller {
-    left_x: f64,
-    left_y: f64,
+    left_pos: Coordinate,
     right_x: f64,
     right_y: f64,
 }
@@ -20,8 +19,7 @@ impl Controller {
         let r_x = ((buf[8] as f64) / 255.0 - 0.5) * 2.0;
         let r_y = ((buf[9] as f64 / 255.0 - 0.5) * -1.0) * 2.0;
         Controller {
-            left_x: l_x,
-            left_y: l_y,
+            left_pos: Coordinate(l_x, l_y),
             right_x: r_x,
             right_y: r_y,
         }
@@ -69,7 +67,7 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
                         state
                             .controller_mode
                             .mask
-                            .set_pos(controller.left_x, controller.left_y);
+                            .set_pos(controller.left_pos);
                         // TODO make this calculation an angle
                         let r = (controller.right_x + 1.0) / 2.0;
                         let g = (controller.right_x + 1.0) / 2.0;
