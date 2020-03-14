@@ -74,7 +74,7 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
                             .set_pos(controller.left_pos);
                         // set color from right stick
                         let mut color = Color::new(0.0, 0.0, 0.0);
-                        if controller.right_pos.length() > 0.15 {
+                        if controller.right_pos.length() > 0.3 {
                             let angle = controller.right_pos.angle();
                             let hue = RgbHue::from_radians(angle);
                             color = Color::from(Hsv::new(hue, 1.0, 1.0))

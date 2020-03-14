@@ -21,7 +21,7 @@ impl Coordinate {
         if b.0 > 0.0 && b.1 > 0.0 {
             angle = (1.0 - angle) * 0.5;
         } else if b.0 > 0.0 && b.1 <= 0.0 {
-            angle = (0.5 + (angle * 0.5) * -1.0);
+            angle = 0.5 + (angle * 0.5) * -1.0;
         } else if b.0 <= 0.0 && b.1 <= 0.0 {
             angle = - 0.5 + angle * 0.5;
         } else if b.0 <= 0.0 && b.1 > 0.0 {
