@@ -13,10 +13,10 @@ struct Controller {
 
 impl Controller {
     fn new(buf: [u8; 10]) -> Controller {
-        let l_x = (buf[6] as f64) / 255.0 - 0.5;
-        let l_y = (buf[7] as f64 / 255.0 - 0.5) * -1.0;
-        let r_x = (buf[8] as f64) / 255.0 - 0.5;
-        let r_y = (buf[9] as f64 / 255.0 - 0.5) * -1.0;
+        let l_x = ((buf[6] as f64) / 255.0 - 0.5) * 2.0;
+        let l_y = ((buf[7] as f64 / 255.0 - 0.5) * -1.0) * 2.0;
+        let r_x = ((buf[8] as f64) / 255.0 - 0.5) * 2.0;
+        let r_y = ((buf[9] as f64 / 255.0 - 0.5) * -1.0) * 2.0;
         Controller {
             left_x: l_x,
             left_y: l_y,

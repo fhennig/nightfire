@@ -17,10 +17,10 @@ impl LightId {
 impl Positionable for LightId {
     fn pos(&self) -> Coordinate {
         match &self {
-            LightId::Top => Coordinate(-0.5, 0.5),
-            LightId::Bottom => Coordinate(0.5, -0.5),
-            LightId::Left => Coordinate(-0.5, -0.5),
-            LightId::Right => Coordinate(0.5, 0.5),
+            LightId::Top => Coordinate(-1.0, 1.0),
+            LightId::Bottom => Coordinate(1.0, -1.0),
+            LightId::Left => Coordinate(-1.0, -1.0),
+            LightId::Right => Coordinate(1.0, 1.0),
         }
     }
 }
