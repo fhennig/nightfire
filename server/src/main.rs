@@ -29,7 +29,7 @@ use crate::state::State;
 use crate::controller::read_controller;
 use clap::{App, Arg, ArgMatches};
 use std::sync::{Arc, Mutex};
-use std::{thread, time};
+use std::{thread, time, error};
 
 fn get_args() -> ArgMatches<'static> {
     App::new("lumi")
@@ -49,8 +49,7 @@ fn init_pin_setting(conf: &Conf) -> Lights {
 }
 
 #[allow(unused_variables)]
-#[allow(unused_must_use)]
-fn main() {
+fn main() -> Result<(), Box<dyn error::Error>> {
     // start logging
     env_logger::init();
     // read commandline arguments
@@ -80,6 +79,7 @@ fn main() {
             thread::sleep(dur);
         }
     }
-    graphql.close();
+    graphql.close()?;
     piblaster.stop();
+    Ok(())
 }
