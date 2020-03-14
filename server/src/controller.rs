@@ -1,3 +1,4 @@
+use crate::models::Color;
 use crate::state::State;
 use hidapi::HidApi;
 use std::sync::{Arc, Mutex};
@@ -66,14 +67,16 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
                         // let r = controller.right_x + 0.5;
                         // let g = ((buf[9] as f64 / 255.0) * -1.0) + 1.0;
                         // let g =
+                        let r = (controller.right_x + 1.0) / 2.0;
+                        let g = (controller.right_x + 1.0) / 2.0;
                         let mut state = state.lock().unwrap();
                         state
                             .controller_mode
                             .mask
                             .set_pos(controller.left_x, controller.left_y);
                         // TODO make this calculation an angle
-                        // let color = Color::new(r, g, ((1.0 - g) + (1.0 - r)) / 2.0);
-                        // state.controller_mode.set_basecolor(color);
+                        let color = Color::new(r, g, ((1.0 - g) + (1.0 - r)) / 2.0);
+                        state.controller_mode.set_basecolor(color);
                     }
                     Err(_e) => {
                         println!("Error reading controller values.");

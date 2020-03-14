@@ -55,7 +55,7 @@ impl ControllerMode {
     pub fn get_color(&self, light_id: &LightId) -> Color {
         let value = self.mask.get_value(light_id);
         Color::new(
-            1.0 * value,
+            self.color.red * value,
             self.color.green * value,
             self.color.blue * value,
         )
