@@ -65,18 +65,14 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
                     Ok(res) => {
                         println!("Read: {:?}", &buf[..res]);
                         let controller = Controller::new(buf);
-                        // let r = (buf[8] as f64) / 255.0;
-                        // let r = controller.right_x + 0.5;
-                        // let g = ((buf[9] as f64 / 255.0) * -1.0) + 1.0;
-                        // let g =
-                        let r = (controller.right_x + 1.0) / 2.0;
-                        let g = (controller.right_x + 1.0) / 2.0;
                         let mut state = state.lock().unwrap();
                         state
                             .controller_mode
                             .mask
                             .set_pos(controller.left_x, controller.left_y);
                         // TODO make this calculation an angle
+                        let r = (controller.right_x + 1.0) / 2.0;
+                        let g = (controller.right_x + 1.0) / 2.0;
                         let color = Color::new(r, g, ((1.0 - g) + (1.0 - r)) / 2.0);
                         state.controller_mode.set_basecolor(color);
                     }
