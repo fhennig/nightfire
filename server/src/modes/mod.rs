@@ -3,11 +3,11 @@ mod manual;
 mod off;
 mod pinkpulse;
 mod rainbow;
+pub use controllermode::ControllerMode;
 pub use manual::ManualMode;
 pub use off::OffMode;
 pub use pinkpulse::PinkPulse;
 pub use rainbow::Rainbow;
-pub use controllermode::ControllerMode;
 
 #[derive(juniper::GraphQLEnum, PartialEq, Copy)]
 pub enum Mode {

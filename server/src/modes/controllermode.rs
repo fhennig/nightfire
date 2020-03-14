@@ -1,14 +1,7 @@
 use crate::lightid::LightId;
-use crate::models::{Color};
+use crate::models::{Color, Coordinate, Positionable};
 use crate::modes::Mode;
 use splines::{Interpolation, Key, Spline};
-
-#[derive(Copy, Clone)]
-struct Coordinate(f64, f64);
-
-trait Positionable {
-    fn pos(&self) -> Coordinate;
-}
 
 impl Positionable for LightId {
     fn pos(&self) -> Coordinate {

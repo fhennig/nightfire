@@ -13,7 +13,7 @@ struct Controller {
 }
 
 impl Controller {
-    pub fn new(buf: [u8; 10]) -> Controller {
+    fn new(buf: [u8; 10]) -> Controller {
         let l_x = (buf[6] as f64) / 255.0 - 0.5;
         let l_y = (buf[7] as f64 / 255.0 - 0.5) * -1.0;
         let r_x = (buf[8] as f64) / 255.0 - 0.5;

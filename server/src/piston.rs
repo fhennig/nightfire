@@ -1,4 +1,5 @@
 use crate::lightid::LightId;
+use crate::models::Positionable;
 use crate::state::State;
 use piston_window::*;
 use std::sync::{Arc, Mutex};
@@ -57,6 +58,16 @@ pub fn run_piston_thread(state: Arc<Mutex<State>>) {
                 .trans(-15.0, 15.0);
 
             rectangle(color, stripe, transform, g);
+
+            let position = state.lock().unwrap().controller_mode.pos();
+            let x = 100.0 + position.0 * 100.0;
+            let y = 100.0 + position.1 * - 100.0;  // invert
+
+            let transform = c
+                .transform
+                .trans(x, y);
+
+            ellipse([1.0; 4], [0.0, 0.0, 10.0, 10.0], transform, g);
         });
     }
 }
