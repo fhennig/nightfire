@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 use std::{thread, time};
 use stoppable_thread::{spawn, StoppableHandle};
 
+#[allow(dead_code)]
 struct Controller {
     left_x: f64,
     left_y: f64,
@@ -27,6 +28,7 @@ impl Controller {
     }
 }
 
+#[allow(unused_must_use)]
 pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
     spawn(move |stopped| {
         // TODO make a big retry loop, where we retry to open the device.
@@ -34,13 +36,13 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
         while !stopped.get() {
             println!("Trying to connect to a controller ...");
 
-            let (VID, PID) = (1356, 616);
+            let (vid, pid) = (1356, 616);
             let mut api = HidApi::new().unwrap();
             let mut found = false;
             while !found {
                 api.refresh_devices();
-                for device in api.devices() {
-                    if device.vendor_id == VID && device.product_id == PID {
+                for device in api.device_list() {
+                    if device.vendor_id() == vid && device.product_id() == pid {
                         println!("Found the device!");
                         found = true;
                     }
@@ -52,7 +54,7 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
             }
             // at this point the device was found, open it:
             println!("Opening...");
-            let device = api.open(VID, PID).unwrap();
+            let device = api.open(vid, pid).unwrap();
 
             while !stopped.get() {
                 // println!("Reading...");

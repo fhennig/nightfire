@@ -49,6 +49,7 @@ fn init_pin_setting(conf: &Conf) -> Lights {
 }
 
 #[allow(unused_variables)]
+#[allow(unused_must_use)]
 fn main() {
     // start logging
     env_logger::init();

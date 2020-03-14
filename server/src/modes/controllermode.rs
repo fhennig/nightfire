@@ -1,35 +1,7 @@
 use crate::lightid::LightId;
-use crate::models::{distance, Color, Coordinate, Positionable};
+use crate::models::{Color, Coordinate, Mask};
 use crate::modes::Mode;
-use splines::{Interpolation, Key, Spline};
-
-pub struct Mask {
-    position: Coordinate,
-    spline: Spline<f64, f64>,
-}
-
-impl Mask {
-    pub fn set_pos(&mut self, x: f64, y: f64) {
-        self.position = Coordinate(x, y);
-    }
-
-    fn get_value(&self, pos: &dyn Positionable) -> f64 {
-        let dist = distance(self, pos);
-        let value = self.spline.clamped_sample(dist).unwrap();
-        value
-    }
-
-    pub fn get_masked_color(&self, pos: &dyn Positionable, color: Color) -> Color {
-        let value = self.get_value(pos);
-        Color::new(color.red * value, color.green * value, color.blue * value)
-    }
-}
-
-impl Positionable for Mask {
-    fn pos(&self) -> Coordinate {
-        self.position
-    }
-}
+use splines::{Key, Interpolation, Spline};
 
 pub struct ControllerMode {
     pub id: Mode,
