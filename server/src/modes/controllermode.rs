@@ -1,24 +1,7 @@
 use crate::lightid::LightId;
-use crate::models::{Color, Coordinate, Positionable};
+use crate::models::{distance, Color, Coordinate, Positionable};
 use crate::modes::Mode;
 use splines::{Interpolation, Key, Spline};
-
-impl Positionable for LightId {
-    fn pos(&self) -> Coordinate {
-        match &self {
-            LightId::Top => Coordinate(-0.5, 0.5),
-            LightId::Bottom => Coordinate(0.5, -0.5),
-            LightId::Left => Coordinate(-0.5, -0.5),
-            LightId::Right => Coordinate(0.5, 0.5),
-        }
-    }
-}
-
-fn distance(a: &dyn Positionable, b: &dyn Positionable) -> f64 {
-    let a = a.pos();
-    let b = b.pos();
-    ((a.0 - b.0).powi(2) + (a.1 - b.1).powi(2)).sqrt()
-}
 
 pub struct ControllerMode {
     pub id: Mode,
