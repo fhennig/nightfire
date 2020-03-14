@@ -92,7 +92,7 @@ impl Mutation {
         state.activate(Mode::Controller);
         // set position
         match pos {
-            Some(pos) => state.controller_mode.set_pos(pos.x, pos.y),
+            Some(pos) => state.controller_mode.mask.set_pos(pos.x, pos.y),
             None => (),
         }
         // result

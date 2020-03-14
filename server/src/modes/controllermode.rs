@@ -13,7 +13,7 @@ impl Mask {
         self.position = Coordinate(x, y);
     }
 
-    pub fn get_value(&self, pos: &Positionable) -> f64 {
+    pub fn get_value(&self, pos: &dyn Positionable) -> f64 {
         let dist = distance(self, pos);
         let value = self.spline.clamped_sample(dist).unwrap();
         value
@@ -50,10 +50,6 @@ impl ControllerMode {
 
     pub fn set_basecolor(&mut self, color: Color) {
         self.color = color;
-    }
-
-    pub fn set_pos(&mut self, x: f64, y: f64) {
-        self.mask.set_pos(x, y);
     }
 
     pub fn get_color(&self, light_id: &LightId) -> Color {
