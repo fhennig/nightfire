@@ -9,7 +9,32 @@ pub type Color = Rgb<Linear<Srgb>, PinValue>;
 #[derive(Copy, Clone)]
 pub struct Coordinate(pub f64, pub f64);
 
-// TODO implement "get_angle" on coordinate.
+// TODO this should be an optional; the angle is undefined for 0, 0 (WARNING!)
+impl Coordinate {
+    /// Returns radians from [-PI, PI)
+    pub fn angle(&self) -> f64 {
+        let a = Coordinate(0.0, 1.0);
+        let b = self;
+        let mut angle = (a.0 * b.0 + a.1 * b.1) /
+            ((a.0.powi(2) + a.1.powi(2)).powf(0.5) *
+             (b.0.powi(2) + b.1.powi(2)).powf(0.5));
+        if b.0 > 0.0 && b.1 > 0.0 {
+            angle = (1.0 - angle) * 0.5;
+        } else if b.0 > 0.0 && b.1 <= 0.0 {
+            angle = (0.5 + (angle * 0.5) * -1.0);
+        } else if b.0 <= 0.0 && b.1 <= 0.0 {
+            angle = - 0.5 + angle * 0.5;
+        } else if b.0 <= 0.0 && b.1 > 0.0 {
+            angle = - (1.0 - angle) * 0.5;
+        }
+        angle * std::f64::consts::PI
+    }
+
+    pub fn length(&self) -> f64 {
+        (self.0.powi(2) +
+         self.1.powi(2)).sqrt()
+    }
+}
 
 pub trait Positionable {
     fn pos(&self) -> Coordinate;
