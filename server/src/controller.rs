@@ -10,8 +10,6 @@ use stoppable_thread::{spawn, StoppableHandle};
 struct Controller {
     left_pos: Coordinate,
     right_pos: Coordinate,
-    right_x: f64,
-    right_y: f64,
 }
 
 impl Controller {
@@ -23,8 +21,6 @@ impl Controller {
         Controller {
             left_pos: Coordinate(l_x, l_y),
             right_pos: Coordinate(r_x, r_y),
-            right_x: r_x,
-            right_y: r_y,
         }
     }
 }
