@@ -13,10 +13,15 @@ impl Mask {
         self.position = Coordinate(x, y);
     }
 
-    pub fn get_value(&self, pos: &dyn Positionable) -> f64 {
+    fn get_value(&self, pos: &dyn Positionable) -> f64 {
         let dist = distance(self, pos);
         let value = self.spline.clamped_sample(dist).unwrap();
         value
+    }
+
+    pub fn get_masked_color(&self, pos: &dyn Positionable, color: Color) -> Color {
+        let value = self.get_value(pos);
+        Color::new(color.red * value, color.green * value, color.blue * value)
     }
 }
 
@@ -53,11 +58,6 @@ impl ControllerMode {
     }
 
     pub fn get_color(&self, light_id: &LightId) -> Color {
-        let value = self.mask.get_value(light_id);
-        Color::new(
-            self.color.red * value,
-            self.color.green * value,
-            self.color.blue * value,
-        )
+        self.mask.get_masked_color(light_id, self.color)
     }
 }
