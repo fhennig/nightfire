@@ -1,29 +1,66 @@
 use crate::models::{Color, Coordinate};
 use crate::state::State;
-use palette::{Hsv, RgbHue};
 use hidapi::HidApi;
+use palette::{Hsv, RgbHue};
 use std::sync::{Arc, Mutex};
 use std::{thread, time};
 use stoppable_thread::{spawn, StoppableHandle};
 
-#[allow(dead_code)]
+pub type RawControllerValues = [u8; 10];
+
+/// gets the bit at position `n`. Bits are numbered from 0 (least significant) to 31 (most significant).
+fn get_bit_at(input: u8, n: u8) -> bool {
+    if n < 32 {
+        input & (1 << n) != 0
+    } else {
+        false
+    }
+}
+
 struct Controller {
-    left_pos: Coordinate,
-    right_pos: Coordinate,
+    prev_vals: RawControllerValues,
+    curr_vals: RawControllerValues,
 }
 
 impl Controller {
-    fn new(buf: [u8; 10]) -> Controller {
-        let l_x = ((buf[6] as f64) / 255.0 - 0.5) * 2.0;
-        let l_y = ((buf[7] as f64 / 255.0 - 0.5) * -1.0) * 2.0;
-        let r_x = ((buf[8] as f64) / 255.0 - 0.5) * 2.0;
-        let r_y = ((buf[9] as f64 / 255.0 - 0.5) * -1.0) * 2.0;
+    fn new(buf: RawControllerValues) -> Controller {
         Controller {
-            left_pos: Coordinate(l_x, l_y),
-            right_pos: Coordinate(r_x, r_y),
+            prev_vals: buf,
+            curr_vals: buf,
         }
     }
+
+    fn update(&mut self, new_vals: RawControllerValues) {
+        self.prev_vals = self.curr_vals;
+        self.curr_vals = new_vals;
+    }
+
+    fn left_pos(&self) -> Coordinate {
+        let buf = self.curr_vals;
+        let l_x = ((buf[6] as f64) / 255.0 - 0.5) * 2.0;
+        let l_y = ((buf[7] as f64 / 255.0 - 0.5) * -1.0) * 2.0;
+        Coordinate(l_x, l_y)
+    }
+
+    fn right_pos(&self) -> Coordinate {
+        let buf = self.curr_vals;
+        let r_x = ((buf[8] as f64) / 255.0 - 0.5) * 2.0;
+        let r_y = ((buf[9] as f64 / 255.0 - 0.5) * -1.0) * 2.0;
+        Coordinate(r_x, r_y)
+    }
+
+    fn was_pressed(&self, i1: usize, i2: u8) -> bool {
+        let prev = get_bit_at(self.prev_vals[i1], i2);
+        let curr = get_bit_at(self.curr_vals[i1], i2);
+        return !prev && curr
+    }
+
+    fn start_pressed(&self) -> bool {
+        self.was_pressed(2, 3)
+    }
 }
+
+// 
 
 #[allow(unused_must_use)]
 pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
@@ -53,25 +90,24 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
             println!("Opening...");
             let device = api.open(vid, pid).unwrap();
 
-            while !stopped.get() {
-                // println!("Reading...");
-                // Read data from device
-                let mut buf = [0u8; 10];
+            let mut buf = [0u8; 10];
+            let mut controller = Controller::new(buf);
 
+            // The loop
+            while !stopped.get() {
+
+                // Read data from device
                 match device.read_timeout(&mut buf[..], -1) {
-                    Ok(res) => {
-                        println!("Read: {:?}", &buf[..res]);
-                        let controller = Controller::new(buf);
+                    Ok(_) => {
+                        println!("Read: {:?}", buf);
+                        controller.update(buf);
                         let mut state = state.lock().unwrap();
                         // set mask position from left stick
-                        state
-                            .controller_mode
-                            .mask
-                            .set_pos(controller.left_pos);
+                        state.controller_mode.mask.set_pos(controller.left_pos());
                         // set color from right stick
                         let mut color = Color::new(0.0, 0.0, 0.0);
-                        if controller.right_pos.length() > 0.3 {
-                            let angle = controller.right_pos.angle();
+                        if controller.right_pos().length() > 0.75 {
+                            let angle = controller.right_pos().angle();
                             let hue = RgbHue::from_radians(angle);
                             color = Color::from(Hsv::new(hue, 1.0, 1.0))
                         }
