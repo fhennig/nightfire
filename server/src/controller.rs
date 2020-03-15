@@ -102,6 +102,10 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
                         println!("Read: {:?}", buf);
                         controller.update(buf);
                         let mut state = state.lock().unwrap();
+                        // set on/off
+                        if controller.start_pressed() {
+                            state.controller_mode.switch_off();
+                        }
                         // set mask position from left stick
                         state.controller_mode.mask.set_pos(controller.left_pos());
                         // set color from right stick

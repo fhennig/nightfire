@@ -67,7 +67,12 @@ pub fn run_piston_thread(state: Arc<Mutex<State>>) {
                 .transform
                 .trans(x, y);
 
-            ellipse([1.0; 4], [0.0, 0.0, 10.0, 10.0], transform, g);
+            let mut color = [1.0; 4];
+            if state.lock().unwrap().controller_mode.is_off() {
+                color = [0.0; 4];
+            }
+
+            ellipse(color, [0.0, 0.0, 10.0, 10.0], transform, g);
         });
     }
 }

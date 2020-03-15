@@ -6,6 +6,7 @@ use splines::{Key, Interpolation, Spline};
 pub struct ControllerMode {
     pub id: Mode,
     pub mask: Mask,
+    off: bool,
     color: Color,
 }
 
@@ -14,6 +15,7 @@ impl ControllerMode {
         ControllerMode {
             id: Mode::Controller,
             color: Color::new(0.0, 0.0, 0.0),
+            off: false,
             mask: Mask {
                 position: Coordinate(0.0, 0.0),
                 spline: Spline::from_vec(vec![
@@ -29,7 +31,19 @@ impl ControllerMode {
         self.color = color;
     }
 
+    pub fn switch_off(&mut self) {
+        self.off = !self.off;
+    }
+
+    pub fn is_off(&self) -> bool {
+        self.off
+    }
+
     pub fn get_color(&self, light_id: &LightId) -> Color {
-        self.mask.get_masked_color(light_id, self.color)
+        if self.off {
+            return Color::new(0.0, 0.0, 0.0);
+        } else {
+            return self.mask.get_masked_color(light_id, self.color);
+        }
     }
 }
