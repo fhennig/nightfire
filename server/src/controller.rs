@@ -8,6 +8,51 @@ use stoppable_thread::{spawn, StoppableHandle};
 
 pub type RawControllerValues = [u8; 10];
 
+#[allow(dead_code)]
+enum Button {
+    PS,
+    Start,
+    Select,
+    Up,
+    Down,
+    Left,
+    Right,
+    L1,
+    L2,
+    L3,
+    R1,
+    R2,
+    R3,
+    Triangle,
+    Circle,
+    Cross,
+    Square,
+}
+
+impl Button {
+    fn val(&self) -> (usize, u8) {
+        match *self {
+            Button::PS => (4, 0),
+            Button::Start => (2, 3),
+            Button::Select => (2, 0),
+            Button::Up => (2, 4),
+            Button::Down => (2, 6),
+            Button::Left => (2, 7),
+            Button::Right => (2, 5),
+            Button::L1 => (3, 2),
+            Button::L2 => (3, 0),
+            Button::L3 => (2, 1),
+            Button::R1 => (3, 3),
+            Button::R2 => (3, 1),
+            Button::R3 => (2, 2),
+            Button::Triangle => (3, 4),
+            Button::Circle => (3, 5),
+            Button::Cross => (3, 6),
+            Button::Square => (3, 7),
+        }
+    }
+}
+
 /// gets the bit at position `n`. Bits are numbered from 0 (least significant) to 31 (most significant).
 fn get_bit_at(input: u8, n: u8) -> bool {
     if n < 32 {
@@ -49,14 +94,11 @@ impl Controller {
         Coordinate(r_x, r_y)
     }
 
-    fn was_pressed(&self, i1: usize, i2: u8) -> bool {
-        let prev = get_bit_at(self.prev_vals[i1], i2);
-        let curr = get_bit_at(self.curr_vals[i1], i2);
+    fn was_pressed(&self, btn: Button) -> bool {
+        let v = btn.val();
+        let prev = get_bit_at(self.prev_vals[v.0], v.1);
+        let curr = get_bit_at(self.curr_vals[v.0], v.1);
         return !prev && curr
-    }
-
-    fn start_pressed(&self) -> bool {
-        self.was_pressed(2, 3)
     }
 }
 
@@ -103,7 +145,7 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
                         controller.update(buf);
                         let mut state = state.lock().unwrap();
                         // set on/off
-                        if controller.start_pressed() {
+                        if controller.was_pressed(Button::Start) {
                             state.controller_mode.switch_off();
                         }
                         // set mask position from left stick
