@@ -8,7 +8,7 @@ use stoppable_thread::{spawn, StoppableHandle};
 
 pub type RawControllerValues = [u8; 10];
 
-#[allow(dead_code)]
+#[derive(Debug)]
 enum Button {
     PS,
     Start,
@@ -94,15 +94,39 @@ impl Controller {
         Coordinate(r_x, r_y)
     }
 
-    fn was_pressed(&self, btn: Button) -> bool {
+    fn was_pressed(&self, btn: &Button) -> bool {
         let v = btn.val();
         let prev = get_bit_at(self.prev_vals[v.0], v.1);
         let curr = get_bit_at(self.curr_vals[v.0], v.1);
-        return !prev && curr
+        return !prev && curr;
+    }
+
+    fn debug_print(&self) {
+        for btn in [
+            Button::PS,
+            Button::Start,
+            Button::Select,
+            Button::Up,
+            Button::Down,
+            Button::Left,
+            Button::Right,
+            Button::L1,
+            Button::L2,
+            Button::L3,
+            Button::R1,
+            Button::R2,
+            Button::R3,
+            Button::Triangle,
+            Button::Circle,
+            Button::Cross,
+            Button::Square,
+        ].iter() {
+            if self.was_pressed(btn) {
+                println!("{:?} pressed.", btn);
+            }
+        }
     }
 }
-
-// 
 
 #[allow(unused_must_use)]
 pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
@@ -137,15 +161,15 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
 
             // The loop
             while !stopped.get() {
-
                 // Read data from device
                 match device.read_timeout(&mut buf[..], -1) {
                     Ok(_) => {
                         println!("Read: {:?}", buf);
                         controller.update(buf);
+                        controller.debug_print();
                         let mut state = state.lock().unwrap();
                         // set on/off
-                        if controller.was_pressed(Button::Start) {
+                        if controller.was_pressed(&Button::Start) {
                             state.controller_mode.switch_off();
                         }
                         // set mask position from left stick

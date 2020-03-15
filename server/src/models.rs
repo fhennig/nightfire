@@ -73,3 +73,17 @@ impl Positionable for Mask {
         self.position
     }
 }
+
+pub struct BinaryMask {
+    top: bool,
+    bottom: bool,
+    left: bool,
+    right: bool,
+}
+
+// impl BinaryMask {
+//     pub fn get_masked_color(&self, pos: &syn Positionable, color: Color) -> Color {
+//         let mut m = true,
+//         if pos.pos().0 
+//     }
+// }
