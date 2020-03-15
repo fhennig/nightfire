@@ -59,7 +59,7 @@ pub fn run_piston_thread(state: Arc<Mutex<State>>) {
 
             rectangle(color, stripe, transform, g);
 
-            let position = state.lock().unwrap().controller_mode.mask.pos();
+            let position = state.lock().unwrap().controller_mode.pos_mask.pos();
             let x = 100.0 + position.0 * 100.0;
             let y = 100.0 + position.1 * - 100.0;  // invert
 

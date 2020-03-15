@@ -8,7 +8,7 @@ use stoppable_thread::{spawn, StoppableHandle};
 
 pub type RawControllerValues = [u8; 10];
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 enum Button {
     PS,
     Start,
@@ -94,11 +94,16 @@ impl Controller {
         Coordinate(r_x, r_y)
     }
 
-    fn was_pressed(&self, btn: &Button) -> bool {
+    fn was_pressed(&self, btn: Button) -> bool {
         let v = btn.val();
         let prev = get_bit_at(self.prev_vals[v.0], v.1);
         let curr = get_bit_at(self.curr_vals[v.0], v.1);
         return !prev && curr;
+    }
+
+    fn is_pressed(&self, btn: Button) -> bool {
+        let v = btn.val();
+        get_bit_at(self.curr_vals[v.0], v.1)
     }
 
     fn debug_print(&self) {
@@ -120,12 +125,52 @@ impl Controller {
             Button::Circle,
             Button::Cross,
             Button::Square,
-        ].iter() {
-            if self.was_pressed(btn) {
+        ]
+        .iter()
+        {
+            if self.was_pressed(*btn) {
                 println!("{:?} pressed.", btn);
             }
         }
     }
+}
+
+/// read the current controller state and update the state accordingly
+fn update_state(controller: &Controller, state: &mut State) {
+    // set on/off
+    if controller.was_pressed(Button::Start) {
+        state.controller_mode.switch_off();
+    }
+    // set d-pad masks
+    state
+        .controller_mode
+        .top_only_mask
+        .set_active(controller.is_pressed(Button::Up));
+    state
+        .controller_mode
+        .bottom_only_mask
+        .set_active(controller.is_pressed(Button::Down));
+    state
+        .controller_mode
+        .left_only_mask
+        .set_active(controller.is_pressed(Button::Left));
+    state
+        .controller_mode
+        .right_only_mask
+        .set_active(controller.is_pressed(Button::Right));
+    // set mask position from left stick
+    state
+        .controller_mode
+        .pos_mask
+        .set_pos(controller.left_pos());
+    // set color from right stick
+    let mut color = Color::new(0.0, 0.0, 0.0);
+    if controller.right_pos().length() > 0.75 {
+        let angle = controller.right_pos().angle();
+        let hue = RgbHue::from_radians(angle);
+        color = Color::from(Hsv::new(hue, 1.0, 1.0))
+    }
+    state.controller_mode.set_basecolor(color);
 }
 
 #[allow(unused_must_use)]
@@ -168,20 +213,7 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
                         controller.update(buf);
                         controller.debug_print();
                         let mut state = state.lock().unwrap();
-                        // set on/off
-                        if controller.was_pressed(&Button::Start) {
-                            state.controller_mode.switch_off();
-                        }
-                        // set mask position from left stick
-                        state.controller_mode.mask.set_pos(controller.left_pos());
-                        // set color from right stick
-                        let mut color = Color::new(0.0, 0.0, 0.0);
-                        if controller.right_pos().length() > 0.75 {
-                            let angle = controller.right_pos().angle();
-                            let hue = RgbHue::from_radians(angle);
-                            color = Color::from(Hsv::new(hue, 1.0, 1.0))
-                        }
-                        state.controller_mode.set_basecolor(color);
+                        update_state(&controller, &mut state);
                     }
                     Err(_e) => {
                         println!("Error reading controller values.");
