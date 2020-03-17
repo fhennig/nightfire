@@ -1,4 +1,4 @@
-use crate::models::{Color, Coordinate};
+use crate::models::{Color, Colors, Coordinate};
 use crate::state::State;
 use hidapi::HidApi;
 use palette::{Hsv, RgbHue};
@@ -145,44 +145,6 @@ impl Controller {
     }
 }
 
-/// read the current controller state and update the state accordingly
-fn update_state(controller: &Controller, state: &mut State) {
-    // set on/off
-    if controller.was_pressed(Button::Start) {
-        state.controller_mode.switch_off();
-    }
-    // set d-pad masks
-    state
-        .controller_mode
-        .top_only_mask
-        .set_active(controller.is_pressed(Button::Up));
-    state
-        .controller_mode
-        .bottom_only_mask
-        .set_active(controller.is_pressed(Button::Down));
-    state
-        .controller_mode
-        .left_only_mask
-        .set_active(controller.is_pressed(Button::Left));
-    state
-        .controller_mode
-        .right_only_mask
-        .set_active(controller.is_pressed(Button::Right));
-    // set mask position from left stick
-    state
-        .controller_mode
-        .pos_mask
-        .set_pos(controller.left_pos());
-    // set color from right stick
-    let mut color = Color::new(0.0, 0.0, 0.0);
-    if controller.right_pos().length() > 0.75 {
-        let angle = controller.right_pos().angle();
-        let hue = RgbHue::from_radians(angle);
-        color = Color::from(Hsv::new(hue, 1.0, 1.0))
-    }
-    state.controller_mode.set_basecolor(color);
-}
-
 #[allow(unused_must_use)]
 pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
     spawn(move |stopped| {
@@ -235,4 +197,43 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
             }
         }
     })
+}
+
+/// read the current controller state and update the state accordingly.
+/// This function is called repeatedly each second, at every controller update.
+fn update_state(controller: &Controller, state: &mut State) {
+    // set on/off
+    if controller.was_pressed(Button::Start) {
+        state.controller_mode.switch_off();
+    }
+    // set d-pad masks
+    state
+        .controller_mode
+        .top_only_mask
+        .set_active(controller.is_pressed(Button::Up));
+    state
+        .controller_mode
+        .bottom_only_mask
+        .set_active(controller.is_pressed(Button::Down));
+    state
+        .controller_mode
+        .left_only_mask
+        .set_active(controller.is_pressed(Button::Left));
+    state
+        .controller_mode
+        .right_only_mask
+        .set_active(controller.is_pressed(Button::Right));
+    // set mask position from left stick
+    state
+        .controller_mode
+        .pos_mask
+        .set_pos(controller.left_pos());
+    // set color from right stick
+    let mut color = Colors::black();
+    if controller.right_pos().length() > 0.75 {
+        let angle = controller.right_pos().angle();
+        let hue = RgbHue::from_radians(angle);
+        color = Color::from(Hsv::new(hue, 1.0, 1.0))
+    }
+    state.controller_mode.set_basecolor(color);
 }

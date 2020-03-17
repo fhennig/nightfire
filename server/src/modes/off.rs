@@ -1,4 +1,4 @@
-use crate::models::{Color};
+use crate::models::{Color, Colors};
 use crate::lightid::LightId;
 use crate::modes::Mode;
 
@@ -14,6 +14,6 @@ impl OffMode {
     }
 
     pub fn get_color(&self, _light_id: &LightId) -> Color {
-        Color::new(0.0, 0.0, 0.0)
+        Colors::black()
     }
 }
