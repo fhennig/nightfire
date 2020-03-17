@@ -5,7 +5,6 @@ use palette::{Hsv, RgbHue};
 use std::sync::{Arc, Mutex};
 use std::{thread, time};
 use stoppable_thread::{spawn, StoppableHandle};
-use std::ffi::CString;
 
 pub type RawControllerValues = [u8; 20];
 
@@ -93,6 +92,16 @@ impl Controller {
         let r_x = ((buf[8] as f64) / 255.0 - 0.5) * 2.0;
         let r_y = ((buf[9] as f64 / 255.0 - 0.5) * -1.0) * 2.0;
         Coordinate(r_x, r_y)
+    }
+
+    /// Returns a value in [0, 1]
+    fn left_trigger(&self) -> f64 {
+        (self.curr_vals[18] as f64) / 255.0
+    }
+
+    /// Returns a value in [0, 1]
+    fn right_trigger(&self) -> f64 {
+        (self.curr_vals[19] as f64) / 255.0
     }
 
     fn was_pressed(&self, btn: Button) -> bool {
