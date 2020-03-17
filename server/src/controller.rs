@@ -5,8 +5,9 @@ use palette::{Hsv, RgbHue};
 use std::sync::{Arc, Mutex};
 use std::{thread, time};
 use stoppable_thread::{spawn, StoppableHandle};
+use std::ffi::CString;
 
-pub type RawControllerValues = [u8; 10];
+pub type RawControllerValues = [u8; 20];
 
 #[derive(Debug, Copy, Clone)]
 enum Button {
@@ -186,22 +187,24 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
             let mut found = false;
             while !found {
                 api.refresh_devices();
+                println!("Devices refreshed!");
                 for device in api.device_list() {
+                    println!("{:?}", device.path());
                     if device.vendor_id() == vid && device.product_id() == pid {
                         println!("Found the device!");
                         found = true;
                     }
-                    if !found {
-                        println!("Device not found, retrying ...");
-                        thread::sleep(dur);
-                    }
+                }
+                if !found {
+                    println!("Device not found, retrying ...");
+                    thread::sleep(dur);
                 }
             }
             // at this point the device was found, open it:
             println!("Opening...");
             let device = api.open(vid, pid).unwrap();
 
-            let mut buf = [0u8; 10];
+            let mut buf = [0u8; 20];
             let mut controller = Controller::new(buf);
 
             // The loop

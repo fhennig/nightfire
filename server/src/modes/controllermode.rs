@@ -28,6 +28,7 @@ impl ControllerMode {
                 position: Coordinate(0.0, 0.0),
                 spline: Spline::from_vec(vec![
                     Key::new(0., 1., Interpolation::Linear),
+                    Key::new(0.1, 1., Interpolation::Linear),
                     Key::new(1.6, 0.1, Interpolation::Linear),
                     Key::new(1.9, 0., Interpolation::Linear),
                 ]),
