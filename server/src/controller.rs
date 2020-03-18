@@ -117,6 +117,13 @@ impl Controller {
         get_bit_at(self.curr_vals[v.0], v.1)
     }
 
+    fn was_released(&self, btn: Button) -> bool {
+        let v = btn.val();
+        let prev = get_bit_at(self.prev_vals[v.0], v.1);
+        let curr = get_bit_at(self.curr_vals[v.0], v.1);
+        return prev && !curr;
+    }
+
     fn debug_print(&self) {
         for btn in [
             Button::PS,
@@ -206,6 +213,12 @@ fn update_state(controller: &Controller, state: &mut State) {
     // set on/off
     if controller.was_pressed(Button::Start) {
         state.switch_off();
+    }
+    if controller.was_pressed(Button::PS) {
+        state.start_white_pulse();
+    }
+    if controller.was_released(Button::PS) {
+        state.activate_controller_mode();
     }
     // set d-pad masks
     state

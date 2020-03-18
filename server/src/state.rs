@@ -1,6 +1,7 @@
 use crate::lightid::LightId;
-use crate::models::{Color, ColorProvider};
+use crate::models::{Color, ColorProvider, PulseEnvelope, Colors};
 use crate::modes::{ControllerMode, ManualMode, OffMode, PinkPulse, Rainbow};
+use std::time::Duration;
 
 #[derive(juniper::GraphQLEnum, PartialEq, Copy)]
 pub enum Mode {
@@ -9,6 +10,7 @@ pub enum Mode {
     PinkPulse,
     Rainbow,
     Controller,
+    WhitePulse,
 }
 
 impl Clone for Mode {
@@ -23,6 +25,7 @@ pub struct State {
     pub pink_pulse: PinkPulse,
     pub rainbow: Rainbow,
     pub controller_mode: ControllerMode,
+    white_pulse: PulseEnvelope,
     active_mode: Mode,
 }
 
@@ -41,6 +44,7 @@ impl State {
             pink_pulse: pink_pulse,
             rainbow: rainbow,
             controller_mode: controller_mode,
+            white_pulse: PulseEnvelope::new(Duration::from_millis(1800)),
             active_mode: active_mode,
         }
     }
@@ -51,6 +55,15 @@ impl State {
         } else if self.active_mode == Mode::Controller {
             self.active_mode = Mode::OffMode;
         }
+    }
+
+    pub fn start_white_pulse(&mut self) {
+        self.activate(Mode::WhitePulse);
+        self.white_pulse.reset();
+    }
+
+    pub fn activate_controller_mode(&mut self) {
+        self.activate(Mode::Controller);
     }
 
     pub fn is_off(&self) -> bool {
@@ -71,6 +84,7 @@ impl State {
             Mode::PinkPulse => self.pink_pulse.get_color(light_id),
             Mode::Rainbow => self.rainbow.get_color(light_id),
             Mode::Controller => self.controller_mode.get_color(light_id),
+            Mode::WhitePulse => Colors::mask(Colors::white(), self.white_pulse.get_current_value()),
         }
     }
 }

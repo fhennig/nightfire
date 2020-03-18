@@ -1,8 +1,9 @@
+use crate::lightid::LightId;
 use palette::encoding::linear::Linear;
 use palette::encoding::Srgb;
 use palette::rgb::Rgb;
-use splines::Spline;
-use crate::lightid::LightId;
+use splines::{Interpolation, Key, Spline};
+use std::time::{Duration, SystemTime};
 
 pub type PinValue = f64;
 pub type Color = Rgb<Linear<Srgb>, PinValue>;
@@ -17,6 +18,14 @@ impl Colors {
 
     pub fn white() -> Color {
         Color::new(1.0, 1.0, 1.0)
+    }
+
+    pub fn rosy_pink() -> Color {
+        Color::new(1.0, 0.1, 0.7)
+    }
+
+    pub fn mask(color: Color, value: f64) -> Color {
+        Color::new(color.red * value, color.green * value, color.blue * value)
     }
 }
 
@@ -142,5 +151,48 @@ impl Mask for BinaryMask {
         } else {
             return Colors::black();
         }
+    }
+}
+
+pub struct PulseEnvelope {
+    t_start: SystemTime,
+    period: Duration,
+    spline: Spline<f64, f64>,
+}
+
+impl PulseEnvelope {
+    pub fn new(period: Duration) -> PulseEnvelope {
+        PulseEnvelope {
+            t_start: SystemTime::now(),
+            period: period,
+            spline: Spline::from_vec(vec![
+                Key::new(0., 0., Interpolation::Linear),
+                Key::new(0.05, 0., Interpolation::Linear),
+                Key::new(0.25, 0.4, Interpolation::Linear),
+                Key::new(0.5, 1., Interpolation::Linear),
+                Key::new(0.75, 0.4, Interpolation::Linear),
+                Key::new(0.95, 0., Interpolation::Linear),
+                Key::new(1., 0., Interpolation::Linear),
+            ]),
+        }
+    }
+
+    pub fn reset(&mut self) {
+        self.t_start = SystemTime::now();
+    }
+
+    fn get_current_position(&self) -> f64 {
+        let now = SystemTime::now();
+        let passed_time = now.duration_since(self.t_start).unwrap().as_millis() as i32;
+        let period_length = self.period.as_millis() as i32;
+        let position = passed_time % period_length;
+        let intensity = f64::from(position) / f64::from(period_length);
+        intensity
+    }
+
+    pub fn get_current_value(&self) -> f64 {
+        let pos = self.get_current_position();
+        let value = self.spline.sample(pos).unwrap();
+        value
     }
 }
