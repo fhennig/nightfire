@@ -1,5 +1,5 @@
 use crate::lightid::LightId;
-use crate::models::{Color, Colors, Coordinate, Mask, PosMask, BinaryMask};
+use crate::models::{BinaryMask, Color, ColorProvider, Colors, Coordinate, Mask, PosMask};
 use crate::modes::Mode;
 use splines::{Interpolation, Key, Spline};
 
@@ -47,8 +47,10 @@ impl ControllerMode {
     pub fn is_off(&self) -> bool {
         self.off
     }
+}
 
-    pub fn get_color(&self, light_id: &LightId) -> Color {
+impl ColorProvider for ControllerMode {
+    fn get_color(&self, light_id: &LightId) -> Color {
         if self.off {
             return Colors::black();
         } else {

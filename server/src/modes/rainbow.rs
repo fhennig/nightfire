@@ -1,5 +1,5 @@
 use crate::lightid::LightId;
-use crate::models::{Color, PinValue};
+use crate::models::{Color, ColorProvider, PinValue};
 use crate::modes::Mode;
 use palette::{FromColor, Hsv, RgbHue};
 use splines::{Interpolation, Key, Spline};
@@ -69,8 +69,10 @@ impl Rainbow {
         );
         internal_state
     }
+}
 
-    pub fn get_color(&self, light_id: &LightId) -> Color {
+impl ColorProvider for Rainbow {
+    fn get_color(&self, light_id: &LightId) -> Color {
         let value = self.envelopes.get(light_id).unwrap().get_current_value();
         let value: PinValue = value * 360.0 - 180.0;
         let hue = RgbHue::from(value);

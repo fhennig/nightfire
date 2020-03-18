@@ -1,5 +1,5 @@
 use crate::lightid::LightId;
-use crate::models::{Color, PinValue};
+use crate::models::{Color, ColorProvider, PinValue};
 use crate::modes::Mode;
 use std::collections::HashMap;
 
@@ -35,8 +35,10 @@ impl ManualMode {
         );
         self.colors.insert(light_id, new_color);
     }
+}
 
-    pub fn get_color(&self, light_id: &LightId) -> Color {
+impl ColorProvider for ManualMode {
+    fn get_color(&self, light_id: &LightId) -> Color {
         *self.colors.get(light_id).unwrap()
     }
 }

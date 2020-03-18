@@ -2,6 +2,7 @@ use palette::encoding::linear::Linear;
 use palette::encoding::Srgb;
 use palette::rgb::Rgb;
 use splines::Spline;
+use crate::lightid::LightId;
 
 pub type PinValue = f64;
 pub type Color = Rgb<Linear<Srgb>, PinValue>;
@@ -12,6 +13,14 @@ impl Colors {
     pub fn black() -> Color {
         Color::new(0.0, 0.0, 0.0)
     }
+
+    pub fn white() -> Color {
+        Color::new(1.0, 1.0, 1.0)
+    }
+}
+
+pub trait ColorProvider: Send + Sync {
+    fn get_color(&self, light_id: &LightId) -> Color;
 }
 
 #[derive(Copy, Clone)]

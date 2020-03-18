@@ -1,5 +1,5 @@
 use crate::lightid::LightId;
-use crate::models::Color;
+use crate::models::{Color, ColorProvider};
 use crate::modes::Mode;
 use splines::{Interpolation, Key, Spline};
 use std::collections::HashMap;
@@ -73,8 +73,10 @@ impl PinkPulse {
         );
         pulse
     }
+}
 
-    pub fn get_color(&self, light_id: &LightId) -> Color {
+impl ColorProvider for PinkPulse {
+    fn get_color(&self, light_id: &LightId) -> Color {
         let value = self.envelopes.get(light_id).unwrap().get_current_value();
         Color::new(1.0 * value, 0.1 * value, 0.7 * value)
     }
