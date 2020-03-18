@@ -63,6 +63,22 @@ impl State {
         self.activate(Mode::Controller);
     }
 
+    pub fn switch_pink_pulse_mode(&mut self) {
+        if self.active_mode == Mode::PinkPulse {
+            self.active_mode = Mode::Controller;
+        } else if self.active_mode == Mode::Controller {
+            self.active_mode = Mode::PinkPulse;
+        }
+    }
+
+    pub fn switch_rainbow_mode(&mut self) {
+        if self.active_mode == Mode::Rainbow {
+            self.active_mode = Mode::Controller;
+        } else if self.active_mode == Mode::Controller {
+            self.active_mode = Mode::Rainbow;
+        }
+    }
+
     pub fn is_off(&self) -> bool {
         self.active_mode == Mode::OffMode
     }
