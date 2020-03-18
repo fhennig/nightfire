@@ -8,22 +8,15 @@ lights, under the hood it provides a GraphQL API.
 
 Various modes are supported.
 
-## Architecture
-
-The server consists of various actors reading and writing a shared
-state.  The lights are set in a thread which reads the color of the
-lights from the state.  The state generates the color dynamically from
-its internal state.
-
-In other threads the state is modified to change the color of the
-lights.  One thread runs a web server which serves a GraphQL API that
-allows to modify the state.  A web frontend that interfaces with the
-API is also provided.
-
-### TODO
-
 
 ## Building and Installing
+
+### System dependencies
+
+some stuff.
+
+sudo apt install libusb-1.0-0-dev:armhf
+sudo apt install libudev-dev:armhf libfox-1.6-dev:armhf
   
 ### Builing for arm
 
@@ -40,19 +33,38 @@ Copy the contents of the build directory to `/usr/local/lib/lumi/web/`.
 ### System Dependencies
 
 - pi-blaster
-- nginx
 
 
 ### Installation
 
-- Put binary in `/usr/local/bin/lumi`
-- Put web files in `/usr/local/lib/lumi/web/`
-- Put the systemd unit file in `/etc/systemd/system/lumi.service`
-- Put the nginx file (`lumi`) in the correct place
-- Put the config file in `/etc/lumi/conf.yaml`
+Put everything in /opt/lumi/
 
 
-## GraphQL API
+## Architecture
+
+The server consists of various actors reading and writing a shared
+state.  The lights are set in a thread which reads the color of the
+lights from the state.  The state generates the color dynamically from
+its internal state.
+
+In other threads the state is modified to change the color of the
+lights.  One thread runs a web server which serves a GraphQL API that
+allows to modify the state.  A web frontend that interfaces with the
+API is also provided.
+
+There is a light struct that can only be owned by any single mode.
+The mode can then internally have a thread that continuously updates
+the light.
+
+Every mode has an activate and deactivate function.  These can be used
+to start and stop a thread.  Any mode can also implement other methods
+that mutate internal state.
+
+zu jeder mutation für einen mode gibt es dann auch ein query mit dem
+man den zustand des modes abfragen kann.
+
+
+### GraphQL API
 
 The lights are controlled by modes.  At any time there is only one
 mode active.
@@ -75,20 +87,6 @@ optional:
     }
 
 
-## Internal workings
-
-There is a light struct that can only be owned by any single mode.
-The mode can then internally have a thread that continuously updates
-the light.
-
-Every mode has an activate and deactivate function.  These can be used
-to start and stop a thread.  Any mode can also implement other methods
-that mutate internal state.
-
-zu jeder mutation für einen mode gibt es dann auch ein query mit dem
-man den zustand des modes abfragen kann.
-
-
 ## Ideas
 
 - Implement a midi mode that listens in a thread for midi signals.
@@ -98,9 +96,7 @@ man den zustand des modes abfragen kann.
 
 ## TODO
 
-Light source mode.
-
-Have a mode that has an internal (x, y) coordinate of a light source,
-and a function to calculate light intensity at distance.  Then set
-the light intensity of every stripe according to its distance to the
-light source.
+- Can I use
+  [bluetooth-serial-port](https://github.com/Dushistov/bluetooth-serial-port)
+  to connect to the controller via bluetooth?
+- RTP-MIDI?
