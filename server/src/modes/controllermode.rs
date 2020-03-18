@@ -1,10 +1,8 @@
 use crate::lightid::LightId;
 use crate::models::{BinaryMask, Color, ColorProvider, Colors, Coordinate, Mask, PosMask};
-use crate::modes::Mode;
 use splines::{Interpolation, Key, Spline};
 
 pub struct ControllerMode {
-    pub id: Mode,
     pub pos_mask: PosMask,
     pub top_only_mask: BinaryMask,
     pub bottom_only_mask: BinaryMask,
@@ -17,7 +15,6 @@ pub struct ControllerMode {
 impl ControllerMode {
     pub fn new() -> ControllerMode {
         ControllerMode {
-            id: Mode::Controller,
             color: Color::new(0.0, 0.0, 0.0),
             off: false,
             top_only_mask: BinaryMask::top_only_mask(),

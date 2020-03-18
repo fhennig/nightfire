@@ -9,6 +9,7 @@ pub type Color = Rgb<Linear<Srgb>, PinValue>;
 
 pub struct Colors;
 
+#[allow(dead_code)]
 impl Colors {
     pub fn black() -> Color {
         Color::new(0.0, 0.0, 0.0)

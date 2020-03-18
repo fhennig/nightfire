@@ -1,7 +1,21 @@
 use crate::lightid::LightId;
-use crate::models::{Color, ColorProvider, Colors};
-use crate::modes::{ControllerMode, ManualMode, Mode, OffMode, PinkPulse, Rainbow};
-use std::sync::Arc;
+use crate::models::{Color, ColorProvider};
+use crate::modes::{ControllerMode, ManualMode, OffMode, PinkPulse, Rainbow};
+
+#[derive(juniper::GraphQLEnum, PartialEq, Copy)]
+pub enum Mode {
+    OffMode,
+    ManualMode,
+    PinkPulse,
+    Rainbow,
+    Controller,
+}
+
+impl Clone for Mode {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
 
 pub struct State {
     pub off_mode: OffMode,
@@ -14,13 +28,13 @@ pub struct State {
 
 impl State {
     pub fn new() -> State {
-        let off_mode = OffMode::new();
+        let off_mode = OffMode;
         let man_mode = ManualMode::new();
         let pink_pulse = PinkPulse::new();
         let rainbow = Rainbow::new();
         let controller_mode = ControllerMode::new();
         // set activate
-        let active_mode = controller_mode.id;
+        let active_mode = Mode::Controller;
         State {
             off_mode: off_mode,
             manual_mode: man_mode,
@@ -46,52 +60,5 @@ impl State {
             Mode::Rainbow => self.rainbow.get_color(light_id),
             Mode::Controller => self.controller_mode.get_color(light_id),
         }
-    }
-}
-
-pub struct Off {}
-
-impl ColorProvider for Off {
-    fn get_color(&self, light_id: &LightId) -> Color {
-        Colors::black()
-    }
-}
-
-pub struct White {}
-
-impl ColorProvider for White {
-    fn get_color(&self, light_id: &LightId) -> Color {
-        Colors::white()
-    }
-}
-
-pub struct NewState {
-    pub off_mode: Arc<Off>,
-    pub white_mode: Arc<White>,
-    active_mode: Arc<dyn ColorProvider>,
-}
-
-impl NewState {
-    pub fn new() -> NewState {
-        let off_mode = Arc::new(Off {});
-        let white_mode = Arc::new(White {});
-        let active_mode = off_mode.clone();
-        NewState {
-            off_mode: off_mode,
-            white_mode: white_mode,
-            active_mode: active_mode,
-        }
-    }
-
-    pub fn activate(&mut self, mode: &Arc<dyn ColorProvider>) {
-        if !Arc::ptr_eq(&self.active_mode, mode) {
-            self.active_mode = mode.clone();
-        }
-    }
-}
-
-impl ColorProvider for NewState {
-    fn get_color(&self, light_id: &LightId) -> Color {
-        self.active_mode.get_color(light_id)
     }
 }

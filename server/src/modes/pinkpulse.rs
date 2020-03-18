@@ -1,6 +1,5 @@
 use crate::lightid::LightId;
 use crate::models::{Color, ColorProvider};
-use crate::modes::Mode;
 use splines::{Interpolation, Key, Spline};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
@@ -45,14 +44,12 @@ impl PulseEnvelope {
 }
 
 pub struct PinkPulse {
-    pub id: Mode,
     envelopes: HashMap<LightId, PulseEnvelope>,
 }
 
 impl PinkPulse {
     pub fn new() -> PinkPulse {
         let mut pulse = PinkPulse {
-            id: Mode::PinkPulse,
             envelopes: HashMap::new(),
         };
         pulse.envelopes.insert(

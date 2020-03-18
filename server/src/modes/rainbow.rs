@@ -1,6 +1,5 @@
 use crate::lightid::LightId;
 use crate::models::{Color, ColorProvider, PinValue};
-use crate::modes::Mode;
 use palette::{FromColor, Hsv, RgbHue};
 use splines::{Interpolation, Key, Spline};
 use std::collections::HashMap;
@@ -41,14 +40,12 @@ impl RiserEnvelope {
 }
 
 pub struct Rainbow {
-    pub id: Mode,
     envelopes: HashMap<LightId, RiserEnvelope>,
 }
 
 impl Rainbow {
     pub fn new() -> Rainbow {
         let mut internal_state = Rainbow {
-            id: Mode::Rainbow,
             envelopes: HashMap::new(),
         };
         internal_state.envelopes.insert(

@@ -1,17 +1,14 @@
 use crate::lightid::LightId;
 use crate::models::{Color, ColorProvider, PinValue};
-use crate::modes::Mode;
 use std::collections::HashMap;
 
 pub struct ManualMode {
-    pub id: Mode,
     colors: HashMap<LightId, Color>,
 }
 
 impl ManualMode {
     pub fn new() -> ManualMode {
         let mut m = ManualMode {
-            id: Mode::ManualMode,
             colors: HashMap::new(),
         };
         for id in LightId::all() {

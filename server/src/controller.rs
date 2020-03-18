@@ -67,6 +67,7 @@ struct Controller {
     curr_vals: RawControllerValues,
 }
 
+#[allow(dead_code)]
 impl Controller {
     fn new(buf: RawControllerValues) -> Controller {
         Controller {
