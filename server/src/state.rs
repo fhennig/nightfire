@@ -1,6 +1,6 @@
 use crate::lightid::LightId;
 use crate::models::{Color, ColorProvider, PulseEnvelope, Colors};
-use crate::modes::{ControllerMode, ManualMode, OffMode, PinkPulse, Rainbow};
+use crate::modes::{ControllerMode, ManualMode, PinkPulse, Rainbow};
 use std::time::Duration;
 
 #[derive(juniper::GraphQLEnum, PartialEq, Copy)]
@@ -20,7 +20,6 @@ impl Clone for Mode {
 }
 
 pub struct State {
-    pub off_mode: OffMode,
     pub manual_mode: ManualMode,
     pub pink_pulse: PinkPulse,
     pub rainbow: Rainbow,
@@ -31,7 +30,6 @@ pub struct State {
 
 impl State {
     pub fn new() -> State {
-        let off_mode = OffMode;
         let man_mode = ManualMode::new();
         let pink_pulse = PinkPulse::new();
         let rainbow = Rainbow::new();
@@ -39,7 +37,6 @@ impl State {
         // set activate
         let active_mode = Mode::Controller;
         State {
-            off_mode: off_mode,
             manual_mode: man_mode,
             pink_pulse: pink_pulse,
             rainbow: rainbow,
@@ -79,7 +76,7 @@ impl State {
 
     pub fn get_color(&self, light_id: &LightId) -> Color {
         match self.active_mode {
-            Mode::OffMode => self.off_mode.get_color(light_id),
+            Mode::OffMode => Colors::black(),
             Mode::ManualMode => self.manual_mode.get_color(light_id),
             Mode::PinkPulse => self.pink_pulse.get_color(light_id),
             Mode::Rainbow => self.rainbow.get_color(light_id),
