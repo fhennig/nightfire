@@ -1,7 +1,7 @@
 use crate::models::{Color, Colors, Coordinate};
 use crate::state::State;
 use hidapi::HidApi;
-use palette::{Hsv, RgbHue};
+use palette::Hsv;
 use std::sync::{Arc, Mutex};
 use std::{thread, time};
 use stoppable_thread::{spawn, StoppableHandle};
@@ -251,8 +251,7 @@ fn update_state(controller: &Controller, state: &mut State) {
     // set color from right stick
     let mut color = Colors::black();
     if controller.right_pos().length() > 0.75 {
-        let angle = controller.right_pos().angle();
-        let hue = RgbHue::from_radians(angle);
+        let hue = controller.right_pos().hue_from_angle();
         color = Color::from(Hsv::new(hue, 1.0, 1.0))
     }
     state.controller_mode.set_basecolor(color);

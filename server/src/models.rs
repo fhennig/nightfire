@@ -2,6 +2,7 @@ use crate::lightid::LightId;
 use palette::encoding::linear::Linear;
 use palette::encoding::Srgb;
 use palette::rgb::Rgb;
+use palette::RgbHue;
 use splines::{Interpolation, Key, Spline};
 use std::time::{Duration, SystemTime};
 
@@ -38,7 +39,8 @@ pub struct Coordinate(pub f64, pub f64);
 
 // TODO this should be an optional; the angle is undefined for 0, 0 (WARNING!)
 impl Coordinate {
-    /// Returns radians from [-PI, PI)
+    /// Returns radians from [-1, 1)
+    /// top is 0, left is -0.5, right is 0.5, bottom is -1
     pub fn angle(&self) -> f64 {
         let a = Coordinate(0.0, 1.0);
         let b = self;
@@ -53,7 +55,11 @@ impl Coordinate {
         } else if b.0 <= 0.0 && b.1 > 0.0 {
             angle = -(1.0 - angle) * 0.5;
         }
-        angle * std::f64::consts::PI
+        angle
+    }
+
+    pub fn hue_from_angle(&self) -> RgbHue<PinValue> {
+        RgbHue::from_radians(self.angle() * std::f64::consts::PI)
     }
 
     pub fn length(&self) -> f64 {
@@ -65,9 +71,7 @@ pub trait Positionable {
     fn pos(&self) -> Coordinate;
 }
 
-pub fn distance(a: &dyn Positionable, b: &dyn Positionable) -> f64 {
-    let a = a.pos();
-    let b = b.pos();
+fn distance(a: &Coordinate, b: &Coordinate) -> f64 {
     ((a.0 - b.0).powi(2) + (a.1 - b.1).powi(2)).sqrt()
 }
 
@@ -86,7 +90,7 @@ impl PosMask {
     }
 
     fn get_value(&self, pos: &dyn Positionable) -> f64 {
-        let dist = distance(self, pos);
+        let dist = distance(&self.position, &pos.pos());
         let value = self.spline.clamped_sample(dist).unwrap();
         value
     }
@@ -99,9 +103,60 @@ impl Mask for PosMask {
     }
 }
 
-impl Positionable for PosMask {
-    fn pos(&self) -> Coordinate {
-        self.position
+pub struct DiscretePosMask {
+    pub top_right: PinValue,
+    pub bot_right: PinValue,
+    pub bot_left: PinValue,
+    pub top_left: PinValue,
+}
+
+impl DiscretePosMask {
+    fn new(
+        top_right: PinValue,
+        bot_right: PinValue,
+        bot_left: PinValue,
+        top_left: PinValue,
+    ) -> DiscretePosMask {
+        DiscretePosMask {
+            top_right: top_right,
+            bot_right: bot_right,
+            bot_left: bot_left,
+            top_left: bot_right,
+        }
+    }
+
+    fn from_coord(coord: Coordinate, lower_value: PinValue) -> DiscretePosMask {
+        // Get mask position
+        let dist = distance(&Coordinate(0., 0.), &coord);
+        // within the inner circle, no masking is applied
+        if dist <= 0.5 {
+            return DiscretePosMask::new(1.0, 1.0, 1.0, 1.0);
+        } else {
+            if coord.0 > 0. && coord.1 > 0. {
+                return DiscretePosMask::new(1.0, lower_value, lower_value, lower_value);
+            } else if coord.0 > 0. && coord.1 <= 0. {
+                return DiscretePosMask::new(lower_value, 1.0, lower_value, lower_value);
+            } else if coord.0 <= 0. && coord.1 <= 0. {
+                return DiscretePosMask::new(lower_value, lower_value, 1.0, lower_value);
+            } else {
+                return DiscretePosMask::new(lower_value, lower_value, lower_value, 1.0);
+            }
+        }
+    }
+}
+
+impl Mask for DiscretePosMask {
+    fn get_masked_color(&self, pos: &dyn Positionable, color: Color) -> Color {
+        let coord = pos.pos();
+        if coord.0 > 0. && coord.1 > 0. {
+            return Colors::mask(color, self.top_right);
+        } else if coord.0 > 0. && coord.1 <= 0. {
+            return Colors::mask(color, self.bot_right);
+        } else if coord.0 <= 0. && coord.1 <= 0. {
+            return Colors::mask(color, self.bot_left);
+        } else {
+            return Colors::mask(color, self.top_left);
+        }
     }
 }
 
