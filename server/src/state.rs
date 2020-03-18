@@ -45,6 +45,18 @@ impl State {
         }
     }
 
+    pub fn switch_off(&mut self) {
+        if self.active_mode == Mode::OffMode {
+            self.active_mode = Mode::Controller;
+        } else if self.active_mode == Mode::Controller {
+            self.active_mode = Mode::OffMode;
+        }
+    }
+
+    pub fn is_off(&self) -> bool {
+        self.active_mode == Mode::OffMode
+    }
+
     pub fn activate(&mut self, mode: Mode) {
         if self.active_mode == mode {
             return;

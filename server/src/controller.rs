@@ -205,7 +205,7 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
 fn update_state(controller: &Controller, state: &mut State) {
     // set on/off
     if controller.was_pressed(Button::Start) {
-        state.controller_mode.switch_off();
+        state.switch_off();
     }
     // set d-pad masks
     state

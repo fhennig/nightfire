@@ -8,15 +8,13 @@ pub struct ControllerMode {
     pub bottom_only_mask: BinaryMask,
     pub left_only_mask: BinaryMask,
     pub right_only_mask: BinaryMask,
-    off: bool,
     color: Color,
 }
 
 impl ControllerMode {
     pub fn new() -> ControllerMode {
         ControllerMode {
-            color: Color::new(0.0, 0.0, 0.0),
-            off: false,
+            color: Colors::black(),
             top_only_mask: BinaryMask::top_only_mask(),
             bottom_only_mask: BinaryMask::bottom_only_mask(),
             left_only_mask: BinaryMask::left_only_mask(),
@@ -36,28 +34,16 @@ impl ControllerMode {
     pub fn set_basecolor(&mut self, color: Color) {
         self.color = color;
     }
-
-    pub fn switch_off(&mut self) {
-        self.off = !self.off;
-    }
-
-    pub fn is_off(&self) -> bool {
-        self.off
-    }
 }
 
 impl ColorProvider for ControllerMode {
     fn get_color(&self, light_id: &LightId) -> Color {
-        if self.off {
-            return Colors::black();
-        } else {
-            let mut color = self.color;
-            color = self.pos_mask.get_masked_color(light_id, color);
-            color = self.top_only_mask.get_masked_color(light_id, color);
-            color = self.bottom_only_mask.get_masked_color(light_id, color);
-            color = self.left_only_mask.get_masked_color(light_id, color);
-            color = self.right_only_mask.get_masked_color(light_id, color);
-            color
-        }
+        let mut color = self.color;
+        color = self.pos_mask.get_masked_color(light_id, color);
+        color = self.top_only_mask.get_masked_color(light_id, color);
+        color = self.bottom_only_mask.get_masked_color(light_id, color);
+        color = self.left_only_mask.get_masked_color(light_id, color);
+        color = self.right_only_mask.get_masked_color(light_id, color);
+        color
     }
 }

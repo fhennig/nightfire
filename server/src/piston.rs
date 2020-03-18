@@ -68,7 +68,7 @@ pub fn run_piston_thread(state: Arc<Mutex<State>>) {
                 .trans(x, y);
 
             let mut color = [1.0; 4];
-            if state.lock().unwrap().controller_mode.is_off() {
+            if state.lock().unwrap().is_off() {
                 color = [0.0; 4];
             }
 
