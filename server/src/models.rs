@@ -23,6 +23,30 @@ impl Colors {
         Color::new(1.0, 0.1, 0.7)
     }
 
+    pub fn red() -> Color {
+        Color::new(1.0, 0.0, 0.0)
+    }
+
+    pub fn yellow() -> Color {
+        Color::new(1.0, 1.0, 0.0)
+    }
+
+    pub fn green() -> Color {
+        Color::new(0.0, 1.0, 0.0)
+    }
+
+    pub fn cyan() -> Color {
+        Color::new(0.0, 1.0, 1.0)
+    }
+
+    pub fn blue() -> Color {
+        Color::new(0.0, 0.0, 1.0)
+    }
+
+    pub fn magenta() -> Color {
+        Color::new(1.0, 0.0, 1.0)
+    }
+
     pub fn mask(color: Color, value: f64) -> Color {
         Color::new(color.red * value, color.green * value, color.blue * value)
     }
@@ -76,4 +100,3 @@ pub trait Positionable {
 pub fn distance(a: &Coordinate, b: &Coordinate) -> f64 {
     ((a.0 - b.0).powi(2) + (a.1 - b.1).powi(2)).sqrt()
 }
-

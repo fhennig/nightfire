@@ -1,6 +1,6 @@
 use crate::envelope::Envelope;
 use crate::lightid::LightId;
-use crate::models::{Color, ColorProvider, Colors};
+use crate::models::{Color, ColorProvider, Colors, Coordinate};
 use crate::modes::{ControllerMode, ManualMode};
 use std::time::Duration;
 
@@ -11,9 +11,39 @@ pub enum Mode {
     Controller,
 }
 
+impl Mode {
+    fn get_color(&self) -> Color {
+        match self {
+            Mode::OffMode => Colors::white(),
+            Mode::Controller => Colors::red(),
+            Mode::ManualMode => Colors::blue(),
+        }
+    }
+}
+
 impl Clone for Mode {
     fn clone(&self) -> Self {
         *self
+    }
+}
+
+/// takes a number in [-1, 1) and returns a number, which circle
+/// segment it was.  Hard coded for six segments for now.
+pub fn angle_to_mode(angle: f64) -> Mode {
+    if angle < -0.8333 {
+        Mode::OffMode
+    } else if angle < -0.5 {
+        Mode::Controller
+    } else if angle < -0.1666 {
+        Mode::Controller
+    } else if angle < 0.1666 {
+        Mode::Controller
+    } else if angle < 0.5 {
+        Mode::Controller
+    } else if angle < 0.8333 {
+        Mode::Controller
+    } else {
+        Mode::OffMode
     }
 }
 
@@ -57,10 +87,6 @@ impl State {
         }
     }
 
-    pub fn activate_controller_mode(&mut self) {
-        self.activate(Mode::Controller);
-    }
-
     pub fn is_off(&self) -> bool {
         self.active_mode == Mode::OffMode
     }
@@ -72,9 +98,30 @@ impl State {
         self.active_mode = mode;
     }
 
+    fn mode_selection_from_coord(&mut self, coord: Coordinate) {
+        if coord.length() > 0.75 {
+            self.active_mode = angle_to_mode(coord.angle().unwrap());
+        }
+    }
+
+    pub fn set_left_coord(&mut self, coord: Coordinate) {
+        if self.select_mode {
+            self.mode_selection_from_coord(coord);
+        }
+    }
+
+    pub fn set_right_coord(&mut self, coord: Coordinate) {
+        if self.select_mode {
+            self.mode_selection_from_coord(coord);
+        }
+    }
+
     pub fn get_color(&self, light_id: &LightId) -> Color {
         if self.select_mode {
-            Colors::mask(Colors::white(), self.white_pulse.get_current_value())
+            Colors::mask(
+                self.active_mode.get_color(),
+                self.white_pulse.get_current_value(),
+            )
         } else {
             match self.active_mode {
                 Mode::OffMode => Colors::black(),

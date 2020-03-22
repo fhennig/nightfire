@@ -210,14 +210,14 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
 /// read the current controller state and update the state accordingly.
 /// This function is called repeatedly each second, at every controller update.
 fn update_state(controller: &Controller, state: &mut State) {
+    // select mode
+    state.set_select_mode(controller.is_pressed(Button::PS));
+    // put stick values to state
+    state.set_left_coord(controller.left_pos());
+    state.set_right_coord(controller.right_pos());
     // set on/off
     if controller.was_pressed(Button::Start) {
         state.switch_off();
-    }
-    // select mode
-    state.set_select_mode(controller.is_pressed(Button::PS));
-    if controller.was_released(Button::PS) {
-        state.activate_controller_mode();
     }
     if controller.was_pressed(Button::Square) {
         state.controller_mode.activate_rainbow_color();
