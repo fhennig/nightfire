@@ -1,7 +1,7 @@
-use crate::models::{Color, Colors, Coordinate};
+use crate::models::{Coordinate};
 use crate::state::State;
 use hidapi::HidApi;
-use palette::{Hsv};
+use log::{debug, info};
 use std::sync::{Arc, Mutex};
 use std::{thread, time};
 use stoppable_thread::{spawn, StoppableHandle};
@@ -147,7 +147,7 @@ impl Controller {
         .iter()
         {
             if self.was_pressed(*btn) {
-                println!("{:?} pressed.", btn);
+                debug!("{:?} pressed.", btn);
             }
         }
     }
@@ -159,28 +159,28 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
         // TODO make a big retry loop, where we retry to open the device.
         let dur = time::Duration::from_millis(1000);
         while !stopped.get() {
-            println!("Trying to connect to a controller ...");
+            info!("Trying to connect to a controller ...");
 
             let (vid, pid) = (1356, 616);
             let mut api = HidApi::new().unwrap();
             let mut found = false;
             while !found {
                 api.refresh_devices();
-                println!("Devices refreshed!");
+                debug!("Devices refreshed!");
                 for device in api.device_list() {
-                    println!("{:?}", device.path());
+                    debug!("{:?}", device.path());
                     if device.vendor_id() == vid && device.product_id() == pid {
-                        println!("Found the device!");
+                        info!("Found the device!");
                         found = true;
                     }
                 }
                 if !found {
-                    println!("Device not found, retrying ...");
+                    debug!("Device not found, retrying ...");
                     thread::sleep(dur);
                 }
             }
             // at this point the device was found, open it:
-            println!("Opening...");
+            info!("Opening...");
             let device = api.open(vid, pid).unwrap();
 
             let mut buf = [0u8; 20];
@@ -191,14 +191,14 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
                 // Read data from device
                 match device.read_timeout(&mut buf[..], -1) {
                     Ok(_) => {
-                        println!("Read: {:?}", buf);
+                        debug!("Read: {:?}", buf);
                         controller.update(buf);
                         controller.debug_print();
                         let mut state = state.lock().unwrap();
                         update_state(&controller, &mut state);
                     }
                     Err(_e) => {
-                        println!("Error reading controller values.");
+                        info!("Error reading controller values.");
                         break;
                     }
                 }
@@ -248,13 +248,18 @@ fn update_state(controller: &Controller, state: &mut State) {
         .controller_mode
         .pos_mask
         .set_pos(controller.left_pos());
-    // set color from right stick
-    let mut color = Colors::black();
-    if controller.right_pos().length() > 0.75 {
-        let hue = controller.right_pos().hue_from_angle();
-        let value = 1. - controller.left_trigger();
-        let saturation = 1. - controller.right_trigger();
-        color = Color::from(Hsv::new(hue, saturation, value))
+    // set whether to show black or the color
+    state
+        .controller_mode
+        .set_color_active(controller.right_pos().length() > 0.75);
+    // set hue of the color from the right stick angle
+    match controller.right_pos().hue_from_angle() {
+        Some(hue) => state.controller_mode.set_hue(hue),
+        None => (),
     }
-    state.controller_mode.set_basecolor(color);
+    // set saturation and value from the triggers
+    let saturation = 1. - controller.right_trigger();
+    let value = 1. - controller.left_trigger();
+    state.controller_mode.set_saturation(saturation);
+    state.controller_mode.set_value(value);
 }

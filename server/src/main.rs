@@ -1,5 +1,7 @@
+#[macro_use]
 extern crate clap;
 extern crate env_logger;
+extern crate hidapi;
 extern crate iron;
 extern crate juniper;
 extern crate juniper_iron;
@@ -11,8 +13,8 @@ extern crate rand;
 extern crate staticfile;
 extern crate stoppable_thread;
 extern crate yaml_rust;
-extern crate hidapi;
 mod conf;
+mod controller;
 mod graphql;
 mod lightid;
 mod models;
@@ -20,16 +22,16 @@ mod modes;
 mod piblaster;
 mod piston;
 mod state;
-mod controller;
 use crate::conf::Conf;
+use crate::controller::read_controller;
 use crate::graphql::serve;
 use crate::piblaster::{start_piblaster_thread, Light, Lights, PinModel};
 use crate::piston::run_piston_thread;
 use crate::state::State;
-use crate::controller::read_controller;
 use clap::{App, Arg, ArgMatches};
+use log::info;
 use std::sync::{Arc, Mutex};
-use std::{thread, time, error};
+use std::{error, thread, time};
 
 fn get_args() -> ArgMatches<'static> {
     App::new("lumi")
@@ -68,7 +70,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let piblaster = start_piblaster_thread(init_pin_setting(&conf), Arc::clone(&state));
     // start GraphQL endpoint server
     let mut graphql = serve(conf.address, Arc::clone(&state));
-    println!("graphql server started.");
+    info!("graphql server started.");
     // debug window
     if matches.is_present("debug") {
         run_piston_thread(Arc::clone(&state));
