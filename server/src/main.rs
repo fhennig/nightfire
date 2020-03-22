@@ -14,6 +14,7 @@ extern crate stoppable_thread;
 extern crate yaml_rust;
 mod conf;
 mod controller;
+mod envelope;
 mod graphql;
 mod lightid;
 mod models;

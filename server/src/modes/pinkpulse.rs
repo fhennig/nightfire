@@ -1,5 +1,6 @@
 use crate::lightid::LightId;
-use crate::models::{Color, ColorProvider, Envelope, Colors};
+use crate::envelope::Envelope;
+use crate::models::{Color, ColorProvider, Colors};
 use std::collections::HashMap;
 use std::time::Duration;
 
