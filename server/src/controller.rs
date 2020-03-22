@@ -1,7 +1,7 @@
 use crate::models::{Color, Colors, Coordinate};
 use crate::state::State;
 use hidapi::HidApi;
-use palette::Hsv;
+use palette::{Hsv};
 use std::sync::{Arc, Mutex};
 use std::{thread, time};
 use stoppable_thread::{spawn, StoppableHandle};

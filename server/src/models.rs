@@ -125,21 +125,28 @@ impl DiscretePosMask {
         }
     }
 
-    fn from_coord(coord: Coordinate, lower_value: PinValue) -> DiscretePosMask {
+    fn set_from_coord(&mut self, coord: Coordinate, lower_value: PinValue) {
         // Get mask position
         let dist = distance(&Coordinate(0., 0.), &coord);
         // within the inner circle, no masking is applied
         if dist <= 0.5 {
-            return DiscretePosMask::new(1.0, 1.0, 1.0, 1.0);
+            self.top_right = 1.;
+            self.bot_right = 1.;
+            self.bot_left = 1.;
+            self.top_left = 1.;
         } else {
+            self.top_right = lower_value;
+            self.bot_right = lower_value;
+            self.bot_left = lower_value;
+            self.top_left = lower_value;
             if coord.0 > 0. && coord.1 > 0. {
-                return DiscretePosMask::new(1.0, lower_value, lower_value, lower_value);
+                self.top_right = 1.;
             } else if coord.0 > 0. && coord.1 <= 0. {
-                return DiscretePosMask::new(lower_value, 1.0, lower_value, lower_value);
+                self.bot_right = 1.;
             } else if coord.0 <= 0. && coord.1 <= 0. {
-                return DiscretePosMask::new(lower_value, lower_value, 1.0, lower_value);
+                self.bot_left = 1.;
             } else {
-                return DiscretePosMask::new(lower_value, lower_value, lower_value, 1.0);
+                self.top_left = 1.;
             }
         }
     }
