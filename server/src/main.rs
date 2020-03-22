@@ -19,6 +19,7 @@ mod graphql;
 mod lightid;
 mod models;
 mod modes;
+mod mask;
 mod piblaster;
 mod piston;
 mod state;

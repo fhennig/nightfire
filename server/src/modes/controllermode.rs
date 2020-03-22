@@ -1,7 +1,8 @@
 use crate::envelope::Envelope;
 use crate::lightid::LightId;
+use crate::mask::{Mask, PosMask, BinaryMask};
 use crate::models::{
-    BinaryMask, Color, ColorProvider, Colors, Coordinate, Mask, PinValue, PosMask,
+    Color, ColorProvider, Colors, Coordinate, PinValue,
 };
 use palette::Hsv;
 use palette::RgbHue;
