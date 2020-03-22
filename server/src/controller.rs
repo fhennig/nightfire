@@ -252,7 +252,9 @@ fn update_state(controller: &Controller, state: &mut State) {
     let mut color = Colors::black();
     if controller.right_pos().length() > 0.75 {
         let hue = controller.right_pos().hue_from_angle();
-        color = Color::from(Hsv::new(hue, 1.0, 1.0))
+        let value = 1. - controller.left_trigger();
+        let saturation = 1. - controller.right_trigger();
+        color = Color::from(Hsv::new(hue, saturation, value))
     }
     state.controller_mode.set_basecolor(color);
 }
