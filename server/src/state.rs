@@ -1,6 +1,6 @@
 use crate::lightid::LightId;
 use crate::models::{Color, ColorProvider, Envelope, Colors};
-use crate::modes::{ControllerMode, ManualMode, PinkPulse, Rainbow};
+use crate::modes::{ControllerMode, ManualMode, PinkPulse};
 use std::time::Duration;
 
 #[derive(juniper::GraphQLEnum, PartialEq, Copy)]
@@ -8,7 +8,6 @@ pub enum Mode {
     OffMode,
     ManualMode,
     PinkPulse,
-    Rainbow,
     Controller,
     WhitePulse,
 }
@@ -22,7 +21,6 @@ impl Clone for Mode {
 pub struct State {
     pub manual_mode: ManualMode,
     pub pink_pulse: PinkPulse,
-    pub rainbow: Rainbow,
     pub controller_mode: ControllerMode,
     white_pulse: Envelope,
     active_mode: Mode,
@@ -32,14 +30,12 @@ impl State {
     pub fn new() -> State {
         let man_mode = ManualMode::new();
         let pink_pulse = PinkPulse::new();
-        let rainbow = Rainbow::new();
         let controller_mode = ControllerMode::new();
         // set activate
         let active_mode = Mode::Controller;
         State {
             manual_mode: man_mode,
             pink_pulse: pink_pulse,
-            rainbow: rainbow,
             controller_mode: controller_mode,
             white_pulse: Envelope::new_pulse(Duration::from_millis(1800)),
             active_mode: active_mode,
@@ -71,14 +67,6 @@ impl State {
         }
     }
 
-    pub fn switch_rainbow_mode(&mut self) {
-        if self.active_mode == Mode::Rainbow {
-            self.active_mode = Mode::Controller;
-        } else if self.active_mode != Mode::Rainbow {
-            self.active_mode = Mode::Rainbow;
-        }
-    }
-
     pub fn is_off(&self) -> bool {
         self.active_mode == Mode::OffMode
     }
@@ -95,7 +83,6 @@ impl State {
             Mode::OffMode => Colors::black(),
             Mode::ManualMode => self.manual_mode.get_color(light_id),
             Mode::PinkPulse => self.pink_pulse.get_color(light_id),
-            Mode::Rainbow => self.rainbow.get_color(light_id),
             Mode::Controller => self.controller_mode.get_color(light_id),
             Mode::WhitePulse => Colors::mask(Colors::white(), self.white_pulse.get_current_value()),
         }

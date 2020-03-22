@@ -2,7 +2,7 @@ use crate::lightid::LightId;
 use palette::encoding::linear::Linear;
 use palette::encoding::Srgb;
 use palette::rgb::Rgb;
-use palette::{RgbHue, Hsv, FromColor};
+use palette::RgbHue;
 use splines::{Interpolation, Key, Spline};
 use std::time::{Duration, SystemTime};
 
@@ -62,9 +62,8 @@ impl Coordinate {
     }
 
     pub fn hue_from_angle(&self) -> Option<RgbHue<PinValue>> {
-        self.angle()
-            .map(|angle| RgbHue::from(angle * 180.))
-            // .map(|angle| RgbHue::from_radians(angle * std::f64::consts::PI))
+        self.angle().map(|angle| RgbHue::from(angle * 180.))
+        // .map(|angle| RgbHue::from_radians(angle * std::f64::consts::PI))
     }
 
     pub fn length(&self) -> f64 {
@@ -238,7 +237,7 @@ impl Envelope {
             ]),
         }
     }
-    
+
     pub fn new_pulse(period: Duration) -> Envelope {
         Envelope {
             t_start: SystemTime::now(),

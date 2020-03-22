@@ -6,14 +6,12 @@ use palette::Hsv;
 use palette::RgbHue;
 use splines::{Interpolation, Key, Spline};
 use std::time::Duration;
-use std::vec::Vec;
 
 /// Should always be in [0, 1]
 pub type ControllerFloat = PinValue;
 
 pub enum InactiveMode {
     Black,
-    White,
     Color,
     Rainbow,
 }
@@ -57,10 +55,6 @@ impl ControllerMode {
         }
     }
 
-    pub fn set_inactive_mode(&mut self, inactive_mode: InactiveMode) {
-        self.inactive_mode = inactive_mode;
-    }
-
     pub fn activate_rainbow_color(&mut self) {
         self.inactive_mode = InactiveMode::Rainbow;
     }
@@ -102,7 +96,6 @@ impl ControllerMode {
         } else {
             match self.inactive_mode {
                 InactiveMode::Black => Colors::black(),
-                InactiveMode::White => Colors::white(),
                 InactiveMode::Color => self.get_current_color(),
                 InactiveMode::Rainbow => Color::from(Hsv::new(
                     self.rainbow_riser.get_value_as_hue(),
