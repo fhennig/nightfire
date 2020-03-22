@@ -1,5 +1,5 @@
-use crate::lightid::LightId;
 use crate::envelope::Envelope;
+use crate::lightid::LightId;
 use crate::models::{Color, ColorProvider, Colors};
 use crate::modes::{ControllerMode, ManualMode};
 use std::time::Duration;
@@ -9,7 +9,6 @@ pub enum Mode {
     OffMode,
     ManualMode,
     Controller,
-    WhitePulse,
 }
 
 impl Clone for Mode {
@@ -21,6 +20,7 @@ impl Clone for Mode {
 pub struct State {
     pub manual_mode: ManualMode,
     pub controller_mode: ControllerMode,
+    select_mode: bool,
     white_pulse: Envelope,
     active_mode: Mode,
 }
@@ -35,6 +35,7 @@ impl State {
             manual_mode: man_mode,
             controller_mode: controller_mode,
             white_pulse: Envelope::new_pulse(Duration::from_millis(1800)),
+            select_mode: false,
             active_mode: active_mode,
         }
     }
@@ -47,9 +48,13 @@ impl State {
         }
     }
 
-    pub fn start_white_pulse(&mut self) {
-        self.activate(Mode::WhitePulse);
-        self.white_pulse.reset();
+    pub fn set_select_mode(&mut self, active: bool) {
+        if self.select_mode != active {
+            self.select_mode = active;
+            if self.select_mode {
+                self.white_pulse.reset();
+            }
+        }
     }
 
     pub fn activate_controller_mode(&mut self) {
@@ -68,11 +73,14 @@ impl State {
     }
 
     pub fn get_color(&self, light_id: &LightId) -> Color {
-        match self.active_mode {
-            Mode::OffMode => Colors::black(),
-            Mode::ManualMode => self.manual_mode.get_color(light_id),
-            Mode::Controller => self.controller_mode.get_color(light_id),
-            Mode::WhitePulse => Colors::mask(Colors::white(), self.white_pulse.get_current_value()),
+        if self.select_mode {
+            Colors::mask(Colors::white(), self.white_pulse.get_current_value())
+        } else {
+            match self.active_mode {
+                Mode::OffMode => Colors::black(),
+                Mode::ManualMode => self.manual_mode.get_color(light_id),
+                Mode::Controller => self.controller_mode.get_color(light_id),
+            }
         }
     }
 }

@@ -214,9 +214,8 @@ fn update_state(controller: &Controller, state: &mut State) {
     if controller.was_pressed(Button::Start) {
         state.switch_off();
     }
-    if controller.was_pressed(Button::PS) {
-        state.start_white_pulse();
-    }
+    // select mode
+    state.set_select_mode(controller.is_pressed(Button::PS));
     if controller.was_released(Button::PS) {
         state.activate_controller_mode();
     }
