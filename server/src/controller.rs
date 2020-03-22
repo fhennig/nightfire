@@ -221,10 +221,13 @@ fn update_state(controller: &Controller, state: &mut State) {
         state.activate_controller_mode();
     }
     if controller.was_pressed(Button::Square) {
-        state.switch_pink_pulse_mode();
+        state.controller_mode.activate_rainbow_color();
     }
     if controller.was_pressed(Button::Circle) {
-        state.switch_rainbow_mode();
+        state.switch_pink_pulse_mode();
+    }
+    if controller.was_pressed(Button::R3) {
+        state.controller_mode.reset_inactive_mode();
     }
     // set d-pad masks
     state

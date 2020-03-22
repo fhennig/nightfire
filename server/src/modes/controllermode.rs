@@ -2,19 +2,30 @@ use crate::lightid::LightId;
 use crate::models::{
     BinaryMask, Color, ColorProvider, Colors, Coordinate, Mask, PinValue, PosMask,
 };
+use crate::modes::Rainbow;
 use palette::Hsv;
 use palette::RgbHue;
 use splines::{Interpolation, Key, Spline};
+use std::vec::Vec;
 
 /// Should always be in [0, 1]
 pub type ControllerFloat = PinValue;
 
+pub enum InactiveMode {
+    Black,
+    White,
+    Color,
+    Rainbow,
+}
+
 pub struct ControllerMode {
+    pub rainbow: Rainbow,
     pub pos_mask: PosMask,
     pub top_only_mask: BinaryMask,
     pub bottom_only_mask: BinaryMask,
     pub left_only_mask: BinaryMask,
     pub right_only_mask: BinaryMask,
+    inactive_mode: InactiveMode,
     active: bool,
     hue: RgbHue<PinValue>,
     saturation: ControllerFloat,
@@ -24,6 +35,7 @@ pub struct ControllerMode {
 impl ControllerMode {
     pub fn new() -> ControllerMode {
         ControllerMode {
+            rainbow: Rainbow::new(),
             top_only_mask: BinaryMask::top_only_mask(),
             bottom_only_mask: BinaryMask::bottom_only_mask(),
             left_only_mask: BinaryMask::left_only_mask(),
@@ -37,10 +49,26 @@ impl ControllerMode {
                     Key::new(1.9, 0., Interpolation::Linear),
                 ]),
             },
+            inactive_mode: InactiveMode::Black,
             active: false,
             hue: RgbHue::from_radians(0.),
             saturation: 1.,
             value: 1.,
+        }
+    }
+
+    pub fn set_inactive_mode(&mut self, inactive_mode: InactiveMode) {
+        self.inactive_mode = inactive_mode;
+    }
+
+    pub fn activate_rainbow_color(&mut self) {
+        self.inactive_mode = InactiveMode::Rainbow;
+    }
+
+    pub fn reset_inactive_mode(&mut self) {
+        match self.inactive_mode {
+            InactiveMode::Black => self.inactive_mode = InactiveMode::White,
+            _ => self.inactive_mode = InactiveMode::Black,
         }
     }
 
@@ -60,12 +88,21 @@ impl ControllerMode {
         self.value = value;
     }
 
+    fn get_current_color(&self) -> Color {
+        Color::from(Hsv::new(self.hue, self.saturation, self.value))
+    }
+
     fn get_basecolor(&self) -> Color {
-        let mut color = Colors::black();
         if self.active {
-            color = Color::from(Hsv::new(self.hue, self.saturation, self.value));
+            self.get_current_color()
+        } else {
+            match self.inactive_mode {
+                InactiveMode::Black => Colors::black(),
+                InactiveMode::White => Colors::white(),
+                InactiveMode::Color => self.get_current_color(),
+                InactiveMode::Rainbow => Colors::rosy_pink(),
+            }
         }
-        color
     }
 }
 
