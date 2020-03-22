@@ -1,5 +1,7 @@
+use crate::envelope::Envelope;
 use crate::models::{distance, Color, Colors, Coordinate, PinValue, Positionable};
 use splines::Spline;
+use std::time::Duration;
 
 pub trait Mask {
     fn get_masked_color(&self, pos: &dyn Positionable, color: Color) -> Color;
@@ -47,7 +49,7 @@ impl DiscretePosMask {
             top_right: top_right,
             bot_right: bot_right,
             bot_left: bot_left,
-            top_left: bot_right,
+            top_left: top_left,
         }
     }
 
@@ -139,5 +141,38 @@ impl Mask for BinaryMask {
         } else {
             return Colors::black();
         }
+    }
+}
+
+pub struct EnvMask {
+    top_right: Envelope,
+    bot_right: Envelope,
+    bot_left: Envelope,
+    top_left: Envelope,
+}
+
+impl EnvMask {
+    pub fn new_random_pulse() -> EnvMask {
+        EnvMask {
+            top_right: Envelope::new_pulse(Duration::from_millis(2100)),
+            bot_right: Envelope::new_pulse(Duration::from_millis(3300)),
+            bot_left: Envelope::new_pulse(Duration::from_millis(3900)),
+            top_left: Envelope::new_pulse(Duration::from_millis(4700)),
+        }
+    }
+
+    fn get_pos_mask(&self) -> DiscretePosMask {
+        DiscretePosMask::new(
+            self.top_right.get_current_value(),
+            self.bot_right.get_current_value(),
+            self.bot_left.get_current_value(),
+            self.top_left.get_current_value(),
+        )
+    }
+}
+
+impl Mask for EnvMask {
+    fn get_masked_color(&self, pos: &dyn Positionable, color: Color) -> Color {
+        self.get_pos_mask().get_masked_color(pos, color)
     }
 }
