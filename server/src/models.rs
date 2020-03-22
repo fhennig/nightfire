@@ -43,7 +43,7 @@ impl Coordinate {
     /// top is 0, left is -0.5, right is 0.5, bottom is -1
     pub fn angle(&self) -> Option<f64> {
         if self.length() < 0.01 {
-            return None
+            return None;
         }
         let a = Coordinate(0.0, 1.0);
         let b = self;
@@ -62,7 +62,8 @@ impl Coordinate {
     }
 
     pub fn hue_from_angle(&self) -> Option<RgbHue<PinValue>> {
-        self.angle().map(|angle| RgbHue::from_radians(angle * std::f64::consts::PI))
+        self.angle()
+            .map(|angle| RgbHue::from_radians(angle * std::f64::consts::PI))
     }
 
     pub fn length(&self) -> f64 {
@@ -219,15 +220,26 @@ impl Mask for BinaryMask {
     }
 }
 
-pub struct PulseEnvelope {
+pub struct Envelope {
     t_start: SystemTime,
     period: Duration,
     spline: Spline<f64, f64>,
 }
 
-impl PulseEnvelope {
-    pub fn new(period: Duration) -> PulseEnvelope {
-        PulseEnvelope {
+impl Envelope {
+    pub fn new_riser(period: Duration) -> Envelope {
+        Envelope {
+            t_start: SystemTime::now(),
+            period: period,
+            spline: Spline::from_vec(vec![
+                Key::new(0., 0., Interpolation::Linear),
+                Key::new(1., 1., Interpolation::Linear),
+            ]),
+        }
+    }
+    
+    pub fn new_pulse(period: Duration) -> Envelope {
+        Envelope {
             t_start: SystemTime::now(),
             period: period,
             spline: Spline::from_vec(vec![

@@ -1,10 +1,10 @@
 use crate::lightid::LightId;
-use crate::models::{Color, ColorProvider, PulseEnvelope, Colors};
+use crate::models::{Color, ColorProvider, Envelope, Colors};
 use std::collections::HashMap;
 use std::time::Duration;
 
 pub struct PinkPulse {
-    envelopes: HashMap<LightId, PulseEnvelope>,
+    envelopes: HashMap<LightId, Envelope>,
 }
 
 impl PinkPulse {
@@ -14,19 +14,19 @@ impl PinkPulse {
         };
         pulse.envelopes.insert(
             LightId::Top,
-            PulseEnvelope::new(Duration::from_millis(2100)),
+            Envelope::new_pulse(Duration::from_millis(2100)),
         );
         pulse.envelopes.insert(
             LightId::Left,
-            PulseEnvelope::new(Duration::from_millis(3300)),
+            Envelope::new_pulse(Duration::from_millis(3300)),
         );
         pulse.envelopes.insert(
             LightId::Bottom,
-            PulseEnvelope::new(Duration::from_millis(3900)),
+            Envelope::new_pulse(Duration::from_millis(3900)),
         );
         pulse.envelopes.insert(
             LightId::Right,
-            PulseEnvelope::new(Duration::from_millis(4700)),
+            Envelope::new_pulse(Duration::from_millis(4700)),
         );
         pulse
     }

@@ -1,5 +1,5 @@
 use crate::lightid::LightId;
-use crate::models::{Color, ColorProvider, PulseEnvelope, Colors};
+use crate::models::{Color, ColorProvider, Envelope, Colors};
 use crate::modes::{ControllerMode, ManualMode, PinkPulse, Rainbow};
 use std::time::Duration;
 
@@ -24,7 +24,7 @@ pub struct State {
     pub pink_pulse: PinkPulse,
     pub rainbow: Rainbow,
     pub controller_mode: ControllerMode,
-    white_pulse: PulseEnvelope,
+    white_pulse: Envelope,
     active_mode: Mode,
 }
 
@@ -41,7 +41,7 @@ impl State {
             pink_pulse: pink_pulse,
             rainbow: rainbow,
             controller_mode: controller_mode,
-            white_pulse: PulseEnvelope::new(Duration::from_millis(1800)),
+            white_pulse: Envelope::new_pulse(Duration::from_millis(1800)),
             active_mode: active_mode,
         }
     }
