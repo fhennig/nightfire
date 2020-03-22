@@ -37,9 +37,7 @@ impl Rainbow {
 
 impl ColorProvider for Rainbow {
     fn get_color(&self, light_id: &LightId) -> Color {
-        let value = self.envelopes.get(light_id).unwrap().get_current_value();
-        let value: PinValue = value * 360.0 - 180.0;
-        let hue = RgbHue::from(value);
+        let hue = self.envelopes.get(light_id).unwrap().get_value_as_hue();
         Color::from_hsv(Hsv::new(hue, 1.0, 1.0))
     }
 }
