@@ -75,12 +75,6 @@ impl Mutation {
         Ok(MyResult::Ok)
     }
 
-    fn pinkPulse(context: &Context) -> FieldResult<MyResult> {
-        let mut state = context.state.lock().unwrap();
-        state.activate(Mode::PinkPulse);
-        Ok(MyResult::Ok)
-    }
-
     fn controller(context: &Context, pos: Option<GQLCoordinate>) -> FieldResult<MyResult> {
         let mut state = context.state.lock().unwrap();
         state.activate(Mode::Controller);
