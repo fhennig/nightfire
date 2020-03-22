@@ -1,11 +1,11 @@
 use crate::lightid::LightId;
 use crate::models::{
-    BinaryMask, Color, ColorProvider, Colors, Coordinate, Mask, PinValue, PosMask,
+    BinaryMask, Color, ColorProvider, Colors, Coordinate, Envelope, Mask, PinValue, PosMask,
 };
-use crate::modes::Rainbow;
 use palette::Hsv;
 use palette::RgbHue;
 use splines::{Interpolation, Key, Spline};
+use std::time::Duration;
 use std::vec::Vec;
 
 /// Should always be in [0, 1]
@@ -19,7 +19,7 @@ pub enum InactiveMode {
 }
 
 pub struct ControllerMode {
-    pub rainbow: Rainbow,
+    pub rainbow_riser: Envelope,
     pub pos_mask: PosMask,
     pub top_only_mask: BinaryMask,
     pub bottom_only_mask: BinaryMask,
@@ -35,7 +35,7 @@ pub struct ControllerMode {
 impl ControllerMode {
     pub fn new() -> ControllerMode {
         ControllerMode {
-            rainbow: Rainbow::new(),
+            rainbow_riser: Envelope::new_riser(Duration::from_millis(10000)),
             top_only_mask: BinaryMask::top_only_mask(),
             bottom_only_mask: BinaryMask::bottom_only_mask(),
             left_only_mask: BinaryMask::left_only_mask(),
@@ -100,7 +100,11 @@ impl ControllerMode {
                 InactiveMode::Black => Colors::black(),
                 InactiveMode::White => Colors::white(),
                 InactiveMode::Color => self.get_current_color(),
-                InactiveMode::Rainbow => Colors::rosy_pink(),
+                InactiveMode::Rainbow => Color::from(Hsv::new(
+                    self.rainbow_riser.get_value_as_hue(),
+                    self.saturation,
+                    self.value,
+                )),
             }
         }
     }
