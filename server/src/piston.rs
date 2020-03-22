@@ -3,75 +3,60 @@ use crate::state::State;
 use piston_window::*;
 use std::sync::{Arc, Mutex};
 
+/// more realistic light intensity
+fn fix_int(val: f32) -> f32 {
+    ((1. - val).powi(2) * -1.) + 1.
+}
+
+fn piston_color(state: &Arc<Mutex<State>>, light_id: &LightId) -> [f32; 4] {
+    let color = state.lock().unwrap().get_color(light_id);
+    [
+        fix_int(color.red as f32),
+        fix_int(color.green as f32),
+        fix_int(color.blue as f32),
+        1.0,
+    ]
+}
+
+/// creates a transformation for one of the stripes
+fn get_transf(context: Context, rot: f64, w: f64, n: f64) -> [[f64; 3]; 2] {
+    context
+        .transform
+        .trans(n, n)
+        .rot_deg(rot)
+        .trans(w * -0.5, w * 0.5)
+}
+
 pub fn run_piston_thread(state: Arc<Mutex<State>>) {
     println!("Startin window thread!");
-    let mut window: PistonWindow = WindowSettings::new("Hello World!", [300; 2])
+    let n = 200.;
+    let w = 50.;
+
+    let mut window: PistonWindow = WindowSettings::new("lumi debug simulation UI", [n * 2.; 2])
         .exit_on_esc(true)
         .build()
         .unwrap();
+
+    let stripe = [0.0, 0.0, w, n];
     while let Some(e) = window.next() {
         window.draw_2d(&e, |c, g, _| {
             clear([0.5, 0.5, 0.5, 1.0], g);
 
-            let stripe = [0.0, 0.0, 30.0, 100.0];
-            let color = state.lock().unwrap().get_color(&LightId::Top);
-            let color = [color.red as f32, color.green as f32, color.blue as f32, 1.0];
-
-            let transform = c
-                .transform
-                .trans(100.0, 100.0)
-                .rot_deg(135.0)
-                .trans(-15.0, 15.0);
-
-            rectangle(color, stripe, transform, g);
-
-            let color = state.lock().unwrap().get_color(&LightId::Bottom);
-            let color = [color.red as f32, color.green as f32, color.blue as f32, 1.0];
-
-            let transform = c
-                .transform
-                .trans(100.0, 100.0)
-                .rot_deg(-45.0)
-                .trans(-15.0, 15.0);
-
-            rectangle(color, stripe, transform, g);
-
-            let color = state.lock().unwrap().get_color(&LightId::Left);
-            let color = [color.red as f32, color.green as f32, color.blue as f32, 1.0];
-
-            let transform = c
-                .transform
-                .trans(100.0, 100.0)
-                .rot_deg(45.0)
-                .trans(-15.0, 15.0);
-
-            rectangle(color, stripe, transform, g);
-
-            let color = state.lock().unwrap().get_color(&LightId::Right);
-            let color = [color.red as f32, color.green as f32, color.blue as f32, 1.0];
-
-            let transform = c
-                .transform
-                .trans(100.0, 100.0)
-                .rot_deg(-135.0)
-                .trans(-15.0, 15.0);
-
-            rectangle(color, stripe, transform, g);
+            rectangle(piston_color(&state, &LightId::Top), stripe, get_transf(c, 135., w, n), g);
+            rectangle(piston_color(&state, &LightId::Bottom), stripe, get_transf(c, -45., w, n), g);
+            rectangle(piston_color(&state, &LightId::Left), stripe, get_transf(c, 45., w, n), g);
+            rectangle(piston_color(&state, &LightId::Right), stripe, get_transf(c, -135., w, n), g);
 
             let position = state.lock().unwrap().controller_mode.pos_mask.position;
-            let x = 100.0 + position.0 * 100.0;
-            let y = 100.0 + position.1 * - 100.0;  // invert
-
-            let transform = c
-                .transform
-                .trans(x, y);
+            let x = n + position.0 * n;
+            let y = n + position.1 * -n; // invert
 
             let mut color = [1.0; 4];
             if state.lock().unwrap().is_off() {
                 color = [0.0; 4];
             }
 
-            ellipse(color, [0.0, 0.0, 10.0, 10.0], transform, g);
+            ellipse(color, [0.0, 0.0, 10.0, 10.0], c.transform.trans(x, y), g);
         });
     }
 }
