@@ -65,9 +65,13 @@ impl ControllerMode {
         self.inactive_mode = InactiveMode::Rainbow;
     }
 
+    pub fn activate_locked_color(&mut self) {
+        self.inactive_mode = InactiveMode::Color;
+    }
+
     pub fn reset_inactive_mode(&mut self) {
         match self.inactive_mode {
-            InactiveMode::Black => self.inactive_mode = InactiveMode::White,
+            InactiveMode::Black => self.inactive_mode = InactiveMode::Color,
             _ => self.inactive_mode = InactiveMode::Black,
         }
     }

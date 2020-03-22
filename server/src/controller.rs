@@ -223,8 +223,11 @@ fn update_state(controller: &Controller, state: &mut State) {
     if controller.was_pressed(Button::Square) {
         state.controller_mode.activate_rainbow_color();
     }
-    if controller.was_pressed(Button::Circle) {
+    if controller.was_pressed(Button::Triangle) {
         state.switch_pink_pulse_mode();
+    }
+    if controller.was_pressed(Button::Circle) {
+        state.controller_mode.activate_locked_color();
     }
     if controller.was_pressed(Button::R3) {
         state.controller_mode.reset_inactive_mode();
@@ -252,13 +255,16 @@ fn update_state(controller: &Controller, state: &mut State) {
         .pos_mask
         .set_pos(controller.left_pos());
     // set whether to show black or the color
+    let active = controller.right_pos().length() > 0.75;
     state
         .controller_mode
-        .set_color_active(controller.right_pos().length() > 0.75);
+        .set_color_active(active);
     // set hue of the color from the right stick angle
-    match controller.right_pos().hue_from_angle() {
-        Some(hue) => state.controller_mode.set_hue(hue),
-        None => (),
+    if active {
+        match controller.right_pos().hue_from_angle() {
+            Some(hue) => state.controller_mode.set_hue(hue),
+            None => (),
+        }
     }
     // set saturation and value from the triggers
     let saturation = 1. - controller.right_trigger();
