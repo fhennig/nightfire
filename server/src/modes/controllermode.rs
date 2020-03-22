@@ -1,9 +1,7 @@
 use crate::envelope::Envelope;
 use crate::lightid::LightId;
-use crate::mask::{Mask, PosMask, BinaryMask};
-use crate::models::{
-    Color, ColorProvider, Colors, Coordinate, PinValue,
-};
+use crate::mask::{BinaryMask, EnvMask, Mask, PosMask};
+use crate::models::{Color, ColorProvider, Colors, Coordinate, PinValue};
 use palette::Hsv;
 use palette::RgbHue;
 use splines::{Interpolation, Key, Spline};
@@ -21,12 +19,14 @@ pub enum InactiveMode {
 pub struct ControllerMode {
     pub rainbow_riser: Envelope,
     pub pos_mask: PosMask,
+    pulse_mask: EnvMask,
     pub top_only_mask: BinaryMask,
     pub bottom_only_mask: BinaryMask,
     pub left_only_mask: BinaryMask,
     pub right_only_mask: BinaryMask,
     inactive_mode: InactiveMode,
     active: bool,
+    pulse_active: bool,
     hue: RgbHue<PinValue>,
     saturation: ControllerFloat,
     value: ControllerFloat,
@@ -49,8 +49,10 @@ impl ControllerMode {
                     Key::new(1.9, 0., Interpolation::Linear),
                 ]),
             },
+            pulse_mask: EnvMask::new_random_pulse(),
             inactive_mode: InactiveMode::Black,
             active: false,
+            pulse_active: false,
             hue: RgbHue::from_radians(0.),
             saturation: 1.,
             value: 1.,
@@ -70,6 +72,10 @@ impl ControllerMode {
             InactiveMode::Black => self.inactive_mode = InactiveMode::Color,
             _ => self.inactive_mode = InactiveMode::Black,
         }
+    }
+
+    pub fn switch_pulse_active(&mut self) {
+        self.pulse_active = !self.pulse_active;
     }
 
     pub fn set_color_active(&mut self, active: bool) {
@@ -112,6 +118,9 @@ impl ControllerMode {
 impl ColorProvider for ControllerMode {
     fn get_color(&self, light_id: &LightId) -> Color {
         let mut color = self.get_basecolor();
+        if self.pulse_active {
+            color = self.pulse_mask.get_masked_color(light_id, color);
+        }
         color = self.pos_mask.get_masked_color(light_id, color);
         color = self.top_only_mask.get_masked_color(light_id, color);
         color = self.bottom_only_mask.get_masked_color(light_id, color);

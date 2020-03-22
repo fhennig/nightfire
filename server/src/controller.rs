@@ -224,7 +224,7 @@ fn update_state(controller: &Controller, state: &mut State) {
         state.controller_mode.activate_rainbow_color();
     }
     if controller.was_pressed(Button::Triangle) {
-        state.switch_pink_pulse_mode();
+        state.controller_mode.switch_pulse_active();
     }
     if controller.was_pressed(Button::Circle) {
         state.controller_mode.activate_locked_color();
