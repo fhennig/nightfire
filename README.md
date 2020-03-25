@@ -1,7 +1,29 @@
 # lumi
 
-`lumi` allows you to control RGB lights with a playstation 3
-controller (dualshock six axis).
+`lumi` is an audio to light project.
+
+At the moment it consists of a server that runs on a Raspberry Pi and
+controls GPIO attached RGB lights.  It reads input from a playstation
+3 controller (dualshock six axis) on which the lights can be
+controlled in an intuitive way, like an instrument.
+
+The goal is to create a tool that allows for expressive visualization
+of sound, combining user input and automatic audio processing.
+
+
+## Components
+
+The project has multiple components which communicate with each other
+over the [OSC](http://opensoundcontrol.org/) protocol, also over
+network.  The central component is the server, which is running on as
+Raspberry Pi and controls the actual lights.  It takes in input from
+HIDs and audio processing tools.
+
+A playstation controller can be connected, either directly to the
+Raspberry Pi or to another computer from which its signals are then
+sent to the server on the Raspberry Pi.  On another device audio
+processing can be done and a control signal can be sent to the server,
+which is then incorporated into the sound visualization as well.
 
 
 ## Building and Installing
