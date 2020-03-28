@@ -1,12 +1,10 @@
-use crate::models::{Coordinate};
+use crate::models::Coordinate;
 use crate::state::State;
 use hidapi::HidApi;
 use log::{debug, info};
 use std::sync::{Arc, Mutex};
 use std::{thread, time};
 use stoppable_thread::{spawn, StoppableHandle};
-
-pub type RawControllerValues = [u8; 20];
 
 #[derive(Debug, Copy, Clone)]
 enum Button {
@@ -53,7 +51,38 @@ impl Button {
     }
 }
 
-/// gets the bit at position `n`. Bits are numbered from 0 (least significant) to 31 (most significant).
+#[derive(Debug, Copy, Clone)]
+enum Axis {
+    LX,
+    LY,
+    L3,
+    RX,
+    RY,
+    R3,
+}
+
+impl Axis {
+    fn val(&self) -> usize {
+        match *self {
+            Axis::LX => 6,
+            Axis::LY => 7,
+            Axis::L3 => 18,
+            Axis::RX => 8,
+            Axis::RY => 9,
+            Axis::R3 => 19,
+        }
+    }
+}
+
+type RawCVals = [u8; 20];
+
+#[derive(Copy, Clone)]
+struct ControllerValues {
+    buf: RawCVals,
+}
+
+/// gets the bit at position `n`.
+/// Bits are numbered from 0 (least significant) to 31 (most significant).
 fn get_bit_at(input: u8, n: u8) -> bool {
     if n < 32 {
         input & (1 << n) != 0
@@ -62,65 +91,86 @@ fn get_bit_at(input: u8, n: u8) -> bool {
     }
 }
 
-struct Controller {
-    prev_vals: RawControllerValues,
-    curr_vals: RawControllerValues,
+impl ControllerValues {
+    fn new_empty() -> ControllerValues {
+        ControllerValues::new([0; 20])
+    }
+
+    fn new(buf: RawCVals) -> ControllerValues {
+        ControllerValues { buf: buf }
+    }
+
+    fn is_pressed(&self, btn: Button) -> bool {
+        let v = btn.val();
+        get_bit_at(self.buf[v.0], v.1)
+    }
+
+    fn get_axis_val(&self, ax: Axis) -> u8 {
+        let v = ax.val();
+        self.buf[v]
+    }
 }
 
-#[allow(dead_code)]
+struct Controller {
+    prev_vals: ControllerValues,
+    curr_vals: ControllerValues,
+}
+
 impl Controller {
-    fn new(buf: RawControllerValues) -> Controller {
+    fn new(buf: ControllerValues) -> Controller {
         Controller {
             prev_vals: buf,
             curr_vals: buf,
         }
     }
 
-    fn update(&mut self, new_vals: RawControllerValues) {
+    fn update(&mut self, new_vals: ControllerValues) {
         self.prev_vals = self.curr_vals;
         self.curr_vals = new_vals;
     }
 
     fn left_pos(&self) -> Coordinate {
-        let buf = self.curr_vals;
-        let l_x = ((buf[6] as f64) / 255.0 - 0.5) * 2.0;
-        let l_y = ((buf[7] as f64 / 255.0 - 0.5) * -1.0) * 2.0;
+        let l_x = self.curr_vals.get_axis_val(Axis::LX);
+        let l_y = self.curr_vals.get_axis_val(Axis::LY);
+        let l_x = ((l_x as f64) / 255.0 - 0.5) * 2.0;
+        let l_y = ((l_y as f64 / 255.0 - 0.5) * -1.0) * 2.0;
         Coordinate(l_x, l_y)
     }
 
     fn right_pos(&self) -> Coordinate {
-        let buf = self.curr_vals;
-        let r_x = ((buf[8] as f64) / 255.0 - 0.5) * 2.0;
-        let r_y = ((buf[9] as f64 / 255.0 - 0.5) * -1.0) * 2.0;
+        let r_x = self.curr_vals.get_axis_val(Axis::RX);
+        let r_y = self.curr_vals.get_axis_val(Axis::RY);
+        let r_x = ((r_x as f64) / 255.0 - 0.5) * 2.0;
+        let r_y = ((r_y as f64 / 255.0 - 0.5) * -1.0) * 2.0;
         Coordinate(r_x, r_y)
     }
 
     /// Returns a value in [0, 1]
     fn left_trigger(&self) -> f64 {
-        (self.curr_vals[18] as f64) / 255.0
+        let t = self.curr_vals.get_axis_val(Axis::L3);
+        (t as f64) / 255.0
     }
 
     /// Returns a value in [0, 1]
     fn right_trigger(&self) -> f64 {
-        (self.curr_vals[19] as f64) / 255.0
+        let t = self.curr_vals.get_axis_val(Axis::R3);
+        (t as f64) / 255.0
     }
 
     fn was_pressed(&self, btn: Button) -> bool {
-        let v = btn.val();
-        let prev = get_bit_at(self.prev_vals[v.0], v.1);
-        let curr = get_bit_at(self.curr_vals[v.0], v.1);
+        let prev = self.prev_vals.is_pressed(btn);
+        let curr = self.curr_vals.is_pressed(btn);
         return !prev && curr;
     }
 
     fn is_pressed(&self, btn: Button) -> bool {
-        let v = btn.val();
-        get_bit_at(self.curr_vals[v.0], v.1)
+        self.curr_vals.is_pressed(btn)
     }
 
+    #[allow(dead_code)]
     fn was_released(&self, btn: Button) -> bool {
-        let v = btn.val();
-        let prev = get_bit_at(self.prev_vals[v.0], v.1);
-        let curr = get_bit_at(self.curr_vals[v.0], v.1);
+        let prev = self.prev_vals.is_pressed(btn);
+        let curr = self.curr_vals.is_pressed(btn);
         return prev && !curr;
     }
 
@@ -184,7 +234,8 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
             let device = api.open(vid, pid).unwrap();
 
             let mut buf = [0u8; 20];
-            let mut controller = Controller::new(buf);
+            let c_vals = ControllerValues::new_empty();
+            let mut controller = Controller::new(c_vals);
 
             // The loop
             while !stopped.get() {
@@ -192,7 +243,7 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
                 match device.read_timeout(&mut buf[..], -1) {
                     Ok(_) => {
                         debug!("Read: {:?}", buf);
-                        controller.update(buf);
+                        controller.update(ControllerValues::new(buf));
                         controller.debug_print();
                         let mut state = state.lock().unwrap();
                         update_state(&controller, &mut state);
@@ -255,9 +306,7 @@ fn update_state(controller: &Controller, state: &mut State) {
         .set_pos(controller.left_pos());
     // set whether to show black or the color
     let active = controller.right_pos().length() > 0.75;
-    state
-        .controller_mode
-        .set_color_active(active);
+    state.controller_mode.set_color_active(active);
     // set hue of the color from the right stick angle
     if active {
         match controller.right_pos().hue_from_angle() {
