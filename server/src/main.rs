@@ -1,5 +1,5 @@
+mod sixaxis;
 mod conf;
-mod controller;
 mod envelope;
 mod graphql;
 mod lightid;
@@ -10,7 +10,8 @@ mod piblaster;
 mod piston;
 mod state;
 use crate::conf::Conf;
-use crate::controller::{read_controller, StateUpdater};
+use crate::sixaxis::read_controller;
+use crate::sixaxis::state_updater::StateUpdater;
 use crate::graphql::serve;
 use crate::piblaster::{start_piblaster_thread, Light, Lights, PinModel};
 use crate::piston::run_piston_thread;
