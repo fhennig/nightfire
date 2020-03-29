@@ -74,13 +74,6 @@ impl Axis {
     }
 }
 
-type RawCVals = [u8; 20];
-
-#[derive(Copy, Clone)]
-pub struct ControllerValues {
-    buf: RawCVals,
-}
-
 /// gets the bit at position `n`.
 /// Bits are numbered from 0 (least significant) to 31 (most significant).
 fn get_bit_at(input: u8, n: u8) -> bool {
@@ -91,21 +84,32 @@ fn get_bit_at(input: u8, n: u8) -> bool {
     }
 }
 
+/// This type represents the raw byte representation of the controller
+/// state, taken from the HIDAPI.
+pub type RawCVals = [u8; 20];
+
+/// A basic abstraction over the byte representation of the controller
+/// state.  Allows accessing the state with the Button and Axis enums.
+#[derive(Copy, Clone)]
+pub struct ControllerValues {
+    buf: RawCVals,
+}
+
 impl ControllerValues {
-    fn new_empty() -> ControllerValues {
+    pub fn new_empty() -> ControllerValues {
         ControllerValues::new([0; 20])
     }
 
-    fn new(buf: RawCVals) -> ControllerValues {
+    pub fn new(buf: RawCVals) -> ControllerValues {
         ControllerValues { buf: buf }
     }
 
-    fn is_pressed(&self, btn: Button) -> bool {
+    pub fn is_pressed(&self, btn: Button) -> bool {
         let v = btn.val();
         get_bit_at(self.buf[v.0], v.1)
     }
 
-    fn get_axis_val(&self, ax: Axis) -> u8 {
+    pub fn get_axis_val(&self, ax: Axis) -> u8 {
         let v = ax.val();
         self.buf[v]
     }
@@ -117,6 +121,10 @@ pub trait ControllerValsSink {
     fn take_vals(&mut self, vals: ControllerValues);
 }
 
+/// Takes a sink where controller updates will be put.  Controller
+/// values are read from the HIDAPI.  This function takes care of
+/// waiting for a controller to connect and automatically reconnects
+/// if the controller is disconnected.
 #[allow(unused_must_use)]
 pub fn read_controller(
     mut c_vals_sink: Box<dyn ControllerValsSink + Send + Sync>,
@@ -170,6 +178,10 @@ pub fn read_controller(
     })
 }
 
+/// The controller abstracts away over controller state at specific
+/// points and allows to detect when a button is pressed or released.
+/// It also combines the X and Y axis for each stick into a coordinate
+/// and turns the triggers into values in [0, 1].
 struct Controller {
     prev_vals: ControllerValues,
     curr_vals: ControllerValues,
