@@ -203,8 +203,37 @@ impl Controller {
     }
 }
 
+
+trait ControllerValsSink {
+    fn take_vals(&mut self, vals: ControllerValues);
+}
+
+struct StateUpdater {
+    state: Arc<Mutex<State>>,
+    controller: Controller,
+}
+
+impl StateUpdater {
+    pub fn new(state: Arc<Mutex<State>>) -> StateUpdater {
+        let empty_vals = ControllerValues::new_empty();
+        StateUpdater {
+            state: state,
+            controller: Controller::new(empty_vals),
+        }
+    }
+}
+
+impl ControllerValsSink for StateUpdater {
+    fn take_vals(&mut self, vals: ControllerValues) {
+        self.controller.update(vals);
+        let mut state = self.state.lock().unwrap();
+        update_state(&self.controller, &mut state);
+    }
+}
+
 #[allow(unused_must_use)]
 pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
+    let mut updater = StateUpdater::new(state);
     spawn(move |stopped| {
         // TODO make a big retry loop, where we retry to open the device.
         let dur = time::Duration::from_millis(1000);
@@ -234,8 +263,6 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
             let device = api.open(vid, pid).unwrap();
 
             let mut buf = [0u8; 20];
-            let c_vals = ControllerValues::new_empty();
-            let mut controller = Controller::new(c_vals);
 
             // The loop
             while !stopped.get() {
@@ -243,10 +270,8 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
                 match device.read_timeout(&mut buf[..], -1) {
                     Ok(_) => {
                         debug!("Read: {:?}", buf);
-                        controller.update(ControllerValues::new(buf));
-                        controller.debug_print();
-                        let mut state = state.lock().unwrap();
-                        update_state(&controller, &mut state);
+                        let vals = ControllerValues::new(buf);
+                        updater.take_vals(vals);
                     }
                     Err(_e) => {
                         info!("Error reading controller values.");
