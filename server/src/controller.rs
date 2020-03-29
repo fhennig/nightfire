@@ -111,6 +111,62 @@ impl ControllerValues {
     }
 }
 
+trait ControllerValsSink {
+    fn take_vals(&mut self, vals: ControllerValues);
+}
+
+#[allow(unused_must_use)]
+pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
+    let mut updater = StateUpdater::new(state);
+    spawn(move |stopped| {
+        // TODO make a big retry loop, where we retry to open the device.
+        let dur = time::Duration::from_millis(1000);
+        while !stopped.get() {
+            info!("Trying to connect to a controller ...");
+
+            let (vid, pid) = (1356, 616);
+            let mut api = HidApi::new().unwrap();
+            let mut found = false;
+            while !found {
+                api.refresh_devices();
+                debug!("Devices refreshed!");
+                for device in api.device_list() {
+                    debug!("{:?}", device.path());
+                    if device.vendor_id() == vid && device.product_id() == pid {
+                        info!("Found the device!");
+                        found = true;
+                    }
+                }
+                if !found {
+                    debug!("Device not found, retrying ...");
+                    thread::sleep(dur);
+                }
+            }
+            // at this point the device was found, open it:
+            info!("Opening...");
+            let device = api.open(vid, pid).unwrap();
+
+            let mut buf = [0u8; 20];
+
+            // The loop
+            while !stopped.get() {
+                // Read data from device
+                match device.read_timeout(&mut buf[..], -1) {
+                    Ok(_) => {
+                        debug!("Read: {:?}", buf);
+                        let vals = ControllerValues::new(buf);
+                        updater.take_vals(vals);
+                    }
+                    Err(_e) => {
+                        info!("Error reading controller values.");
+                        break;
+                    }
+                }
+            }
+        }
+    })
+}
+
 struct Controller {
     prev_vals: ControllerValues,
     curr_vals: ControllerValues,
@@ -203,11 +259,6 @@ impl Controller {
     }
 }
 
-
-trait ControllerValsSink {
-    fn take_vals(&mut self, vals: ControllerValues);
-}
-
 struct StateUpdater {
     state: Arc<Mutex<State>>,
     controller: Controller,
@@ -221,127 +272,76 @@ impl StateUpdater {
             controller: Controller::new(empty_vals),
         }
     }
+
+    /// read the current controller state and update the state accordingly.
+    /// This function is called repeatedly each second, at every controller update.
+    fn update_state(&self) {
+        let controller = &self.controller;
+        let mut state = self.state.lock().unwrap();
+        // select mode
+        state.set_select_mode(controller.is_pressed(Button::PS));
+        // put stick values to state
+        state.set_left_coord(controller.left_pos());
+        state.set_right_coord(controller.right_pos());
+        // set on/off
+        if controller.was_pressed(Button::Start) {
+            state.switch_off();
+        }
+        if controller.was_pressed(Button::Square) {
+            state.controller_mode.activate_rainbow_color();
+        }
+        if controller.was_pressed(Button::Triangle) {
+            state.controller_mode.switch_pulse_active();
+        }
+        if controller.was_pressed(Button::Circle) {
+            state.controller_mode.activate_locked_color();
+        }
+        if controller.was_pressed(Button::R3) {
+            state.controller_mode.reset_inactive_mode();
+        }
+        // set d-pad masks
+        state
+            .controller_mode
+            .top_only_mask
+            .set_active(controller.is_pressed(Button::Up));
+        state
+            .controller_mode
+            .bottom_only_mask
+            .set_active(controller.is_pressed(Button::Down));
+        state
+            .controller_mode
+            .left_only_mask
+            .set_active(controller.is_pressed(Button::Left));
+        state
+            .controller_mode
+            .right_only_mask
+            .set_active(controller.is_pressed(Button::Right));
+        // set mask position from left stick
+        state
+            .controller_mode
+            .pos_mask
+            .set_pos(controller.left_pos());
+        // set whether to show black or the color
+        let active = controller.right_pos().length() > 0.75;
+        state.controller_mode.set_color_active(active);
+        // set hue of the color from the right stick angle
+        if active {
+            match controller.right_pos().hue_from_angle() {
+                Some(hue) => state.controller_mode.set_hue(hue),
+                None => (),
+            }
+        }
+        // set saturation and value from the triggers
+        let saturation = 1. - controller.right_trigger();
+        let value = 1. - controller.left_trigger();
+        state.controller_mode.set_saturation(saturation);
+        state.controller_mode.set_value(value);
+    }
 }
 
 impl ControllerValsSink for StateUpdater {
     fn take_vals(&mut self, vals: ControllerValues) {
         self.controller.update(vals);
-        let mut state = self.state.lock().unwrap();
-        update_state(&self.controller, &mut state);
+        self.update_state();
     }
-}
-
-#[allow(unused_must_use)]
-pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
-    let mut updater = StateUpdater::new(state);
-    spawn(move |stopped| {
-        // TODO make a big retry loop, where we retry to open the device.
-        let dur = time::Duration::from_millis(1000);
-        while !stopped.get() {
-            info!("Trying to connect to a controller ...");
-
-            let (vid, pid) = (1356, 616);
-            let mut api = HidApi::new().unwrap();
-            let mut found = false;
-            while !found {
-                api.refresh_devices();
-                debug!("Devices refreshed!");
-                for device in api.device_list() {
-                    debug!("{:?}", device.path());
-                    if device.vendor_id() == vid && device.product_id() == pid {
-                        info!("Found the device!");
-                        found = true;
-                    }
-                }
-                if !found {
-                    debug!("Device not found, retrying ...");
-                    thread::sleep(dur);
-                }
-            }
-            // at this point the device was found, open it:
-            info!("Opening...");
-            let device = api.open(vid, pid).unwrap();
-
-            let mut buf = [0u8; 20];
-
-            // The loop
-            while !stopped.get() {
-                // Read data from device
-                match device.read_timeout(&mut buf[..], -1) {
-                    Ok(_) => {
-                        debug!("Read: {:?}", buf);
-                        let vals = ControllerValues::new(buf);
-                        updater.take_vals(vals);
-                    }
-                    Err(_e) => {
-                        info!("Error reading controller values.");
-                        break;
-                    }
-                }
-            }
-        }
-    })
-}
-
-/// read the current controller state and update the state accordingly.
-/// This function is called repeatedly each second, at every controller update.
-fn update_state(controller: &Controller, state: &mut State) {
-    // select mode
-    state.set_select_mode(controller.is_pressed(Button::PS));
-    // put stick values to state
-    state.set_left_coord(controller.left_pos());
-    state.set_right_coord(controller.right_pos());
-    // set on/off
-    if controller.was_pressed(Button::Start) {
-        state.switch_off();
-    }
-    if controller.was_pressed(Button::Square) {
-        state.controller_mode.activate_rainbow_color();
-    }
-    if controller.was_pressed(Button::Triangle) {
-        state.controller_mode.switch_pulse_active();
-    }
-    if controller.was_pressed(Button::Circle) {
-        state.controller_mode.activate_locked_color();
-    }
-    if controller.was_pressed(Button::R3) {
-        state.controller_mode.reset_inactive_mode();
-    }
-    // set d-pad masks
-    state
-        .controller_mode
-        .top_only_mask
-        .set_active(controller.is_pressed(Button::Up));
-    state
-        .controller_mode
-        .bottom_only_mask
-        .set_active(controller.is_pressed(Button::Down));
-    state
-        .controller_mode
-        .left_only_mask
-        .set_active(controller.is_pressed(Button::Left));
-    state
-        .controller_mode
-        .right_only_mask
-        .set_active(controller.is_pressed(Button::Right));
-    // set mask position from left stick
-    state
-        .controller_mode
-        .pos_mask
-        .set_pos(controller.left_pos());
-    // set whether to show black or the color
-    let active = controller.right_pos().length() > 0.75;
-    state.controller_mode.set_color_active(active);
-    // set hue of the color from the right stick angle
-    if active {
-        match controller.right_pos().hue_from_angle() {
-            Some(hue) => state.controller_mode.set_hue(hue),
-            None => (),
-        }
-    }
-    // set saturation and value from the triggers
-    let saturation = 1. - controller.right_trigger();
-    let value = 1. - controller.left_trigger();
-    state.controller_mode.set_saturation(saturation);
-    state.controller_mode.set_value(value);
 }
