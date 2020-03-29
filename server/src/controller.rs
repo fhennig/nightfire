@@ -7,7 +7,7 @@ use std::{thread, time};
 use stoppable_thread::{spawn, StoppableHandle};
 
 #[derive(Debug, Copy, Clone)]
-enum Button {
+pub enum Button {
     PS,
     Start,
     Select,
@@ -52,7 +52,7 @@ impl Button {
 }
 
 #[derive(Debug, Copy, Clone)]
-enum Axis {
+pub enum Axis {
     LX,
     LY,
     L3,
@@ -77,7 +77,7 @@ impl Axis {
 type RawCVals = [u8; 20];
 
 #[derive(Copy, Clone)]
-struct ControllerValues {
+pub struct ControllerValues {
     buf: RawCVals,
 }
 
@@ -111,13 +111,16 @@ impl ControllerValues {
     }
 }
 
-trait ControllerValsSink {
+/// A trait that takes controller values and updates a state, sends
+/// them over a network or does whatever with them.
+pub trait ControllerValsSink {
     fn take_vals(&mut self, vals: ControllerValues);
 }
 
 #[allow(unused_must_use)]
-pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
-    let mut updater = StateUpdater::new(state);
+pub fn read_controller(
+    mut c_vals_sink: Box<dyn ControllerValsSink + Send + Sync>,
+) -> StoppableHandle<()> {
     spawn(move |stopped| {
         // TODO make a big retry loop, where we retry to open the device.
         let dur = time::Duration::from_millis(1000);
@@ -155,7 +158,7 @@ pub fn read_controller(state: Arc<Mutex<State>>) -> StoppableHandle<()> {
                     Ok(_) => {
                         debug!("Read: {:?}", buf);
                         let vals = ControllerValues::new(buf);
-                        updater.take_vals(vals);
+                        c_vals_sink.take_vals(vals);
                     }
                     Err(_e) => {
                         info!("Error reading controller values.");
@@ -259,7 +262,7 @@ impl Controller {
     }
 }
 
-struct StateUpdater {
+pub struct StateUpdater {
     state: Arc<Mutex<State>>,
     controller: Controller,
 }
@@ -342,6 +345,7 @@ impl StateUpdater {
 impl ControllerValsSink for StateUpdater {
     fn take_vals(&mut self, vals: ControllerValues) {
         self.controller.update(vals);
+        self.controller.debug_print();
         self.update_state();
     }
 }

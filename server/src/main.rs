@@ -10,7 +10,7 @@ mod piblaster;
 mod piston;
 mod state;
 use crate::conf::Conf;
-use crate::controller::read_controller;
+use crate::controller::{read_controller, StateUpdater};
 use crate::graphql::serve;
 use crate::piblaster::{start_piblaster_thread, Light, Lights, PinModel};
 use crate::piston::run_piston_thread;
@@ -52,7 +52,8 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     // setup state
     let state = Arc::new(Mutex::new(State::new()));
     // run controller
-    let controller = read_controller(Arc::clone(&state));
+    let updater = Box::new(StateUpdater::new(Arc::clone(&state)));
+    let controller = read_controller(updater);
     // start piblaster
     let piblaster = start_piblaster_thread(init_pin_setting(&conf), Arc::clone(&state));
     // start GraphQL endpoint server
