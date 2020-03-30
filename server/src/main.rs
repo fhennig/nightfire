@@ -1,4 +1,3 @@
-mod osc_receiver;
 mod osc;
 mod sixaxis;
 mod conf;
@@ -14,10 +13,12 @@ mod state;
 use crate::conf::Conf;
 use crate::sixaxis::read_controller;
 use crate::sixaxis::state_updater::StateUpdater;
+use crate::sixaxis::osc_sender::ControllerValsSender;
 use crate::graphql::serve;
 use crate::piblaster::{start_piblaster_thread, Light, Lights, PinModel};
 use crate::piston::run_piston_thread;
 use crate::state::State;
+use crate::osc::start_receiving;
 use clap::{App, Arg, ArgMatches};
 use log::info;
 use std::sync::{Arc, Mutex};
@@ -54,8 +55,11 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     };
     // setup state
     let state = Arc::new(Mutex::new(State::new()));
+    // start receiving osc
+    let osc_receiver = start_receiving("127.0.0.1:33766".parse().unwrap(), Arc::clone(&state));
     // run controller
-    let updater = Box::new(StateUpdater::new(Arc::clone(&state)));
+    // let updater = Box::new(StateUpdater::new(Arc::clone(&state)));
+    let updater = Box::new(ControllerValsSender::new("127.0.0.1:33767".parse().unwrap(), "127.0.0.1:33766".parse().unwrap()));
     let controller = read_controller(updater);
     // start piblaster
     let piblaster = start_piblaster_thread(init_pin_setting(&conf), Arc::clone(&state));

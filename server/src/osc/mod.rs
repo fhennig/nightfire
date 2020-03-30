@@ -1,6 +1,13 @@
+use crate::sixaxis::state_updater::StateUpdater;
+use crate::sixaxis::ControllerValsSink;
 use crate::sixaxis::ControllerValues;
+use crate::state::State;
+use log::{debug, info};
 use std::convert::TryInto;
+use std::net::{SocketAddrV4, UdpSocket};
+use std::sync::{Arc, Mutex};
 use std::vec::Vec;
+use stoppable_thread::{spawn, StoppableHandle};
 
 /// An enum of values that are supported to be sent.
 pub enum OscVal {
@@ -27,11 +34,11 @@ pub fn encode(val: OscVal) -> Vec<u8> {
     rosc::encoder::encode(&rosc::OscPacket::Message(msg)).unwrap()
 }
 
-pub fn decode(msg: &[u8]) -> Option<OscVal> {
+fn decode(msg: &[u8]) -> Option<OscVal> {
     let packet = rosc::decoder::decode(msg).unwrap();
     match packet {
         rosc::OscPacket::Message(msg) => unpack(msg),
-        rosc::OscPacket::Bundle(bundle) => None,
+        rosc::OscPacket::Bundle(_) => None,
     }
 }
 
@@ -50,4 +57,28 @@ fn unpack(msg: rosc::OscMessage) -> Option<OscVal> {
         },
         &_ => None, // unknown address
     }
+}
+
+/// Starts a stoppable thread that receives OSC messages on the specified address as UDP,
+/// parses the messages and updates the state accordingly
+pub fn start_receiving(recv_addr: SocketAddrV4, state: Arc<Mutex<State>>) -> StoppableHandle<()> {
+    let mut state_updater = StateUpdater::new(state);
+    info!("Opening socket for receiving on {}", recv_addr);
+    let socket = UdpSocket::bind(recv_addr).unwrap(); // TODO better error handling here
+    spawn(move |stopped| {
+        let mut buf = [0u8; rosc::decoder::MTU];
+        while !stopped.get() {
+            match socket.recv_from(&mut buf) {
+                Ok((size, _)) => match decode(&buf[..size]) {
+                    Some(val) => match val {
+                        OscVal::ControllerValues(c_vals) => state_updater.take_vals(c_vals),
+                    },
+                    None => debug!("Unknown message received!"),
+                },
+                Err(_) => {
+                    debug!("Error receiving bytes on socket.");
+                }
+            }
+        }
+    })
 }

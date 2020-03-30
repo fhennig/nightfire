@@ -1,7 +1,6 @@
 use crate::osc::{encode, OscVal};
 use crate::sixaxis::{ControllerValsSink, ControllerValues};
 use std::net::{SocketAddrV4, UdpSocket};
-use std::str::FromStr;
 
 pub struct ControllerValsSender {
     socket: UdpSocket,
