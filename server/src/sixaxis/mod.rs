@@ -91,7 +91,7 @@ pub type RawCVals = [u8; 20];
 /// state.  Allows accessing the state with the Button and Axis enums.
 #[derive(Copy, Clone)]
 pub struct ControllerValues {
-    buf: RawCVals,
+    pub buf: RawCVals,
 }
 
 impl ControllerValues {

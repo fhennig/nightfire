@@ -1,3 +1,5 @@
+mod osc_receiver;
+mod osc;
 mod sixaxis;
 mod conf;
 mod envelope;

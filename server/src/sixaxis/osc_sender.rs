@@ -1,13 +1,11 @@
+use crate::osc::{encode, OscVal};
 use crate::sixaxis::{ControllerValsSink, ControllerValues};
-use rosc::encoder;
-use rosc::{OscMessage, OscPacket, OscType};
 use std::net::{SocketAddrV4, UdpSocket};
 use std::str::FromStr;
 
 pub struct ControllerValsSender {
     socket: UdpSocket,
     to_addr: SocketAddrV4,
-
 }
 
 impl ControllerValsSender {
@@ -23,11 +21,7 @@ impl ControllerValsSender {
 
 impl ControllerValsSink for ControllerValsSender {
     fn take_vals(&mut self, vals: ControllerValues) {
-        let msg = OscPacket::Message(OscMessage {
-            addr: "/sixaxis".to_string(),
-            args: vec![OscType::Blob(vals.buf.to_vec())],
-        });
-        let enc_msg = encoder::encode(&msg).unwrap();
-        self.socket.send_to(&enc_msg, self.to_addr).unwrap();
+        let bytes = encode(OscVal::ControllerValues(vals));
+        self.socket.send_to(&bytes, self.to_addr).unwrap();
     }
 }
