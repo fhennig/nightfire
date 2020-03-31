@@ -1,14 +1,14 @@
-use lumi::conf::Conf;
-use lumi::sixaxis::read_controller;
-use lumi::sixaxis::state_updater::StateUpdater;
-use lumi::sixaxis::osc_sender::ControllerValsSender;
-use lumi::graphql::serve;
-use lumi::piblaster::{start_piblaster_thread, Light, Lights, PinModel};
-use lumi::piston::run_piston_thread;
-use lumi::state::State;
-use lumi::osc::start_receiving;
 use clap::{App, Arg, ArgMatches};
 use log::info;
+use lumi::conf::Conf;
+use lumi::graphql::serve;
+use lumi::osc::start_receiving;
+use lumi::piblaster::{start_piblaster_thread, Light, Lights, PinModel};
+use lumi::piston::run_piston_thread;
+use lumi::sixaxis::osc_sender::ControllerValsSender;
+use lumi::sixaxis::read_controller;
+use lumi::sixaxis::state_updater::StateUpdater;
+use lumi::state::State;
 use std::sync::{Arc, Mutex};
 use std::{error, thread, time};
 
@@ -44,10 +44,9 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     // setup state
     let state = Arc::new(Mutex::new(State::new()));
     // start receiving osc
-    let osc_receiver = start_receiving("127.0.0.1:33766".parse().unwrap(), Arc::clone(&state));
+    let osc_receiver = start_receiving("0.0.0.0:33766".parse().unwrap(), Arc::clone(&state));
     // run controller
-    // let updater = Box::new(StateUpdater::new(Arc::clone(&state)));
-    let updater = Box::new(ControllerValsSender::new("127.0.0.1:33767".parse().unwrap(), "127.0.0.1:33766".parse().unwrap()));
+    let updater = Box::new(StateUpdater::new(Arc::clone(&state)));
     let controller = read_controller(updater);
     // start piblaster
     let piblaster = start_piblaster_thread(init_pin_setting(&conf), Arc::clone(&state));
