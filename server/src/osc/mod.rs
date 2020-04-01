@@ -33,7 +33,10 @@ pub fn encode(val: OscVal) -> Vec<u8> {
             addr: OscVal::ControllerValues(c_vals).addr(),
             args: vec![rosc::OscType::Blob(c_vals.buf.to_vec())],
         },
-        OscVal::AudioV1(vals) => unimplemented!(),
+        OscVal::AudioV1(vals) => rosc::OscMessage {
+            addr: OscVal::AudioV1(vals).addr(),
+            args: vec![rosc::OscType::Float(vals.intensity)],
+        }
     };
     rosc::encoder::encode(&rosc::OscPacket::Message(msg)).unwrap()
 }
@@ -59,7 +62,12 @@ fn unpack(msg: rosc::OscMessage) -> Option<OscVal> {
             },
             _ => None, // incorrect args
         },
-        "/audio/v1" => unimplemented!(),
+        "/audio/v1" => match &msg.args[..] {
+            [rosc::OscType::Float(intensity)] => {
+                Some(OscVal::AudioV1(MyValues { intensity: *intensity }))
+            }
+            _ => None,
+        },
         &_ => None, // unknown address
     }
 }
@@ -77,7 +85,7 @@ pub fn start_receiving(recv_addr: SocketAddrV4, state: Arc<Mutex<State>>) -> Sto
                 Ok((size, _)) => match decode(&buf[..size]) {
                     Some(val) => match val {
                         OscVal::ControllerValues(c_vals) => state_updater.take_vals(c_vals),
-                        OscVal::AudioV1(vals) => unimplemented!(),
+                        OscVal::AudioV1(vals) => (),   // do nothing for now
                     },
                     None => debug!("Unknown message received!"),
                 },

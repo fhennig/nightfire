@@ -26,3 +26,10 @@ impl ControllerValsSink for ControllerValsSender {
         self.socket.send_to(&bytes, self.to_addr).unwrap();
     }
 }
+
+impl ValsHandler for ControllerValsSender {
+    fn take_vals(&mut self, vals: MyValues) {
+        let bytes = encode(OscVal::AudioV1(vals));
+        self.socket.send_to(&bytes, self.to_addr).unwrap();
+    }
+}
