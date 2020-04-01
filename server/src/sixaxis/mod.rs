@@ -1,5 +1,4 @@
 pub mod state_updater;
-pub mod osc_sender;
 use hidapi::HidApi;
 use log::{debug, info};
 use std::{thread, time};

@@ -5,7 +5,6 @@ use lumi::graphql::serve;
 use lumi::osc::start_receiving;
 use lumi::piblaster::{start_piblaster_thread, Light, Lights, PinModel};
 use lumi::piston::run_piston_thread;
-use lumi::sixaxis::osc_sender::ControllerValsSender;
 use lumi::sixaxis::read_controller;
 use lumi::sixaxis::state_updater::StateUpdater;
 use lumi::state::State;

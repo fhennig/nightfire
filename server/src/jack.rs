@@ -44,7 +44,7 @@ impl ProcessHandler for JackHandler
 
 /// Starts to accept audio frames on the audio port and writes them to
 /// the channel.
-pub fn start_processing(vals_handler: Box<dyn ValsHandler>) -> AsyncClient<(), JackHandler> {
+pub fn read_audio(vals_handler: Box<dyn ValsHandler>) -> AsyncClient<(), JackHandler> {
     info!("Starting processing.  Creating client and port ...");
     let client = jack::Client::new("synesthesizer", jack::ClientOptions::NO_START_SERVER)
         .unwrap()

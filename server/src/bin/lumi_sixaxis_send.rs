@@ -1,8 +1,8 @@
-use lumi::sixaxis::osc_sender::ControllerValsSender;
+use lumi::osc::OscSender;
 use lumi::sixaxis::read_controller;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let updater = Box::new(ControllerValsSender::new(
+    let updater = Box::new(OscSender::new(
         "0.0.0.0:33767".parse().unwrap(),
         "192.168.1.168:33766".parse().unwrap(),
     ));

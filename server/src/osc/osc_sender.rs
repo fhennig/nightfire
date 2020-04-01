@@ -4,30 +4,30 @@ use crate::audio_processing::MyValues;
 use crate::jack::ValsHandler;
 use std::net::{SocketAddrV4, UdpSocket};
 
-pub struct ControllerValsSender {
+pub struct OscSender {
     socket: UdpSocket,
     to_addr: SocketAddrV4,
 }
 
-impl ControllerValsSender {
+impl OscSender {
     /// A host address with port is required.
-    pub fn new(host_addr: SocketAddrV4, to_addr: SocketAddrV4) -> ControllerValsSender {
+    pub fn new(host_addr: SocketAddrV4, to_addr: SocketAddrV4) -> OscSender {
         let socket = UdpSocket::bind(host_addr).unwrap();
-        ControllerValsSender {
+        OscSender {
             socket: socket,
             to_addr: to_addr,
         }
     }
 }
 
-impl ControllerValsSink for ControllerValsSender {
+impl ControllerValsSink for OscSender {
     fn take_vals(&mut self, vals: ControllerValues) {
         let bytes = encode(OscVal::ControllerValues(vals));
         self.socket.send_to(&bytes, self.to_addr).unwrap();
     }
 }
 
-impl ValsHandler for ControllerValsSender {
+impl ValsHandler for OscSender {
     fn take_vals(&mut self, vals: MyValues) {
         let bytes = encode(OscVal::AudioV1(vals));
         self.socket.send_to(&bytes, self.to_addr).unwrap();
