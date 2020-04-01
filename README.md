@@ -25,6 +25,13 @@ sent to the server on the Raspberry Pi.  On another device audio
 processing can be done and a control signal can be sent to the server,
 which is then incorporated into the sound visualization as well.
 
+Each component should send all its available information to the server
+and the server then decides what influences the lights.  Otherwise the
+clients would need to coordinate.
+
+An early stage of the project included a web interface, this might be
+worth considering to allow controlling the server.
+
 
 ## Building and Installing
 
@@ -137,3 +144,26 @@ modify (i.e. which messages to send) and I can also send messages from
 another software.  I.e. I just modify the color with the stick from
 the controller, but another software sets the light intensity in the
 rythm of the music.
+
+----
+
+I could make a seperate module for the controlling of the lights, that
+just receives color over OSC.  for each light I could have an OSC
+address, and specify for each address the pins for RGB.  This could be
+fully specified in a yaml file that the module reads on startup.
+
+In a seperate yaml file on the server I map coordinates to adresses.
+
+### Setups:
+
+Dev setup: have controller and server on the dev machine, send OSC to
+the rPi.
+
+Prod: have the server on the rPi and receive OSC there, have minimal
+code running on a variety of machines (one for the controller, one for
+audio, ...)
+
+=> requires modularity of: controller; sound-processor; server;
+piblaster-module.
+
+Is this too much?  Maybe focus on audio to OSC first?
