@@ -1,24 +1,42 @@
 use jack::{AsyncClient, AudioIn, Client, Control, Port, ProcessHandler, ProcessScope};
-use triple_buffer::Input;
 // my definitions
-use crate::common::{MyValues, SignalProcessor};
+use log::{info, debug};
+use crate::audio_processing::{MyValues, SignalProcessor};
+use std::{thread, time};
+use stoppable_thread::{spawn, StoppableHandle};
 
-pub struct MyHandler {
-    signal_processor: SignalProcessor,
-    buf_input: Input<MyValues>,
-    audio_in_port: Port<AudioIn>,
+pub trait ValsHandler : Send + Sync {
+    fn take_vals(&mut self, vals: MyValues);
 }
 
-impl ProcessHandler for MyHandler {
+pub struct JackHandler {
+    signal_processor: SignalProcessor,
+    audio_in_port: Port<AudioIn>,
+    vals_handler: Box<dyn ValsHandler>,
+}
+
+impl JackHandler
+{
+    fn new(audio_in_port: Port<AudioIn>, handler: Box<dyn ValsHandler>) -> JackHandler {
+        JackHandler {
+            signal_processor: SignalProcessor::new(),
+            audio_in_port: audio_in_port,
+            vals_handler: handler,
+        }
+    }
+}
+
+impl ProcessHandler for JackHandler
+{
     fn process(&mut self, client: &Client, process_scope: &ProcessScope) -> Control {
         // read frame from the port
         let audio = self.audio_in_port.as_slice(process_scope);
         // add the latest audio to our signal processor
         let current_values = self.signal_processor.add_audio_frame(audio);
         // push new values in the buffer
-        self.buf_input.write(current_values);
+        // ... TODO ...
         // print CPU load
-        println!("{}", client.cpu_load());
+        info!("{}", client.cpu_load());
         // Continue the loop
         Control::Continue
     }
@@ -26,7 +44,7 @@ impl ProcessHandler for MyHandler {
 
 /// Starts to accept audio frames on the audio port and writes them to
 /// the channel.
-pub fn start_processing(buf_in: Input<MyValues>) -> AsyncClient<(), MyHandler> {
+pub fn start_processing(vals_handler: Box<dyn ValsHandler>) -> AsyncClient<(), JackHandler> {
     info!("Starting processing.  Creating client and port ...");
     let client = jack::Client::new("synesthesizer", jack::ClientOptions::NO_START_SERVER)
         .unwrap()
@@ -35,11 +53,7 @@ pub fn start_processing(buf_in: Input<MyValues>) -> AsyncClient<(), MyHandler> {
     let spec = jack::AudioIn::default();
     let audio_in_port = client.register_port("in", spec).unwrap();
 
-    let p_handler = MyHandler {
-        signal_processor: SignalProcessor::new(),
-        buf_input: buf_in,
-        audio_in_port: audio_in_port,
-    };
+    let p_handler = JackHandler::new(audio_in_port, vals_handler);
 
     let active_client = client.activate_async((), p_handler).unwrap();
     info!("Async processhandling started.");

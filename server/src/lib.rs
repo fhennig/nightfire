@@ -10,3 +10,5 @@ pub mod modes;
 pub mod piblaster;
 pub mod piston;
 pub mod state;
+pub mod audio_processing;
+pub mod jack;

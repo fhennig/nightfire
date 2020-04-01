@@ -1,5 +1,7 @@
 use crate::osc::{encode, OscVal};
 use crate::sixaxis::{ControllerValsSink, ControllerValues};
+use crate::audio_processing::MyValues;
+use crate::jack::ValsHandler;
 use std::net::{SocketAddrV4, UdpSocket};
 
 pub struct ControllerValsSender {

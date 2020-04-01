@@ -1,6 +1,7 @@
 use crate::sixaxis::state_updater::StateUpdater;
 use crate::sixaxis::ControllerValsSink;
 use crate::sixaxis::ControllerValues;
+use crate::audio_processing::MyValues;
 use crate::state::State;
 use log::{debug, info};
 use std::convert::TryInto;
@@ -12,6 +13,7 @@ use stoppable_thread::{spawn, StoppableHandle};
 /// An enum of values that are supported to be sent.
 pub enum OscVal {
     ControllerValues(ControllerValues),
+    AudioV1(MyValues),
 }
 
 impl OscVal {
@@ -19,6 +21,7 @@ impl OscVal {
     fn addr(&self) -> String {
         match *self {
             OscVal::ControllerValues(_) => "/sixaxis/raw".to_string(),
+            OscVal::AudioV1(_) => "/audio/v1".to_string(),
         }
     }
 }
@@ -30,6 +33,7 @@ pub fn encode(val: OscVal) -> Vec<u8> {
             addr: OscVal::ControllerValues(c_vals).addr(),
             args: vec![rosc::OscType::Blob(c_vals.buf.to_vec())],
         },
+        OscVal::AudioV1(vals) => unimplemented!(),
     };
     rosc::encoder::encode(&rosc::OscPacket::Message(msg)).unwrap()
 }
@@ -52,9 +56,10 @@ fn unpack(msg: rosc::OscMessage) -> Option<OscVal> {
                 } else {
                     None // incorrect blob length
                 }
-            }
+            },
             _ => None, // incorrect args
         },
+        "/audio/v1" => unimplemented!(),
         &_ => None, // unknown address
     }
 }
@@ -72,6 +77,7 @@ pub fn start_receiving(recv_addr: SocketAddrV4, state: Arc<Mutex<State>>) -> Sto
                 Ok((size, _)) => match decode(&buf[..size]) {
                     Some(val) => match val {
                         OscVal::ControllerValues(c_vals) => state_updater.take_vals(c_vals),
+                        OscVal::AudioV1(vals) => unimplemented!(),
                     },
                     None => debug!("Unknown message received!"),
                 },
