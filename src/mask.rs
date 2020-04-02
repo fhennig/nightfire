@@ -1,6 +1,6 @@
 use crate::envelope::Envelope;
 use crate::models::{distance, Color, Colors, Coordinate, PinValue, Positionable};
-use splines::{Spline, Key, Interpolation};
+use splines::{Interpolation, Key, Spline};
 use std::time::Duration;
 
 pub trait Mask {
@@ -201,5 +201,29 @@ impl EnvMask {
 impl Mask for EnvMask {
     fn get_masked_color(&self, pos: &dyn Positionable, color: Color) -> Color {
         self.get_pos_mask().get_masked_color(pos, color)
+    }
+}
+
+pub struct SolidMask {
+    val: PinValue,
+}
+
+impl SolidMask {
+    pub fn new() -> SolidMask {
+        SolidMask { val: 1. }
+    }
+
+    pub fn set_val(&mut self, val: PinValue) {
+        self.val = val;
+    }
+}
+
+impl Mask for SolidMask {
+    fn get_masked_color(&self, pos: &dyn Positionable, color: Color) -> Color {
+        Color::new(
+            color.red * self.val,
+            color.green * self.val,
+            color.blue * self.val,
+        )
     }
 }
