@@ -10,6 +10,7 @@ pub type ControllerFloat = PinValue;
 pub enum HueMode {
     Color,
     Rainbow,
+    FourColors,
 }
 
 pub struct ControllerMode {
@@ -19,6 +20,8 @@ pub struct ControllerMode {
     rainbow_solid: models::RainbowSolid,
     /// The solid color that can be set with the stick.
     pub const_solid: models::ConstSolid,
+    /// Four different colors for the four lights
+    pub const_quad: models::ConstQuad,
     // saturation and value. 
     saturation: ControllerFloat,
     value: ControllerFloat,
@@ -40,6 +43,7 @@ impl ControllerMode {
         ControllerMode {
             rainbow_solid: models::RainbowSolid::new(),
             const_solid: models::ConstSolid::new(),
+            const_quad: models::ConstQuad::new(),
             top_only_mask: BinaryMask::top_only_mask(),
             bottom_only_mask: BinaryMask::bottom_only_mask(),
             left_only_mask: BinaryMask::left_only_mask(),
@@ -96,6 +100,11 @@ impl ControllerMode {
             )),
             HueMode::Rainbow => Color::from(Hsv::new(
                 self.rainbow_solid.hue_at(pos),
+                self.saturation,
+                self.value,
+            )),
+            HueMode::FourColors => Color::from(Hsv::new(
+                self.const_quad.hue_at(pos),
                 self.saturation,
                 self.value,
             )),

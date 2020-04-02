@@ -59,6 +59,7 @@ pub trait ColorProvider: Send + Sync {
     fn get_color(&self, light_id: &LightId) -> Color;
 }
 
+/// A hue map.  Provides a hue for any Coordinate.
 pub trait HueMap: Send + Sync {
     /// Provide a hue.  not for every position a hue needs to be provided.
     fn hue_at(&self, pos: Coordinate) -> RgbHue<PinValue>;
@@ -101,6 +102,39 @@ impl ConstSolid {
 impl HueMap for ConstSolid {
     fn hue_at(&self, pos: Coordinate) -> RgbHue<PinValue> {
         self.hue
+    }
+}
+
+/// A color map that has four different hues for each quadrant of the coordinate system
+pub struct ConstQuad {
+    pub tl_hue: RgbHue<PinValue>,
+    pub tr_hue: RgbHue<PinValue>,
+    pub bl_hue: RgbHue<PinValue>,
+    pub br_hue: RgbHue<PinValue>,
+}
+
+impl ConstQuad {
+    pub fn new() -> ConstQuad {
+        ConstQuad {
+            tl_hue: RgbHue::from(0.),
+            tr_hue: RgbHue::from(0.),
+            bl_hue: RgbHue::from(0.),
+            br_hue: RgbHue::from(0.),
+        }
+    }
+}
+
+impl HueMap for ConstQuad {
+    fn hue_at(&self, pos: Coordinate) -> RgbHue<PinValue> {
+        if pos.0 > 0. && pos.1 > 0. {
+            self.tr_hue
+        } else if pos.0 > 0. && pos.1 <= 0. {
+            self.br_hue
+        } else if pos.0 <= 0. && pos.1 > 0. {
+            self.tl_hue
+        } else {
+            self.bl_hue
+        }
     }
 }
 
