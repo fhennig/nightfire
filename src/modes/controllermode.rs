@@ -20,8 +20,6 @@ pub struct ControllerMode {
     rainbow_solid: models::RainbowSolid,
     /// The solid color that can be set with the stick.
     pub const_solid: models::ConstSolid,
-    /// Four different colors for the four lights
-    pub const_quad: models::ConstQuad,
     // saturation and value. 
     saturation: ControllerFloat,
     value: ControllerFloat,
@@ -39,7 +37,6 @@ impl ControllerMode {
         ControllerMode {
             rainbow_solid: models::RainbowSolid::new(),
             const_solid: models::ConstSolid::new(),
-            const_quad: models::ConstQuad::new(),
             // masks
             pos_mask: mask::PosMask::new(),
             music_mask: mask::SolidMask::new(),
