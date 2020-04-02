@@ -144,6 +144,11 @@ impl StateUpdater {
         if controller.was_pressed(Button::L3) {
             state.controller_mode.pos_mask.switch_center_off();
         }
+        // set mask position from left stick
+        state
+            .controller_mode
+            .pos_mask
+            .set_pos(controller.left_pos());
         // set hue of the color from the right stick angle
         let active = controller.right_pos().length() > 0.75;
         if active {
