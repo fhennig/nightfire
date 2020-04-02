@@ -30,6 +30,8 @@ pub struct ControllerMode {
     hue: RgbHue<PinValue>,
     saturation: ControllerFloat,
     value: ControllerFloat,
+    intensity: f32,
+    music_mode: bool,
 }
 
 impl ControllerMode {
@@ -56,6 +58,8 @@ impl ControllerMode {
             hue: RgbHue::from_radians(0.),
             saturation: 1.,
             value: 1.,
+            intensity: 0.,
+            music_mode: false,
         }
     }
 
@@ -94,8 +98,20 @@ impl ControllerMode {
         self.value = value;
     }
 
+    pub fn set_intensity(&mut self, intensity: f32) {
+        self.intensity = intensity;
+    }
+
+    pub fn set_music_mode(&mut self, active: bool) {
+        self.music_mode = active;
+    }
+
     fn get_current_color(&self) -> Color {
-        Color::from(Hsv::new(self.hue, self.saturation, self.value))
+        if self.music_mode {
+            Color::from(Hsv::new(self.hue, (1. - self.intensity).into(), self.value))
+        } else {
+            Color::from(Hsv::new(self.hue, self.saturation, self.value))
+        }
     }
 
     fn get_basecolor(&self) -> Color {

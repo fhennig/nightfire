@@ -43,12 +43,13 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     // setup state
     let state = Arc::new(Mutex::new(State::new()));
     // start receiving osc
+    let state_copy = Arc::clone(&state);
     let mut state_updater = StateUpdater::new(Arc::clone(&state));
     let osc_receiver = start_recv("0.0.0.0:33766".parse().unwrap(),
                                   Box::new(move |osc_val: OscVal| {
         match osc_val {
             OscVal::ControllerValues(c_vals) => state_updater.take_vals(c_vals),
-            _ => (),
+            OscVal::AudioV1(vals) => state_copy.lock().unwrap().controller_mode.set_intensity(vals.intensity),
         }
     }));
     // run controller
