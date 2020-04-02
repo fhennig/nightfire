@@ -170,7 +170,7 @@ impl StateUpdater {
         let active = controller.right_pos().length() > 0.75;
         if active {
             match controller.right_pos().hue_from_angle() {
-                Some(hue) => state.controller_mode.set_hue(hue),
+                Some(hue) => state.controller_mode.const_solid.set_hue(hue),
                 None => (),
             }
         }
