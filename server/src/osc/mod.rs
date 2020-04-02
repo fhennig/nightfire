@@ -76,8 +76,7 @@ fn unpack(msg: rosc::OscMessage) -> Option<OscVal> {
 
 /// Starts a stoppable thread that receives OSC messages on the specified address as UDP,
 /// parses the messages and updates the state accordingly
-pub fn start_receiving(recv_addr: SocketAddrV4, state: Arc<Mutex<State>>) -> StoppableHandle<()> {
-    let mut state_updater = StateUpdater::new(state);
+pub fn start_recv(recv_addr: SocketAddrV4, mut handler: Box<dyn FnMut(OscVal) + Send + Sync>) -> StoppableHandle<()> {
     info!("Opening socket for receiving on {}", recv_addr);
     let socket = UdpSocket::bind(recv_addr).unwrap(); // TODO better error handling here
     spawn(move |stopped| {
@@ -85,10 +84,7 @@ pub fn start_receiving(recv_addr: SocketAddrV4, state: Arc<Mutex<State>>) -> Sto
         while !stopped.get() {
             match socket.recv_from(&mut buf) {
                 Ok((size, _)) => match decode(&buf[..size]) {
-                    Some(val) => match val {
-                        OscVal::ControllerValues(c_vals) => state_updater.take_vals(c_vals),
-                        OscVal::AudioV1(vals) => (),   // do nothing for now
-                    },
+                    Some(val) => handler(val),
                     None => debug!("Unknown message received!"),
                 },
                 Err(_) => {
@@ -98,3 +94,4 @@ pub fn start_receiving(recv_addr: SocketAddrV4, state: Arc<Mutex<State>>) -> Sto
         }
     })
 }
+

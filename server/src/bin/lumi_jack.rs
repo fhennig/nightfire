@@ -2,6 +2,7 @@ use lumi::osc::OscSender;
 use lumi::jack::read_audio;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    log::info!("Starting lumi jack ...");
     let updater = Box::new(OscSender::new(
         "0.0.0.0:33768".parse().unwrap(),
         "0.0.0.0:33766".parse().unwrap(),

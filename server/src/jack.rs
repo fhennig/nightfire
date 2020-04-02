@@ -32,9 +32,9 @@ impl ProcessHandler for JackHandler
         // read frame from the port
         let audio = self.audio_in_port.as_slice(process_scope);
         // add the latest audio to our signal processor
-        let current_values = self.signal_processor.add_audio_frame(audio);
+        self.signal_processor.add_audio_frame(audio);
         // push new values in the buffer
-        // ... TODO ...
+        self.vals_handler.take_vals(self.signal_processor.get_current_values());
         // print CPU load
         info!("{}", client.cpu_load());
         // Continue the loop

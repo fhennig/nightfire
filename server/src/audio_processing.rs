@@ -23,9 +23,15 @@ fn max_sample(frame: &[f32]) -> f32 {
 /// This struct represents the values that are extracted from the
 /// audio signal at every iteration.  These values are used downstream
 /// to visualize the current audio signal.
-#[derive(Copy,Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct MyValues {
     pub intensity: f32,
+}
+
+impl MyValues {
+    pub fn new_null() -> MyValues {
+        MyValues { intensity: 0.0 }
+    }
 }
 
 pub struct SignalProcessor {
