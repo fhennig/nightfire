@@ -106,9 +106,14 @@ impl ControllerMode {
         self.music_mode = active;
     }
 
+    pub fn switch_music_mode(&mut self) {
+        self.music_mode = !self.music_mode;
+    }
+
     fn get_current_color(&self) -> Color {
         if self.music_mode {
-            Color::from(Hsv::new(self.hue, (1. - self.intensity).into(), self.value))
+            // Color::from(Hsv::new(self.hue, (1. - self.intensity).into(), self.value))
+            Color::from(Hsv::new(self.hue, self.saturation, self.intensity.into()))
         } else {
             Color::from(Hsv::new(self.hue, self.saturation, self.value))
         }

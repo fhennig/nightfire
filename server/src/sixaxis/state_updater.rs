@@ -137,7 +137,9 @@ impl StateUpdater {
         if controller.was_pressed(Button::Circle) {
             state.controller_mode.activate_locked_color();
         }
-        state.controller_mode.set_music_mode(controller.is_pressed(Button::Cross));
+        if controller.was_pressed(Button::Cross) {
+            state.controller_mode.switch_music_mode();
+        }
         if controller.was_pressed(Button::R3) {
             state.controller_mode.reset_inactive_mode();
         }

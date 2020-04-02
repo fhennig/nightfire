@@ -44,7 +44,7 @@ impl SignalProcessor {
     /// creates and initializes a new signal processor.
     pub fn new() -> SignalProcessor {
         let buffer_size = 512; // the buffer size as defined in JACK
-        let history_len = 5;
+        let history_len = 10;
         SignalProcessor {
             intensity_history: vec![0f32; history_len].into_iter().collect(),
         }
