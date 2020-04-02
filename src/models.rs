@@ -1,9 +1,12 @@
 use crate::lightid::LightId;
+use crate::envelope::Envelope;
 use palette::encoding::linear::Linear;
 use palette::encoding::Srgb;
 use palette::rgb::Rgb;
 use palette::RgbHue;
+use std::time;
 
+/// The PinValue is only in [0, 1]
 pub type PinValue = f64;
 pub type Color = Rgb<Linear<Srgb>, PinValue>;
 
@@ -54,6 +57,51 @@ impl Colors {
 
 pub trait ColorProvider: Send + Sync {
     fn get_color(&self, light_id: &LightId) -> Color;
+}
+
+pub trait HueMap: Send + Sync {
+    /// Provide a hue.  not for every position a hue needs to be provided.
+    fn hue_at(&self, pos: Coordinate) -> RgbHue<PinValue>;
+}
+
+pub struct RainbowSolid {
+    rainbow_riser: Envelope,
+}
+
+impl RainbowSolid {
+    pub fn new() -> RainbowSolid {
+        RainbowSolid {
+            rainbow_riser: Envelope::new_riser(time::Duration::from_millis(10000)),
+        }
+    }
+}
+
+impl HueMap for RainbowSolid {
+    fn hue_at(&self, _pos: Coordinate) -> RgbHue<PinValue> {
+        self.rainbow_riser.get_value_as_hue()
+    }
+}
+
+pub struct ConstSolid {
+    hue: RgbHue<PinValue>,
+}
+
+impl ConstSolid {
+    pub fn new() -> ConstSolid {
+        ConstSolid {
+            hue: RgbHue::from(0.),
+        }
+    }
+
+    pub fn set_hue(&mut self, hue: RgbHue<PinValue>) {
+        self.hue = hue;
+    }
+}
+
+impl HueMap for ConstSolid {
+    fn hue_at(&self, pos: Coordinate) -> RgbHue<PinValue> {
+        self.hue
+    }
 }
 
 #[derive(Copy, Clone)]

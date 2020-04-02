@@ -1,10 +1,8 @@
-use crate::envelope::Envelope;
 use crate::lightid::LightId;
 use crate::mask::{BinaryMask, EnvMask, Mask, PosMask};
-use crate::models::{Color, ColorProvider, Colors, PinValue};
+use crate::models::{self, Color, ColorProvider, PinValue, HueMap, Coordinate, Positionable};
 use palette::Hsv;
 use palette::RgbHue;
-use std::time::Duration;
 
 /// Should always be in [0, 1]
 pub type ControllerFloat = PinValue;
@@ -16,7 +14,7 @@ pub enum InactiveMode {
 }
 
 pub struct ControllerMode {
-    pub rainbow_riser: Envelope,
+    rainbow_solid: models::RainbowSolid,
     pub pos_mask: PosMask,
     pulse_mask: EnvMask,
     pub top_only_mask: BinaryMask,
@@ -36,7 +34,7 @@ pub struct ControllerMode {
 impl ControllerMode {
     pub fn new() -> ControllerMode {
         ControllerMode {
-            rainbow_riser: Envelope::new_riser(Duration::from_millis(10000)),
+            rainbow_solid: models::RainbowSolid::new(),
             top_only_mask: BinaryMask::top_only_mask(),
             bottom_only_mask: BinaryMask::bottom_only_mask(),
             left_only_mask: BinaryMask::left_only_mask(),
@@ -110,15 +108,15 @@ impl ControllerMode {
         }
     }
 
-    fn get_basecolor(&self) -> Color {
+    fn get_basecolor(&self, pos: Coordinate) -> Color {
         if self.active {
             self.get_current_color()
         } else {
             match self.inactive_mode {
-                InactiveMode::Black => Colors::black(),
+                InactiveMode::Black => models::Colors::black(),
                 InactiveMode::Color => self.get_current_color(),
                 InactiveMode::Rainbow => Color::from(Hsv::new(
-                    self.rainbow_riser.get_value_as_hue(),
+                    self.rainbow_solid.hue_at(pos),
                     self.saturation,
                     self.value,
                 )),
@@ -129,7 +127,7 @@ impl ControllerMode {
 
 impl ColorProvider for ControllerMode {
     fn get_color(&self, light_id: &LightId) -> Color {
-        let mut color = self.get_basecolor();
+        let mut color = self.get_basecolor(light_id.pos());
         if self.pulse_active {
             color = self.pulse_mask.get_masked_color(light_id, color);
         }
