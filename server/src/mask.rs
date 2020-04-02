@@ -79,6 +79,7 @@ impl DiscretePosMask {
         }
     }
 
+    #[allow(dead_code)]
     fn set_from_coord(&mut self, coord: Coordinate, lower_value: PinValue) {
         // Get mask position
         let dist = distance(&Coordinate(0., 0.), &coord);

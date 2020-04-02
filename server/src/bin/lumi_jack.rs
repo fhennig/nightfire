@@ -13,6 +13,5 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let dur = std::time::Duration::from_millis(10000);
         std::thread::sleep(dur);
     }
-    Ok(())
 }
 

@@ -1,11 +1,8 @@
-use jack::{AsyncClient, AudioIn, Client, Control, Port, ProcessHandler, ProcessScope};
-// my definitions
-use log::{info, debug};
 use crate::audio_processing::{MyValues, SignalProcessor};
-use std::{thread, time};
-use stoppable_thread::{spawn, StoppableHandle};
+use jack::{AsyncClient, AudioIn, Client, Control, Port, ProcessHandler, ProcessScope};
+use log::info;
 
-pub trait ValsHandler : Send + Sync {
+pub trait ValsHandler: Send + Sync {
     fn take_vals(&mut self, vals: MyValues);
 }
 
@@ -15,8 +12,7 @@ pub struct JackHandler {
     vals_handler: Box<dyn ValsHandler>,
 }
 
-impl JackHandler
-{
+impl JackHandler {
     fn new(audio_in_port: Port<AudioIn>, handler: Box<dyn ValsHandler>) -> JackHandler {
         JackHandler {
             signal_processor: SignalProcessor::new(),
@@ -26,15 +22,15 @@ impl JackHandler
     }
 }
 
-impl ProcessHandler for JackHandler
-{
+impl ProcessHandler for JackHandler {
     fn process(&mut self, client: &Client, process_scope: &ProcessScope) -> Control {
         // read frame from the port
         let audio = self.audio_in_port.as_slice(process_scope);
         // add the latest audio to our signal processor
         self.signal_processor.add_audio_frame(audio);
         // push new values in the buffer
-        self.vals_handler.take_vals(self.signal_processor.get_current_values());
+        self.vals_handler
+            .take_vals(self.signal_processor.get_current_values());
         // print CPU load
         info!("{}", client.cpu_load());
         // Continue the loop

@@ -9,7 +9,6 @@
 use std::cmp::Ordering::Equal;
 use std::collections::VecDeque;
 use std::convert::TryInto;
-use std::sync::Arc;
 
 /// A basic function that extracts the maximum sample from a frame.
 fn max_sample(frame: &[f32]) -> f32 {
@@ -43,7 +42,7 @@ pub struct SignalProcessor {
 impl SignalProcessor {
     /// creates and initializes a new signal processor.
     pub fn new() -> SignalProcessor {
-        let buffer_size = 512; // the buffer size as defined in JACK
+        let _buffer_size = 512; // the buffer size as defined in JACK
         let history_len = 10;
         SignalProcessor {
             intensity_history: vec![0f32; history_len].into_iter().collect(),

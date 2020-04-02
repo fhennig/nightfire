@@ -1,10 +1,9 @@
 use crate::envelope::Envelope;
 use crate::lightid::LightId;
 use crate::mask::{BinaryMask, EnvMask, Mask, PosMask};
-use crate::models::{Color, ColorProvider, Colors, Coordinate, PinValue};
+use crate::models::{Color, ColorProvider, Colors, PinValue};
 use palette::Hsv;
 use palette::RgbHue;
-use splines::{Interpolation, Key, Spline};
 use std::time::Duration;
 
 /// Should always be in [0, 1]

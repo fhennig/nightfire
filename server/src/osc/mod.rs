@@ -1,14 +1,10 @@
 mod osc_sender;
-use crate::sixaxis::state_updater::StateUpdater;
-use crate::sixaxis::ControllerValsSink;
 use crate::sixaxis::ControllerValues;
 use crate::audio_processing::MyValues;
-use crate::state::State;
 pub use self::osc_sender::OscSender;
 use log::{debug, info};
 use std::convert::TryInto;
 use std::net::{SocketAddrV4, UdpSocket};
-use std::sync::{Arc, Mutex};
 use std::vec::Vec;
 use stoppable_thread::{spawn, StoppableHandle};
 
