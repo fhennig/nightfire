@@ -130,6 +130,7 @@ impl StateUpdater {
         }
         if controller.was_pressed(Button::Square) {
             state.controller_mode.activate_rainbow_color();
+            // TODO here it would be nice if this button was a switch
         }
         if controller.was_pressed(Button::Triangle) {
             state.controller_mode.switch_pulse_active();
@@ -142,6 +143,9 @@ impl StateUpdater {
         }
         if controller.was_pressed(Button::R3) {
             state.controller_mode.reset_inactive_mode();
+        }
+        if controller.was_pressed(Button::L3) {
+            state.controller_mode.pos_mask.switch_center_off();
         }
         // set d-pad masks
         state

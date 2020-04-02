@@ -42,15 +42,7 @@ impl ControllerMode {
             bottom_only_mask: BinaryMask::bottom_only_mask(),
             left_only_mask: BinaryMask::left_only_mask(),
             right_only_mask: BinaryMask::right_only_mask(),
-            pos_mask: PosMask {
-                position: Coordinate(0.0, 0.0),
-                spline: Spline::from_vec(vec![
-                    Key::new(0., 1., Interpolation::Linear),
-                    Key::new(0.1, 1., Interpolation::Linear),
-                    Key::new(1.6, 0.1, Interpolation::Linear),
-                    Key::new(1.9, 0., Interpolation::Linear),
-                ]),
-            },
+            pos_mask: PosMask::new(),
             pulse_mask: EnvMask::new_random_pulse(),
             inactive_mode: InactiveMode::Black,
             active: false,

@@ -1,6 +1,6 @@
 use crate::envelope::Envelope;
 use crate::models::{distance, Color, Colors, Coordinate, PinValue, Positionable};
-use splines::Spline;
+use splines::{Spline, Key, Interpolation};
 use std::time::Duration;
 
 pub trait Mask {
@@ -9,18 +9,44 @@ pub trait Mask {
 
 pub struct PosMask {
     pub position: Coordinate,
-    pub spline: Spline<f64, f64>,
+    spline: Spline<f64, f64>,
+    center_off: bool,
 }
 
 impl PosMask {
+    pub fn new() -> PosMask {
+        PosMask {
+            position: Coordinate(0.0, 0.0),
+            spline: Spline::from_vec(vec![
+                Key::new(0., 1., Interpolation::Linear),
+                Key::new(0.1, 1., Interpolation::Linear),
+                Key::new(1.6, 0.1, Interpolation::Linear),
+                Key::new(1.9, 0., Interpolation::Linear),
+            ]),
+            center_off: false,
+        }
+    }
+
     pub fn set_pos(&mut self, pos: Coordinate) {
         self.position = pos;
     }
 
+    pub fn switch_center_off(&mut self) {
+        self.center_off = !self.center_off
+    }
+
     fn get_value(&self, pos: &dyn Positionable) -> f64 {
-        let dist = distance(&self.position, &pos.pos());
-        let value = self.spline.clamped_sample(dist).unwrap();
-        value
+        if self.position.length() < 0.2 {
+            if self.center_off {
+                0.
+            } else {
+                1.
+            }
+        } else {
+            let dist = distance(&self.position, &pos.pos());
+            let value = self.spline.clamped_sample(dist).unwrap();
+            value
+        }
     }
 }
 
