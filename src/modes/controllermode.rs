@@ -29,10 +29,6 @@ pub struct ControllerMode {
     pub music_mask: mask::SolidMask,
     pub pos_mask: mask::PosMask,
     pulse_mask: EnvMask,
-    pub top_only_mask: BinaryMask,
-    pub bottom_only_mask: BinaryMask,
-    pub left_only_mask: BinaryMask,
-    pub right_only_mask: BinaryMask,
     // other params
     pulse_active: bool,
     music_mode: bool,
@@ -44,17 +40,16 @@ impl ControllerMode {
             rainbow_solid: models::RainbowSolid::new(),
             const_solid: models::ConstSolid::new(),
             const_quad: models::ConstQuad::new(),
-            top_only_mask: BinaryMask::top_only_mask(),
-            bottom_only_mask: BinaryMask::bottom_only_mask(),
-            left_only_mask: BinaryMask::left_only_mask(),
-            right_only_mask: BinaryMask::right_only_mask(),
+            // masks
             pos_mask: mask::PosMask::new(),
             music_mask: mask::SolidMask::new(),
-            pulse_mask: EnvMask::new_random_pulse(),
-            hue_mode: HueMode::Color,
-            pulse_active: false,
+            pulse_mask: mask::EnvMask::new_random_pulse(),
+            // set & val
             saturation: 1.,
             value: 1.,
+            // mode settings
+            hue_mode: HueMode::Color,
+            pulse_active: false,
             music_mode: false,
         }
     }
@@ -122,10 +117,6 @@ impl ColorProvider for ControllerMode {
             color = self.music_mask.get_masked_color(light_id, color);
         }
         color = self.pos_mask.get_masked_color(light_id, color);
-        color = self.top_only_mask.get_masked_color(light_id, color);
-        color = self.bottom_only_mask.get_masked_color(light_id, color);
-        color = self.left_only_mask.get_masked_color(light_id, color);
-        color = self.right_only_mask.get_masked_color(light_id, color);
         color
     }
 }
