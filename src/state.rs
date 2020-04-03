@@ -67,14 +67,6 @@ impl State {
         }
     }
 
-    pub fn switch_off(&mut self) {
-        if self.active_mode == Mode::OffMode {
-            self.active_mode = Mode::Controller;
-        } else if self.active_mode != Mode::OffMode {
-            self.active_mode = Mode::OffMode;
-        }
-    }
-
     pub fn set_select_mode(&mut self, active: bool) {
         if self.select_mode != active {
             self.select_mode = active;
@@ -84,23 +76,20 @@ impl State {
         }
     }
 
-    pub fn is_off(&self) -> bool {
-        self.active_mode == Mode::OffMode
+    pub fn is_select_mode(&self) -> bool {
+        self.select_mode
     }
 
-    pub fn activate(&mut self, mode: Mode) {
-        if self.active_mode == mode {
-            return;
-        }
+    pub fn set_active_mode(&mut self, mode: Mode) {
         self.active_mode = mode;
     }
 
-    pub fn mode_selection_from_coord(&mut self, coord: Coordinate) {
-        if self.select_mode {
-            if coord.length() > 0.75 {
-                self.active_mode = Mode::from_angle(coord.angle().unwrap());
-            }
-        }
+    pub fn get_active_mode(&self) -> Mode {
+        self.active_mode
+    }
+
+    pub fn is_off(&self) -> bool {
+        self.active_mode == Mode::OffMode
     }
 
     pub fn get_color(&self, light_id: &LightId) -> Color {

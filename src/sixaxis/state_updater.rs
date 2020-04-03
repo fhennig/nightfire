@@ -105,6 +105,20 @@ pub struct StateUpdater {
     controller: Controller,
 }
 
+fn get_mode_from_controller(controller: &Controller) -> Option<state::Mode> {
+    if controller.left_pos().length() >= 0.75 {
+        Some(state::Mode::from_angle(
+            controller.left_pos().angle().unwrap(),
+        ))
+    } else if controller.right_pos().length() >= 0.75 {
+        Some(state::Mode::from_angle(
+            controller.right_pos().angle().unwrap(),
+        ))
+    } else {
+        None
+    }
+}
+
 impl StateUpdater {
     pub fn new(state: Arc<Mutex<state::State>>) -> StateUpdater {
         let empty_vals = ControllerValues::new_empty();
@@ -114,54 +128,59 @@ impl StateUpdater {
         }
     }
 
-    /// read the current controller state and update the state accordingly.
+    /// reads a controller state and and updates the state accordingly.
     /// This function is called repeatedly each second, at every controller update.
-    fn update_state(&self) {
-        let controller = &self.controller;
-        let mut state = self.state.lock().unwrap();
+    fn update_state(&self, controller: &Controller) {
+        let mut s = self.state.lock().unwrap();
         // select mode
-        state.set_select_mode(controller.is_pressed(Button::PS));
-        // put stick values to state
-        state.mode_selection_from_coord(controller.left_pos());
-        state.mode_selection_from_coord(controller.right_pos());
-        // set on/off
-        if controller.was_pressed(Button::Start) {
-            state.switch_off();
-        }
-        if controller.was_pressed(Button::Square) {
-            state.controller_mode.activate_rainbow_color();
-            // TODO here it would be nice if this button was a switch
-        }
-        if controller.was_pressed(Button::Triangle) {
-            state.controller_mode.switch_pulse_active();
-        }
-        if controller.was_pressed(Button::Circle) {
-            state.controller_mode.activate_locked_color();
-        }
-        if controller.was_pressed(Button::Cross) {
-            state.controller_mode.switch_music_mode();
-        }
-        if controller.was_pressed(Button::L3) {
-            state.controller_mode.pos_mask.switch_center_off();
-        }
-        // set mask position from left stick
-        state
-            .controller_mode
-            .pos_mask
-            .set_pos(controller.left_pos());
-        // set hue of the color from the right stick angle
-        let active = controller.right_pos().length() > 0.75;
-        if active {
-            match controller.right_pos().hue_from_angle() {
-                Some(hue) => state.controller_mode.const_solid.set_hue(hue),
+        s.set_select_mode(controller.is_pressed(Button::PS));
+
+        if s.is_select_mode() {
+            match get_mode_from_controller(controller) {
+                Some(mode) => s.set_active_mode(mode),
                 None => (),
             }
+        } else {
+            match s.get_active_mode() {
+                state::Mode::OffMode => (), // no controls need to be set
+                state::Mode::Controller => {
+                    if controller.was_pressed(Button::Square) {
+                        s.controller_mode.activate_rainbow_color();
+                        // TODO here it would be nice if this button was a switch
+                    }
+                    if controller.was_pressed(Button::Triangle) {
+                        s.controller_mode.switch_pulse_active();
+                    }
+                    if controller.was_pressed(Button::Circle) {
+                        s.controller_mode.activate_locked_color();
+                    }
+                    if controller.was_pressed(Button::Cross) {
+                        s.controller_mode.switch_music_mode();
+                    }
+                    if controller.was_pressed(Button::L3) {
+                        s.controller_mode.pos_mask.switch_center_off();
+                    }
+                    // set mask position from left stick
+                    s.controller_mode.pos_mask.set_pos(controller.left_pos());
+                    // set hue of the color from the right stick angle
+                    let active = controller.right_pos().length() > 0.75;
+                    if active {
+                        match controller.right_pos().hue_from_angle() {
+                            Some(hue) => s.controller_mode.const_solid.set_hue(hue),
+                            None => (),
+                        }
+                    }
+                    // set saturation and value from the triggers
+                    let saturation = 1. - controller.right_trigger();
+                    let value = 1. - controller.left_trigger();
+                    s.controller_mode.set_saturation(saturation);
+                    s.controller_mode.set_value(value);
+                }
+                state::Mode::ManualMode => {
+                    // TODO
+                }
+            }
         }
-        // set saturation and value from the triggers
-        let saturation = 1. - controller.right_trigger();
-        let value = 1. - controller.left_trigger();
-        state.controller_mode.set_saturation(saturation);
-        state.controller_mode.set_value(value);
     }
 }
 
@@ -169,6 +188,6 @@ impl ControllerValsSink for StateUpdater {
     fn take_vals(&mut self, vals: ControllerValues) {
         self.controller.update(vals);
         self.controller.debug_print();
-        self.update_state();
+        self.update_state(&self.controller);
     }
 }

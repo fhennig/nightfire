@@ -1,7 +1,6 @@
 use clap::{App, Arg, ArgMatches};
 use log::info;
 use lumi::conf::Conf;
-use lumi::graphql::serve;
 use lumi::osc::{start_recv, OscVal};
 use lumi::piblaster::{start_piblaster_thread, Light, Lights, PinModel};
 use lumi::piston::run_piston_thread;
@@ -57,9 +56,6 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let controller = read_controller(updater);
     // start piblaster
     let piblaster = start_piblaster_thread(init_pin_setting(&conf), Arc::clone(&state));
-    // start GraphQL endpoint server
-    let mut graphql = serve(conf.address, Arc::clone(&state));
-    info!("graphql server started.");
     // debug window
     if matches.is_present("debug") {
         run_piston_thread(Arc::clone(&state));
@@ -70,7 +66,6 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             thread::sleep(dur);
         }
     }
-    graphql.close()?;
     piblaster.stop();
     Ok(())
 }

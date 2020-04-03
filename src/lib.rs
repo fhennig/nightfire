@@ -2,7 +2,6 @@ pub mod osc;
 pub mod sixaxis;
 pub mod conf;
 pub mod envelope;
-pub mod graphql;
 pub mod lightid;
 pub mod mask;
 pub mod models;
