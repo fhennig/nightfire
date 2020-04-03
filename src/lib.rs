@@ -12,3 +12,4 @@ pub mod state;
 pub mod audio_processing;
 pub mod jack;
 pub mod ball_animation;
+pub mod coord;

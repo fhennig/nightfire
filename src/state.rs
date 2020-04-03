@@ -1,6 +1,6 @@
 use crate::envelope::Envelope;
 use crate::lightid::LightId;
-use crate::models::{self, Color, ColorProvider, Colors, Coordinate};
+use crate::models::{self, Color, ColorProvider};
 use crate::modes::{ControllerMode, ManualMode};
 use std::time::Duration;
 

@@ -1,14 +1,15 @@
 use crate::envelope::Envelope;
-use crate::models::{distance, Color, Colors, Coordinate, PinValue, Positionable};
+use crate::models::{Color, Colors, PinValue};
+use crate::coord;
 use splines::{Interpolation, Key, Spline};
 use std::time::Duration;
 
 pub trait Mask {
-    fn get_masked_color(&self, pos: &dyn Positionable, color: Color) -> Color;
+    fn get_masked_color(&self, pos: &dyn coord::Positionable, color: Color) -> Color;
 }
 
 pub struct PosMask {
-    pub position: Coordinate,
+    pub position: coord::Coordinate,
     spline: Spline<f64, f64>,
     center_off: bool,
 }
@@ -16,7 +17,7 @@ pub struct PosMask {
 impl PosMask {
     pub fn new() -> PosMask {
         PosMask {
-            position: Coordinate(0.0, 0.0),
+            position: coord::Coordinate(0.0, 0.0),
             spline: Spline::from_vec(vec![
                 Key::new(0., 1., Interpolation::Linear),
                 Key::new(0.1, 1., Interpolation::Linear),
@@ -27,7 +28,7 @@ impl PosMask {
         }
     }
 
-    pub fn set_pos(&mut self, pos: Coordinate) {
+    pub fn set_pos(&mut self, pos: coord::Coordinate) {
         self.position = pos;
     }
 
@@ -35,7 +36,7 @@ impl PosMask {
         self.center_off = !self.center_off
     }
 
-    fn get_value(&self, pos: &dyn Positionable) -> f64 {
+    fn get_value(&self, pos: &dyn coord::Positionable) -> f64 {
         if self.position.length() < 0.2 {
             if self.center_off {
                 0.
@@ -43,7 +44,7 @@ impl PosMask {
                 1.
             }
         } else {
-            let dist = distance(&self.position, &pos.pos());
+            let dist = coord::distance(&self.position, &pos.pos());
             let value = self.spline.clamped_sample(dist).unwrap();
             value
         }
@@ -51,7 +52,7 @@ impl PosMask {
 }
 
 impl Mask for PosMask {
-    fn get_masked_color(&self, pos: &dyn Positionable, color: Color) -> Color {
+    fn get_masked_color(&self, pos: &dyn coord::Positionable, color: Color) -> Color {
         let value = self.get_value(pos);
         Color::new(color.red * value, color.green * value, color.blue * value)
     }
@@ -80,9 +81,9 @@ impl DiscretePosMask {
     }
 
     #[allow(dead_code)]
-    fn set_from_coord(&mut self, coord: Coordinate, lower_value: PinValue) {
+    fn set_from_coord(&mut self, coord: coord::Coordinate, lower_value: PinValue) {
         // Get mask position
-        let dist = distance(&Coordinate(0., 0.), &coord);
+        let dist = coord::distance(&coord::Coordinate(0., 0.), &coord);
         // within the inner circle, no masking is applied
         if dist <= 0.5 {
             self.top_right = 1.;
@@ -108,7 +109,7 @@ impl DiscretePosMask {
 }
 
 impl Mask for DiscretePosMask {
-    fn get_masked_color(&self, pos: &dyn Positionable, color: Color) -> Color {
+    fn get_masked_color(&self, pos: &dyn coord::Positionable, color: Color) -> Color {
         let coord = pos.pos();
         if coord.0 > 0. && coord.1 > 0. {
             return Colors::mask(color, self.top_right);
@@ -122,7 +123,7 @@ impl Mask for DiscretePosMask {
     }
 }
 
-type BinaryCoordMask = dyn Fn(Coordinate) -> bool + Send + Sync;
+type BinaryCoordMask = dyn Fn(coord::Coordinate) -> bool + Send + Sync;
 
 pub struct BinaryMask {
     active: bool,
@@ -142,24 +143,24 @@ impl BinaryMask {
     }
 
     pub fn top_only_mask() -> BinaryMask {
-        BinaryMask::new(Box::new(|coord: Coordinate| coord.1 >= 0.))
+        BinaryMask::new(Box::new(|coord: coord::Coordinate| coord.1 >= 0.))
     }
 
     pub fn bottom_only_mask() -> BinaryMask {
-        BinaryMask::new(Box::new(|coord: Coordinate| coord.1 <= 0.))
+        BinaryMask::new(Box::new(|coord: coord::Coordinate| coord.1 <= 0.))
     }
 
     pub fn left_only_mask() -> BinaryMask {
-        BinaryMask::new(Box::new(|coord: Coordinate| coord.0 <= 0.))
+        BinaryMask::new(Box::new(|coord: coord::Coordinate| coord.0 <= 0.))
     }
 
     pub fn right_only_mask() -> BinaryMask {
-        BinaryMask::new(Box::new(|coord: Coordinate| coord.0 >= 0.))
+        BinaryMask::new(Box::new(|coord: coord::Coordinate| coord.0 >= 0.))
     }
 }
 
 impl Mask for BinaryMask {
-    fn get_masked_color(&self, pos: &dyn Positionable, color: Color) -> Color {
+    fn get_masked_color(&self, pos: &dyn coord::Positionable, color: Color) -> Color {
         if !self.active {
             return color;
         }
@@ -199,7 +200,7 @@ impl EnvMask {
 }
 
 impl Mask for EnvMask {
-    fn get_masked_color(&self, pos: &dyn Positionable, color: Color) -> Color {
+    fn get_masked_color(&self, pos: &dyn coord::Positionable, color: Color) -> Color {
         self.get_pos_mask().get_masked_color(pos, color)
     }
 }
@@ -219,7 +220,7 @@ impl SolidMask {
 }
 
 impl Mask for SolidMask {
-    fn get_masked_color(&self, pos: &dyn Positionable, color: Color) -> Color {
+    fn get_masked_color(&self, pos: &dyn coord::Positionable, color: Color) -> Color {
         Color::new(
             color.red * self.val,
             color.green * self.val,

@@ -1,8 +1,9 @@
+use crate::coord;
+use crate::coord::Positionable;
 use crate::lightid::LightId;
-use crate::mask::{self, BinaryMask, EnvMask, Mask};
-use crate::models::{self, Color, ColorProvider, Coordinate, HueMap, PinValue, Positionable};
+use crate::mask::{self, EnvMask, Mask};
+use crate::models::{self, Color, ColorProvider, HueMap, PinValue};
 use palette::Hsv;
-use palette::RgbHue;
 
 /// Should always be in [0, 1]
 pub type ControllerFloat = PinValue;
@@ -20,7 +21,7 @@ pub struct ControllerMode {
     rainbow_solid: models::RainbowSolid,
     /// The solid color that can be set with the stick.
     pub const_solid: models::ConstSolid,
-    // saturation and value. 
+    // saturation and value.
     saturation: ControllerFloat,
     value: ControllerFloat,
     // masks
@@ -83,7 +84,7 @@ impl ControllerMode {
         self.music_mode = !self.music_mode;
     }
 
-    fn get_basecolor(&self, pos: Coordinate) -> Color {
+    fn get_basecolor(&self, pos: coord::Coordinate) -> Color {
         match self.hue_mode {
             HueMode::Color => Color::from(Hsv::new(
                 self.const_solid.hue_at(pos),

@@ -1,4 +1,4 @@
-use crate::models::{Coordinate, Positionable};
+use crate::coord;
 
 #[derive(juniper::GraphQLEnum, Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum LightId {
@@ -14,13 +14,13 @@ impl LightId {
     }
 }
 
-impl Positionable for LightId {
-    fn pos(&self) -> Coordinate {
+impl coord::Positionable for LightId {
+    fn pos(&self) -> coord::Coordinate {
         match &self {
-            LightId::Top => Coordinate(-1.0, 1.0),
-            LightId::Bottom => Coordinate(1.0, -1.0),
-            LightId::Left => Coordinate(-1.0, -1.0),
-            LightId::Right => Coordinate(1.0, 1.0),
+            LightId::Top => coord::Coordinate(-1.0, 1.0),
+            LightId::Bottom => coord::Coordinate(1.0, -1.0),
+            LightId::Left => coord::Coordinate(-1.0, -1.0),
+            LightId::Right => coord::Coordinate(1.0, 1.0),
         }
     }
 }

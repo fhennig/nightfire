@@ -1,6 +1,6 @@
-use crate::models::Coordinate;
 use crate::sixaxis::{Axis, Button, ControllerValsSink, ControllerValues};
 use crate::state;
+use crate::coord;
 use log::debug;
 use std::sync::{Arc, Mutex};
 
@@ -26,20 +26,20 @@ impl Controller {
         self.curr_vals = new_vals;
     }
 
-    fn left_pos(&self) -> Coordinate {
+    fn left_pos(&self) -> coord::Coordinate {
         let l_x = self.curr_vals.get_axis_val(Axis::LX);
         let l_y = self.curr_vals.get_axis_val(Axis::LY);
         let l_x = ((l_x as f64) / 255.0 - 0.5) * 2.0;
         let l_y = ((l_y as f64 / 255.0 - 0.5) * -1.0) * 2.0;
-        Coordinate(l_x, l_y)
+        coord::Coordinate(l_x, l_y)
     }
 
-    fn right_pos(&self) -> Coordinate {
+    fn right_pos(&self) -> coord::Coordinate {
         let r_x = self.curr_vals.get_axis_val(Axis::RX);
         let r_y = self.curr_vals.get_axis_val(Axis::RY);
         let r_x = ((r_x as f64) / 255.0 - 0.5) * 2.0;
         let r_y = ((r_y as f64 / 255.0 - 0.5) * -1.0) * 2.0;
-        Coordinate(r_x, r_y)
+        coord::Coordinate(r_x, r_y)
     }
 
     /// Returns a value in [0, 1]
