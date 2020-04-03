@@ -135,10 +135,14 @@ fn get_color_from_controller(controller: &Controller) -> Option<models::Color> {
 }
 
 fn get_quad_from_controller(controller: &Controller) -> Option<coord::Quadrant> {
-    if controller.left_pos().length() > 0.75 {
-        Some(coord::Quadrant::from(controller.left_pos()))
-    } else {
+    if controller.is_pressed(Button::Circle) {
         None
+    } else {
+        if controller.left_pos().length() > 0.75 {
+            Some(coord::Quadrant::from(controller.left_pos()))
+        } else {
+            None
+        }
     }
 }
 
@@ -167,9 +171,8 @@ impl StateUpdater {
             if controller.was_pressed(Button::Cross) {
                 s.switch_music_mode();
             }
-            if controller.was_pressed(Button::Circle) {
-                s.controller_mode.activate_locked_color();
-            }
+            s.pos_mask.set_active(controller.is_pressed(Button::Circle));
+            s.pos_mask.mask.set_pos(controller.left_pos());
             match s.get_active_mode() {
                 state::Mode::OffMode => (), // no controls need to be set
                 state::Mode::Controller => {
@@ -181,10 +184,9 @@ impl StateUpdater {
                         s.controller_mode.switch_pulse_active();
                     }
                     if controller.was_pressed(Button::L3) {
-                        s.controller_mode.pos_mask.switch_center_off();
+                        s.pos_mask.mask.switch_center_off();
                     }
                     // set mask position from left stick
-                    s.controller_mode.pos_mask.set_pos(controller.left_pos());
                     // set hue of the color from the right stick angle
                     let active = controller.right_pos().length() > 0.75;
                     if active {

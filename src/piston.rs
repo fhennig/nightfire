@@ -47,7 +47,7 @@ pub fn run_piston_thread(state: Arc<Mutex<State>>) {
             rectangle(piston_color(&state, &LightId::Left), stripe, get_transf(c, 45., w, n), g);
             rectangle(piston_color(&state, &LightId::Right), stripe, get_transf(c, -135., w, n), g);
 
-            let position = state.lock().unwrap().controller_mode.pos_mask.position;
+            let position = state.lock().unwrap().pos_mask.mask.position;
             let x = n + position.0 * n;
             let y = n + position.1 * -n; // invert
 

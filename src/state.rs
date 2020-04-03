@@ -52,9 +52,8 @@ pub struct State {
     select_mode: bool,
     white_pulse: Envelope,
     active_mode: Mode,
-    // whether to activate the music bounce
-    music_mode: bool,
-    pub music_mask: mask::SolidMask,
+    pub music_mask: mask::ActivatableMask<mask::SolidMask>,
+    pub pos_mask: mask::ActivatableMask<mask::PosMask>,
 }
 
 impl State {
@@ -69,8 +68,8 @@ impl State {
             white_pulse: Envelope::new_pulse(Duration::from_millis(1800)),
             select_mode: false,
             active_mode: active_mode,
-            music_mask: mask::SolidMask::new(),
-            music_mode: false,
+            music_mask: mask::ActivatableMask::new(mask::SolidMask::new(), false),
+            pos_mask: mask::ActivatableMask::new(mask::PosMask::new(), false),
         }
     }
 
@@ -99,16 +98,12 @@ impl State {
         self.active_mode == Mode::OffMode
     }
 
-    pub fn set_music_mode(&mut self, active: bool) {
-        self.music_mode = active;
-    }
-
     pub fn switch_music_mode(&mut self) {
-        self.music_mode = !self.music_mode;
+        self.music_mask.switch_active();
     }
 
     pub fn set_intensity(&mut self, intensity: f32) {
-        self.music_mask.set_val(intensity.into());
+        self.music_mask.mask.set_val(intensity.into());
     }
 
     pub fn get_color(&self, light_id: &LightId) -> models::Color {
@@ -123,9 +118,8 @@ impl State {
                 Mode::ManualMode => self.manual_mode.get_color(light_id.pos()),
                 Mode::Controller => self.controller_mode.get_color(light_id),
             };
-            if self.music_mode {
-                color = self.music_mask.get_masked_color(light_id, color);
-            }
+            color = self.music_mask.get_masked_color(light_id, color);
+            color = self.pos_mask.get_masked_color(light_id, color);
             color
         }
     }

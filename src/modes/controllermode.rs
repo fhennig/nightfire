@@ -8,6 +8,7 @@ use palette::Hsv;
 /// Should always be in [0, 1]
 pub type ControllerFloat = PinValue;
 
+#[derive(PartialEq)]
 pub enum HueMode {
     Color,
     Rainbow,
@@ -24,8 +25,6 @@ pub struct ControllerMode {
     // saturation and value.
     saturation: ControllerFloat,
     value: ControllerFloat,
-    // masks
-    pub pos_mask: mask::PosMask,
     pulse_mask: EnvMask,
     // other params
     pulse_active: bool,
@@ -37,7 +36,6 @@ impl ControllerMode {
             rainbow_solid: models::RainbowSolid::new(),
             const_solid: models::ConstSolid::new(),
             // masks
-            pos_mask: mask::PosMask::new(),
             pulse_mask: mask::EnvMask::new_random_pulse(),
             // set & val
             saturation: 1.,
@@ -93,7 +91,6 @@ impl ControllerMode {
         if self.pulse_active {
             color = self.pulse_mask.get_masked_color(light_id, color);
         }
-        color = self.pos_mask.get_masked_color(light_id, color);
         color
     }
 }

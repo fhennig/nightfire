@@ -1,6 +1,6 @@
+use crate::coord;
 use crate::envelope::Envelope;
 use crate::models::{Color, Colors, PinValue};
-use crate::coord;
 use splines::{Interpolation, Key, Spline};
 use std::time::Duration;
 
@@ -226,5 +226,48 @@ impl Mask for SolidMask {
             color.green * self.val,
             color.blue * self.val,
         )
+    }
+}
+
+pub struct ActivatableMask<M> {
+    pub mask: M,
+    active: bool,
+}
+
+impl<M> ActivatableMask<M>
+where
+    M: Mask
+{
+    pub fn new(mask: M, active: bool) -> ActivatableMask<M> {
+        ActivatableMask::<M> {
+            mask: mask,
+            active: active,
+        }
+    }
+    
+    pub fn set_active(&mut self, active: bool) {
+        self.active = active;
+    }
+
+    pub fn switch_active(&mut self) {
+        self.active = !self.active;
+    }
+
+    pub fn is_active(&self) -> bool {
+        self.active
+    }
+}
+
+impl<M> Mask for ActivatableMask<M>
+where
+    M: Mask
+{
+    
+    fn get_masked_color(&self, pos: &dyn coord::Positionable, color: Color) -> Color {
+        if self.active {
+            self.mask.get_masked_color(pos, color)
+        } else {
+            color
+        }
     }
 }
