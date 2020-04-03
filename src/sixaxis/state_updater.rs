@@ -1,6 +1,8 @@
+use crate::coord;
 use crate::sixaxis::{Axis, Button, ControllerValsSink, ControllerValues};
 use crate::state;
-use crate::coord;
+use crate::models;
+use palette::Hsv;
 use log::debug;
 use std::sync::{Arc, Mutex};
 
@@ -105,6 +107,8 @@ pub struct StateUpdater {
     controller: Controller,
 }
 
+/// A function for the selection mode.  Looks at both sticks and gets
+/// a mode from that.
 fn get_mode_from_controller(controller: &Controller) -> Option<state::Mode> {
     if controller.left_pos().length() >= 0.75 {
         Some(state::Mode::from_angle(
@@ -114,6 +118,25 @@ fn get_mode_from_controller(controller: &Controller) -> Option<state::Mode> {
         Some(state::Mode::from_angle(
             controller.right_pos().angle().unwrap(),
         ))
+    } else {
+        None
+    }
+}
+
+fn get_color_from_controller(controller: &Controller) -> Option<models::Color> {
+    if controller.right_pos().length() > 0.75 {
+        let hue = controller.right_pos().hue_from_angle().unwrap();
+        let saturation = 1. - controller.right_trigger();
+        let value = 1. - controller.left_trigger();
+        Some(models::Color::from(Hsv::new(hue, saturation, value)))
+    } else {
+        None
+    }
+}
+
+fn get_quad_from_controller(controller: &Controller) -> Option<coord::Quadrant> {
+    if controller.left_pos().length() > 0.75 {
+        Some(coord::Quadrant::from(controller.left_pos()))
     } else {
         None
     }
@@ -177,7 +200,13 @@ impl StateUpdater {
                     s.controller_mode.set_value(value);
                 }
                 state::Mode::ManualMode => {
-                    // TODO
+                    match get_quad_from_controller(controller) {
+                        Some(quad) => match get_color_from_controller(controller) {
+                            Some(color) => s.manual_mode.set_color(quad, color),
+                            None => (),
+                        }
+                        None => (),
+                    }
                 }
             }
         }

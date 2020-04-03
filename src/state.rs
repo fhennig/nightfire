@@ -22,11 +22,11 @@ impl Mode {
         if angle < -0.8333 {
             Mode::OffMode
         } else if angle < -0.5 {
-            Mode::Controller
+            Mode::ManualMode
         } else if angle < -0.1666 {
-            Mode::Controller
+            Mode::ManualMode
         } else if angle < 0.1666 {
-            Mode::Controller
+            Mode::OffMode
         } else if angle < 0.5 {
             Mode::Controller
         } else if angle < 0.8333 {
@@ -38,7 +38,7 @@ impl Mode {
 
     fn get_color(&self) -> Color {
         match self {
-            Mode::OffMode => models::Colors::white(),
+            Mode::OffMode => models::Colors::blue(),
             Mode::Controller => models::Colors::red(),
             Mode::ManualMode => models::Colors::yellow(),
         }
