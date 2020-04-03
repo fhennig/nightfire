@@ -38,6 +38,27 @@ impl Coordinate {
     }
 }
 
+pub enum Quadrant {
+    TL,
+    TR,
+    BL,
+    BR,
+}
+
+impl Quadrant {
+    pub fn from(pos: Coordinate) -> Quadrant {
+        if pos.0 > 0. && pos.1 > 0. {
+            Quadrant::TR
+        } else if pos.0 > 0. && pos.1 <= 0. {
+            Quadrant::BR
+        } else if pos.0 <= 0. && pos.1 > 0. {
+            Quadrant::TL
+        } else {
+            Quadrant::BL
+        }
+    }
+}
+
 pub trait Positionable {
     fn pos(&self) -> Coordinate;
 }

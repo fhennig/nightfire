@@ -2,6 +2,7 @@ use crate::envelope::Envelope;
 use crate::lightid::LightId;
 use crate::models::{self, Color, ColorProvider};
 use crate::modes::{ControllerMode, ManualMode};
+use crate::coord::Positionable;
 use std::time::Duration;
 
 /// The overall mode.  There are a couple of high level modes.  Should
@@ -101,7 +102,7 @@ impl State {
         } else {
             match self.active_mode {
                 Mode::OffMode => models::Colors::black(),
-                Mode::ManualMode => self.manual_mode.get_color(light_id),
+                Mode::ManualMode => self.manual_mode.get_color(light_id.pos()),
                 Mode::Controller => self.controller_mode.get_color(light_id),
             }
         }

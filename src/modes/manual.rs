@@ -1,41 +1,38 @@
-use crate::lightid::LightId;
-use crate::models::{Color, ColorProvider, PinValue};
-use std::collections::HashMap;
+use crate::models;
+use crate::coord;
 
 pub struct ManualMode {
-    colors: HashMap<LightId, Color>,
+    tl_color: models::Color,
+    tr_color: models::Color,
+    bl_color: models::Color,
+    br_color: models::Color,
 }
 
 impl ManualMode {
     pub fn new() -> ManualMode {
-        let mut m = ManualMode {
-            colors: HashMap::new(),
-        };
-        for id in LightId::all() {
-            m.colors.insert(id, Color::new(0.0, 0.0, 0.0));
+        ManualMode {
+            tl_color: models::Colors::red(),
+            tr_color: models::Colors::yellow(),
+            bl_color: models::Colors::blue(),
+            br_color: models::Colors::green(),
         }
-        m
     }
 
-    pub fn set_color(
-        &mut self,
-        light_id: LightId,
-        r: Option<PinValue>,
-        g: Option<PinValue>,
-        b: Option<PinValue>,
-    ) {
-        let current_color = self.colors.get(&light_id).unwrap();
-        let new_color = Color::new(
-            r.unwrap_or(current_color.red),
-            g.unwrap_or(current_color.green),
-            b.unwrap_or(current_color.blue),
-        );
-        self.colors.insert(light_id, new_color);
+    pub fn set_color(&mut self, quad: coord::Quadrant, color: models::Color) {
+        match quad {
+            coord::Quadrant::TL => self.tl_color = color,
+            coord::Quadrant::TR => self.tr_color = color,
+            coord::Quadrant::BL => self.bl_color = color,
+            coord::Quadrant::BR => self.br_color = color,
+        }
     }
-}
 
-impl ColorProvider for ManualMode {
-    fn get_color(&self, light_id: &LightId) -> Color {
-        *self.colors.get(light_id).unwrap()
+    pub fn get_color(&self, pos: coord::Coordinate) -> models::Color {
+        match coord::Quadrant::from(pos) {
+            coord::Quadrant::TL => self.tl_color,
+            coord::Quadrant::TR => self.tr_color,
+            coord::Quadrant::BL => self.bl_color,
+            coord::Quadrant::BR => self.br_color,
+        }
     }
 }
