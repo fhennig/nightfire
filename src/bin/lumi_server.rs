@@ -4,8 +4,8 @@ use lumi::conf::Conf;
 use lumi::osc::{start_recv, OscVal};
 use lumi::piblaster::{start_piblaster_thread, Light, Lights, PinModel};
 use lumi::piston::run_piston_thread;
-use lumi::sixaxis::{read_controller, ControllerValsSink};
 use lumi::sixaxis::state_updater::StateUpdater;
+use lumi::sixaxis::{read_controller, ControllerValsSink};
 use lumi::state::State;
 use std::sync::{Arc, Mutex};
 use std::{error, thread, time};
@@ -44,13 +44,13 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     // start receiving osc
     let state_copy = Arc::clone(&state);
     let mut state_updater = StateUpdater::new(Arc::clone(&state));
-    let osc_receiver = start_recv("0.0.0.0:33766".parse().unwrap(),
-                                  Box::new(move |osc_val: OscVal| {
-        match osc_val {
+    let osc_receiver = start_recv(
+        "0.0.0.0:33766".parse().unwrap(),
+        Box::new(move |osc_val: OscVal| match osc_val {
             OscVal::ControllerValues(c_vals) => state_updater.take_vals(c_vals),
-            OscVal::AudioV1(vals) => state_copy.lock().unwrap().controller_mode.set_intensity(vals.intensity),
-        }
-    }));
+            OscVal::AudioV1(vals) => state_copy.lock().unwrap().set_intensity(vals.intensity),
+        }),
+    );
     // run controller
     let updater = Box::new(StateUpdater::new(Arc::clone(&state)));
     let controller = read_controller(updater);

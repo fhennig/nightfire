@@ -1,9 +1,9 @@
 use crate::coord;
+use crate::models;
 use crate::sixaxis::{Axis, Button, ControllerValsSink, ControllerValues};
 use crate::state;
-use crate::models;
-use palette::Hsv;
 use log::debug;
+use palette::Hsv;
 use std::sync::{Arc, Mutex};
 
 /// The controller abstracts away over controller state at specific
@@ -157,13 +157,19 @@ impl StateUpdater {
         let mut s = self.state.lock().unwrap();
         // select mode
         s.set_select_mode(controller.is_pressed(Button::PS));
-
         if s.is_select_mode() {
             match get_mode_from_controller(controller) {
                 Some(mode) => s.set_active_mode(mode),
                 None => (),
             }
         } else {
+            // activate/deactivate music mode with the cross button
+            if controller.was_pressed(Button::Cross) {
+                s.switch_music_mode();
+            }
+            if controller.was_pressed(Button::Circle) {
+                s.controller_mode.activate_locked_color();
+            }
             match s.get_active_mode() {
                 state::Mode::OffMode => (), // no controls need to be set
                 state::Mode::Controller => {
@@ -173,12 +179,6 @@ impl StateUpdater {
                     }
                     if controller.was_pressed(Button::Triangle) {
                         s.controller_mode.switch_pulse_active();
-                    }
-                    if controller.was_pressed(Button::Circle) {
-                        s.controller_mode.activate_locked_color();
-                    }
-                    if controller.was_pressed(Button::Cross) {
-                        s.controller_mode.switch_music_mode();
                     }
                     if controller.was_pressed(Button::L3) {
                         s.controller_mode.pos_mask.switch_center_off();
@@ -199,15 +199,13 @@ impl StateUpdater {
                     s.controller_mode.set_saturation(saturation);
                     s.controller_mode.set_value(value);
                 }
-                state::Mode::ManualMode => {
-                    match get_quad_from_controller(controller) {
-                        Some(quad) => match get_color_from_controller(controller) {
-                            Some(color) => s.manual_mode.set_color(quad, color),
-                            None => (),
-                        }
+                state::Mode::ManualMode => match get_quad_from_controller(controller) {
+                    Some(quad) => match get_color_from_controller(controller) {
+                        Some(color) => s.manual_mode.set_color(quad, color),
                         None => (),
-                    }
-                }
+                    },
+                    None => (),
+                },
             }
         }
     }
