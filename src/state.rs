@@ -1,6 +1,6 @@
 use crate::envelope::Envelope;
 use crate::lightid::LightId;
-use crate::models::{self, Color, ColorProvider};
+use crate::models;
 use crate::modes::{ControllerMode, ManualMode};
 use crate::coord::Positionable;
 use std::time::Duration;
@@ -36,7 +36,7 @@ impl Mode {
         }
     }
 
-    fn get_color(&self) -> Color {
+    fn get_color(&self) -> models::Color {
         match self {
             Mode::OffMode => models::Colors::blue(),
             Mode::Controller => models::Colors::red(),
@@ -93,7 +93,7 @@ impl State {
         self.active_mode == Mode::OffMode
     }
 
-    pub fn get_color(&self, light_id: &LightId) -> Color {
+    pub fn get_color(&self, light_id: &LightId) -> models::Color {
         if self.select_mode {
             models::Colors::mask(
                 self.active_mode.get_color(),

@@ -2,7 +2,7 @@ use crate::coord;
 use crate::coord::Positionable;
 use crate::lightid::LightId;
 use crate::mask::{self, EnvMask, Mask};
-use crate::models::{self, Color, ColorProvider, HueMap, PinValue};
+use crate::models::{self, Color, HueMap, PinValue};
 use palette::Hsv;
 
 /// Should always be in [0, 1]
@@ -103,10 +103,8 @@ impl ControllerMode {
             )),
         }
     }
-}
 
-impl ColorProvider for ControllerMode {
-    fn get_color(&self, light_id: &LightId) -> Color {
+    pub fn get_color(&self, light_id: &LightId) -> Color {
         let mut color = self.get_basecolor(light_id.pos());
         if self.pulse_active {
             color = self.pulse_mask.get_masked_color(light_id, color);
