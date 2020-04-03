@@ -135,14 +135,10 @@ fn get_color_from_controller(controller: &Controller) -> Option<models::Color> {
 }
 
 fn get_quad_from_controller(controller: &Controller) -> Option<coord::Quadrant> {
-    if controller.is_pressed(Button::Circle) {
-        None
+    if controller.left_pos().length() > 0.75 {
+        Some(coord::Quadrant::from(controller.left_pos()))
     } else {
-        if controller.left_pos().length() > 0.75 {
-            Some(coord::Quadrant::from(controller.left_pos()))
-        } else {
-            None
-        }
+        None
     }
 }
 
@@ -171,8 +167,22 @@ impl StateUpdater {
             if controller.was_pressed(Button::Cross) {
                 s.switch_music_mode();
             }
-            s.pos_mask.set_active(controller.is_pressed(Button::Circle));
+            let pos_mask_active = controller.is_pressed(Button::Circle)
+                || s.get_active_mode() == state::Mode::Controller;
+            s.pos_mask.set_active(pos_mask_active);
             s.pos_mask.mask.set_pos(controller.left_pos());
+            if controller.was_pressed(Button::L1) {
+                s.manual_mode.rotate_ccw();
+            }
+            if controller.was_pressed(Button::R1) {
+                s.manual_mode.rotate_cw();
+            }
+            if controller.was_pressed(Button::Left) || controller.was_pressed(Button::Right) {
+                s.manual_mode.flip_h();
+            }
+            if controller.was_pressed(Button::Up) || controller.was_pressed(Button::Down) {
+                s.manual_mode.flip_v();
+            }
             match s.get_active_mode() {
                 state::Mode::OffMode => (), // no controls need to be set
                 state::Mode::Controller => {
@@ -201,13 +211,17 @@ impl StateUpdater {
                     s.controller_mode.set_saturation(saturation);
                     s.controller_mode.set_value(value);
                 }
-                state::Mode::ManualMode => match get_quad_from_controller(controller) {
-                    Some(quad) => match get_color_from_controller(controller) {
-                        Some(color) => s.manual_mode.set_color(quad, color),
-                        None => (),
-                    },
-                    None => (),
-                },
+                state::Mode::ManualMode => {
+                    if !controller.is_pressed(Button::Circle) {
+                        match get_quad_from_controller(controller) {
+                            Some(quad) => match get_color_from_controller(controller) {
+                                Some(color) => s.manual_mode.set_color(quad, color),
+                                None => (),
+                            },
+                            None => (),
+                        }
+                    }
+                }
             }
         }
     }

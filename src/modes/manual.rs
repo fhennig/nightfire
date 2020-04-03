@@ -27,6 +27,40 @@ impl ManualMode {
         }
     }
 
+    pub fn rotate_cw(&mut self) {
+        let temp = self.tl_color;
+        self.tl_color = self.bl_color;
+        self.bl_color = self.br_color;
+        self.br_color = self.tr_color;
+        self.tr_color = temp;
+    }
+
+    pub fn rotate_ccw(&mut self) {
+        let temp = self.tl_color;
+        self.tl_color = self.tr_color;
+        self.tr_color = self.br_color;
+        self.br_color = self.bl_color;
+        self.bl_color = temp;
+    }
+
+    pub fn flip_v(&mut self) {
+        let t1 = self.tl_color;
+        let t2 = self.tr_color;
+        self.tl_color = self.bl_color;
+        self.tr_color = self.br_color;
+        self.bl_color = t1;
+        self.br_color = t2;
+    }
+
+    pub fn flip_h(&mut self) {
+        let t1 = self.tl_color;
+        let t2 = self.bl_color;
+        self.tl_color = self.tr_color;
+        self.bl_color = self.br_color;
+        self.tr_color = t1;
+        self.br_color = t2;
+    }
+
     pub fn get_color(&self, pos: coord::Coordinate) -> models::Color {
         match coord::Quadrant::from(pos) {
             coord::Quadrant::TL => self.tl_color,
