@@ -96,7 +96,7 @@ impl ControllerMode {
                 self.value,
             )),
             HueMode::FourColors => Color::from(Hsv::new(
-                self.const_quad.hue_at(pos),
+                self.const_solid.hue_at(pos),
                 self.saturation,
                 self.value,
             )),

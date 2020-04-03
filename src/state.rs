@@ -1,10 +1,13 @@
 use crate::envelope::Envelope;
 use crate::lightid::LightId;
-use crate::models::{Color, ColorProvider, Colors, Coordinate};
+use crate::models::{self, Color, ColorProvider, Colors, Coordinate};
 use crate::modes::{ControllerMode, ManualMode};
 use std::time::Duration;
 
-#[derive(juniper::GraphQLEnum, PartialEq, Copy)]
+/// The overall mode.  There are a couple of high level modes.  Should
+/// the lights be off?  Should a be a constant setting?  Should a be
+/// pulsating?  Each mode can have different sub parameters.
+#[derive(juniper::GraphQLEnum, PartialEq, Copy, Clone)]
 pub enum Mode {
     OffMode,
     ManualMode,
@@ -12,38 +15,32 @@ pub enum Mode {
 }
 
 impl Mode {
-    fn get_color(&self) -> Color {
-        match self {
-            Mode::OffMode => Colors::white(),
-            Mode::Controller => Colors::red(),
-            Mode::ManualMode => Colors::blue(),
+    /// takes a number in [-1, 1) and returns a number, which circle
+    /// segment it was.  Hard coded for six segments for now.
+    pub fn from_angle(angle: f64) -> Mode {
+        if angle < -0.8333 {
+            Mode::OffMode
+        } else if angle < -0.5 {
+            Mode::Controller
+        } else if angle < -0.1666 {
+            Mode::Controller
+        } else if angle < 0.1666 {
+            Mode::Controller
+        } else if angle < 0.5 {
+            Mode::Controller
+        } else if angle < 0.8333 {
+            Mode::Controller
+        } else {
+            Mode::OffMode
         }
     }
-}
 
-impl Clone for Mode {
-    fn clone(&self) -> Self {
-        *self
-    }
-}
-
-/// takes a number in [-1, 1) and returns a number, which circle
-/// segment it was.  Hard coded for six segments for now.
-pub fn angle_to_mode(angle: f64) -> Mode {
-    if angle < -0.8333 {
-        Mode::OffMode
-    } else if angle < -0.5 {
-        Mode::Controller
-    } else if angle < -0.1666 {
-        Mode::Controller
-    } else if angle < 0.1666 {
-        Mode::Controller
-    } else if angle < 0.5 {
-        Mode::Controller
-    } else if angle < 0.8333 {
-        Mode::Controller
-    } else {
-        Mode::OffMode
+    fn get_color(&self) -> Color {
+        match self {
+            Mode::OffMode => models::Colors::white(),
+            Mode::Controller => models::Colors::red(),
+            Mode::ManualMode => models::Colors::yellow(),
+        }
     }
 }
 
@@ -98,33 +95,23 @@ impl State {
         self.active_mode = mode;
     }
 
-    fn mode_selection_from_coord(&mut self, coord: Coordinate) {
-        if coord.length() > 0.75 {
-            self.active_mode = angle_to_mode(coord.angle().unwrap());
-        }
-    }
-
-    pub fn set_left_coord(&mut self, coord: Coordinate) {
+    pub fn mode_selection_from_coord(&mut self, coord: Coordinate) {
         if self.select_mode {
-            self.mode_selection_from_coord(coord);
-        }
-    }
-
-    pub fn set_right_coord(&mut self, coord: Coordinate) {
-        if self.select_mode {
-            self.mode_selection_from_coord(coord);
+            if coord.length() > 0.75 {
+                self.active_mode = Mode::from_angle(coord.angle().unwrap());
+            }
         }
     }
 
     pub fn get_color(&self, light_id: &LightId) -> Color {
         if self.select_mode {
-            Colors::mask(
+            models::Colors::mask(
                 self.active_mode.get_color(),
                 self.white_pulse.get_current_value(),
             )
         } else {
             match self.active_mode {
-                Mode::OffMode => Colors::black(),
+                Mode::OffMode => models::Colors::black(),
                 Mode::ManualMode => self.manual_mode.get_color(light_id),
                 Mode::Controller => self.controller_mode.get_color(light_id),
             }

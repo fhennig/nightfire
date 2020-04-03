@@ -1,6 +1,6 @@
 use crate::models::Coordinate;
 use crate::sixaxis::{Axis, Button, ControllerValsSink, ControllerValues};
-use crate::state::State;
+use crate::state;
 use log::debug;
 use std::sync::{Arc, Mutex};
 
@@ -101,12 +101,12 @@ impl Controller {
 }
 
 pub struct StateUpdater {
-    state: Arc<Mutex<State>>,
+    state: Arc<Mutex<state::State>>,
     controller: Controller,
 }
 
 impl StateUpdater {
-    pub fn new(state: Arc<Mutex<State>>) -> StateUpdater {
+    pub fn new(state: Arc<Mutex<state::State>>) -> StateUpdater {
         let empty_vals = ControllerValues::new_empty();
         StateUpdater {
             state: state,
@@ -122,8 +122,8 @@ impl StateUpdater {
         // select mode
         state.set_select_mode(controller.is_pressed(Button::PS));
         // put stick values to state
-        state.set_left_coord(controller.left_pos());
-        state.set_right_coord(controller.right_pos());
+        state.mode_selection_from_coord(controller.left_pos());
+        state.mode_selection_from_coord(controller.right_pos());
         // set on/off
         if controller.was_pressed(Button::Start) {
             state.switch_off();
