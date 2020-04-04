@@ -1,6 +1,6 @@
 use crate::coord;
 
-#[derive(juniper::GraphQLEnum, Debug, PartialEq, Eq, Hash, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum LightId {
     Top,
     Bottom,

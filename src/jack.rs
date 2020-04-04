@@ -42,7 +42,7 @@ impl ProcessHandler for JackHandler {
 /// the channel.
 pub fn read_audio(vals_handler: Box<dyn ValsHandler>) -> AsyncClient<(), JackHandler> {
     info!("Starting processing.  Creating client and port ...");
-    let client = jack::Client::new("lumi", jack::ClientOptions::NO_START_SERVER)
+    let client = jack::Client::new("lumi", jack::ClientOptions::empty())
         .unwrap()
         .0;
 

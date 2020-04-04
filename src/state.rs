@@ -9,7 +9,7 @@ use std::time::Duration;
 /// The overall mode.  There are a couple of high level modes.  Should
 /// the lights be off?  Should a be a constant setting?  Should a be
 /// pulsating?  Each mode can have different sub parameters.
-#[derive(juniper::GraphQLEnum, PartialEq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone)]
 pub enum Mode {
     OffMode,
     ManualMode,

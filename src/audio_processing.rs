@@ -6,6 +6,8 @@
 //! Also currently the values are created only from the current frame,
 //! in the future instead there should be a processing struct that
 //! remembers a history of the signal to generate smoother curves.
+use biquad as bq;
+use biquad::Biquad;
 use std::cmp::Ordering::Equal;
 use std::collections::VecDeque;
 use std::convert::TryInto;
@@ -37,6 +39,7 @@ pub struct SignalProcessor {
     /// The intensity history calculated from the last n buffers.
     /// We push to the front (newest element at index 0).
     intensity_history: VecDeque<f32>,
+    filter: bq::DirectForm2Transposed<f32>,
 }
 
 impl SignalProcessor {
@@ -44,8 +47,15 @@ impl SignalProcessor {
     pub fn new() -> SignalProcessor {
         let _buffer_size = 512; // the buffer size as defined in JACK
         let history_len = 10;
+        let coeffs = bq::Coefficients::<f32>::from_params(
+            bq::Type::LowPass,
+            bq::Hertz::<f32>::from_hz(48000.).unwrap(),
+            bq::Hertz::<f32>::from_hz(200.).unwrap(),
+            50.,
+        ).unwrap();
         SignalProcessor {
             intensity_history: vec![0f32; history_len].into_iter().collect(),
+            filter: bq::DirectForm2Transposed::<f32>::new(coeffs),
         }
     }
 
@@ -53,8 +63,15 @@ impl SignalProcessor {
     /// jack, which is 1024 or 512 floats big and represents a frame
     /// of samples.
     pub fn add_audio_frame(&mut self, audio_frame: &[f32]) {
+        let mut max = 0f32;
+        for x in audio_frame {
+            let x = self.filter.run(*x);
+            if x > max {
+                max = x;
+            }
+        }
         self.intensity_history.pop_back(); // remove oldest element
-        self.intensity_history.push_front(max_sample(audio_frame));
+        self.intensity_history.push_front(max);
     }
 
     pub fn get_current_values(&self) -> MyValues {
