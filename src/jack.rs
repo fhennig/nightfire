@@ -42,7 +42,7 @@ impl ProcessHandler for JackHandler {
 /// the channel.
 pub fn read_audio(vals_handler: Box<dyn ValsHandler>) -> AsyncClient<(), JackHandler> {
     info!("Starting processing.  Creating client and port ...");
-    let client = jack::Client::new("synesthesizer", jack::ClientOptions::NO_START_SERVER)
+    let client = jack::Client::new("lumi", jack::ClientOptions::NO_START_SERVER)
         .unwrap()
         .0;
 
@@ -57,7 +57,7 @@ pub fn read_audio(vals_handler: Box<dyn ValsHandler>) -> AsyncClient<(), JackHan
     // connect to the pulseaudio sink for convenience
     let res = active_client
         .as_client()
-        .connect_ports_by_name("PulseAudio JACK Sink:front-left", "synesthesizer:in");
+        .connect_ports_by_name("system:capture_1", "lumi:in");
     match res {
         Ok(_) => info!("Connected!!"),
         Err(error) => info!("Error: {}", error),

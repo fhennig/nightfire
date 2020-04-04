@@ -7,8 +7,28 @@ use lumi::piston::run_piston_thread;
 use lumi::sixaxis::state_updater::StateUpdater;
 use lumi::sixaxis::{read_controller, ControllerValsSink};
 use lumi::state::State;
+use lumi::jack;
+use lumi::audio_processing;
 use std::sync::{Arc, Mutex};
 use std::{error, thread, time};
+
+struct AudioStateUpdater {
+    state: Arc<Mutex<State>>,
+}
+
+impl AudioStateUpdater {
+    pub fn new(state: Arc<Mutex<State>>) -> AudioStateUpdater {
+        AudioStateUpdater {
+            state: state,
+        }
+    }
+}
+
+impl jack::ValsHandler for AudioStateUpdater {
+    fn take_vals(&mut self, vals: audio_processing::MyValues) {
+        self.state.lock().unwrap().set_intensity(vals.intensity);
+    }
+}
 
 fn get_args() -> ArgMatches<'static> {
     App::new("lumi")
@@ -41,6 +61,8 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     };
     // setup state
     let state = Arc::new(Mutex::new(State::new()));
+    // read audio
+    let audio_client = jack::read_audio(Box::new(AudioStateUpdater::new(Arc::clone(&state))));
     // start receiving osc
     let state_copy = Arc::clone(&state);
     let mut state_updater = StateUpdater::new(Arc::clone(&state));
