@@ -8,18 +8,8 @@
 //! remembers a history of the signal to generate smoother curves.
 use biquad as bq;
 use biquad::Biquad;
-use std::cmp::Ordering::Equal;
 use std::collections::VecDeque;
 use std::convert::TryInto;
-
-/// A basic function that extracts the maximum sample from a frame.
-fn max_sample(frame: &[f32]) -> f32 {
-    let max = frame
-        .iter()
-        .max_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));;
-    let max = *max.unwrap();
-    max
-}
 
 /// This struct represents the values that are extracted from the
 /// audio signal at every iteration.  These values are used downstream
