@@ -5,7 +5,7 @@ pub mod envelope;
 pub mod lightid;
 pub mod mask;
 pub mod models;
-pub mod modes;
+pub mod manual;
 pub mod piblaster;
 pub mod piston;
 pub mod state;
