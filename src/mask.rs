@@ -28,7 +28,7 @@ impl PosMask {
                 Key::new(1.6, 0.1, Interpolation::Linear),
                 Key::new(1.9, 0., Interpolation::Linear),
             ]),
-            center_off: false,
+            center_off: true,
         }
     }
 
@@ -43,7 +43,7 @@ impl PosMask {
 
 impl Mask for PosMask {
     fn get_value(&self, pos: &coord::Coordinate) -> PinValue {
-        if self.position.length() < 0.2 {
+        if self.position.length() < 0.1 {
             if self.center_off {
                 0.
             } else {

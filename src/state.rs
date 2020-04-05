@@ -13,7 +13,6 @@ use std::time::Duration;
 pub enum Mode {
     OffMode,
     ManualMode,
-    Controller,
 }
 
 impl Mode {
@@ -29,9 +28,9 @@ impl Mode {
         } else if angle < 0.1666 {
             Mode::OffMode
         } else if angle < 0.5 {
-            Mode::Controller
+            Mode::ManualMode
         } else if angle < 0.8333 {
-            Mode::Controller
+            Mode::ManualMode
         } else {
             Mode::OffMode
         }
@@ -40,7 +39,6 @@ impl Mode {
     fn get_color(&self) -> models::Color {
         match self {
             Mode::OffMode => models::Colors::blue(),
-            Mode::Controller => models::Colors::red(),
             Mode::ManualMode => models::Colors::yellow(),
         }
     }
@@ -48,34 +46,29 @@ impl Mode {
 
 pub struct State {
     pub manual_mode: ManualMode,
-    pub controller_mode: ControllerMode,
     select_mode: bool,
     white_pulse: Envelope,
     active_mode: Mode,
     // masks
     /// The value mask is a full mask, overall brightness
-    pub value_mask: mask::ActivatableMask<mask::SolidMask>,
+    pub value_mask: mask::ActivatableMask<mask::AddMask<mask::SolidMask, mask::PosMask>>,
     /// The music masks gets brightness from the music
     pub music_mask: mask::ActivatableMask<mask::SolidMask>,
-    pub pos_mask: mask::ActivatableMask<mask::PosMask>,
     pulse_mask: mask::ActivatableMask<mask::EnvMask>,
 }
 
 impl State {
     pub fn new() -> State {
         let man_mode = ManualMode::new();
-        let controller_mode = ControllerMode::new();
         // set activate
         let active_mode = Mode::ManualMode;
         State {
             manual_mode: man_mode,
-            controller_mode: controller_mode,
             white_pulse: Envelope::new_pulse(Duration::from_millis(1800)),
             select_mode: false,
             active_mode: active_mode,
-            value_mask: mask::ActivatableMask::new(mask::SolidMask::new(), true),
+            value_mask: mask::ActivatableMask::new(mask::AddMask::new(mask::SolidMask::new(), mask::PosMask::new()), false),
             music_mask: mask::ActivatableMask::new(mask::SolidMask::new(), false),
-            pos_mask: mask::ActivatableMask::new(mask::PosMask::new(), false),
             pulse_mask: mask::ActivatableMask::new(mask::EnvMask::new_random_pulse(), false),
         }
     }
@@ -127,10 +120,8 @@ impl State {
             let mut color = match self.active_mode {
                 Mode::OffMode => models::Colors::black(),
                 Mode::ManualMode => self.manual_mode.get_color(light_id.pos()),
-                Mode::Controller => self.controller_mode.get_color(light_id),
             };
             color = self.music_mask.get_masked_color(light_id, color);
-            color = self.pos_mask.get_masked_color(light_id, color);
             color = self.value_mask.get_masked_color(light_id, color);
             color = self.pulse_mask.get_masked_color(light_id, color);
             color

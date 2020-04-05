@@ -168,14 +168,10 @@ impl StateUpdater {
                 s.switch_music_mode();
             }
             // overall brightness mask
-            let value = controller.left_trigger();
-            s.value_mask.mask.set_val(value);
             s.value_mask.set_active(controller.is_pressed(Button::Circle));
+            s.value_mask.mask.mask1.set_val(controller.left_trigger());
             // position mask handling
-            let pos_mask_active = controller.is_pressed(Button::Circle)
-                || s.get_active_mode() == state::Mode::Controller;
-            s.pos_mask.set_active(pos_mask_active);
-            s.pos_mask.mask.set_pos(controller.left_pos());
+            s.value_mask.mask.mask2.set_pos(controller.left_pos());
             // pulse mode
             if controller.was_pressed(Button::Triangle) {
                 s.switch_pulse_mode();
@@ -195,27 +191,6 @@ impl StateUpdater {
             }
             match s.get_active_mode() {
                 state::Mode::OffMode => (), // no controls need to be set
-                state::Mode::Controller => {
-                    if controller.was_pressed(Button::Square) {
-                        s.controller_mode.activate_rainbow_color();
-                        // TODO here it would be nice if this button was a switch
-                    }
-                    if controller.was_pressed(Button::L3) {
-                        s.pos_mask.mask.switch_center_off();
-                    }
-                    // set mask position from left stick
-                    // set hue of the color from the right stick angle
-                    let active = controller.right_pos().length() > 0.75;
-                    if active {
-                        match controller.right_pos().hue_from_angle() {
-                            Some(hue) => s.controller_mode.const_solid.set_hue(hue),
-                            None => (),
-                        }
-                    }
-                    // set saturation and value from the triggers
-                    let saturation = 1. - controller.right_trigger();
-                    s.controller_mode.set_saturation(saturation);
-                }
                 state::Mode::ManualMode => {
                     if !controller.is_pressed(Button::Circle) {
                         // decide if a color should be set
