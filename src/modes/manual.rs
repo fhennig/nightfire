@@ -1,30 +1,37 @@
-use crate::models;
-use crate::coord;
+use crate::coord as c;
+use crate::models as m;
 
 pub struct ManualMode {
-    tl_color: models::Color,
-    tr_color: models::Color,
-    bl_color: models::Color,
-    br_color: models::Color,
+    tl_color: m::Color,
+    tr_color: m::Color,
+    bl_color: m::Color,
+    br_color: m::Color,
 }
 
 impl ManualMode {
     pub fn new() -> ManualMode {
         ManualMode {
-            tl_color: models::Colors::red(),
-            tr_color: models::Colors::yellow(),
-            bl_color: models::Colors::blue(),
-            br_color: models::Colors::green(),
+            tl_color: m::Colors::red(),
+            tr_color: m::Colors::yellow(),
+            bl_color: m::Colors::blue(),
+            br_color: m::Colors::green(),
         }
     }
 
-    pub fn set_color(&mut self, quad: coord::Quadrant, color: models::Color) {
+    pub fn set_color(&mut self, quad: c::Quadrant, color: m::Color) {
         match quad {
-            coord::Quadrant::TL => self.tl_color = color,
-            coord::Quadrant::TR => self.tr_color = color,
-            coord::Quadrant::BL => self.bl_color = color,
-            coord::Quadrant::BR => self.br_color = color,
+            c::Quadrant::TL => self.tl_color = color,
+            c::Quadrant::TR => self.tr_color = color,
+            c::Quadrant::BL => self.bl_color = color,
+            c::Quadrant::BR => self.br_color = color,
         }
+    }
+
+    pub fn set_all(&mut self, color: m::Color) {
+        self.tl_color = color;
+        self.tr_color = color;
+        self.bl_color = color;
+        self.br_color = color;
     }
 
     pub fn rotate_cw(&mut self) {
@@ -61,12 +68,12 @@ impl ManualMode {
         self.br_color = t2;
     }
 
-    pub fn get_color(&self, pos: coord::Coordinate) -> models::Color {
-        match coord::Quadrant::from(pos) {
-            coord::Quadrant::TL => self.tl_color,
-            coord::Quadrant::TR => self.tr_color,
-            coord::Quadrant::BL => self.bl_color,
-            coord::Quadrant::BR => self.br_color,
+    pub fn get_color(&self, pos: c::Coordinate) -> m::Color {
+        match c::Quadrant::from(pos) {
+            c::Quadrant::TL => self.tl_color,
+            c::Quadrant::TR => self.tr_color,
+            c::Quadrant::BL => self.bl_color,
+            c::Quadrant::BR => self.br_color,
         }
     }
 }
