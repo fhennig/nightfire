@@ -171,17 +171,17 @@ impl StateUpdater {
                 || s.get_active_mode() == state::Mode::Controller;
             s.pos_mask.set_active(pos_mask_active);
             s.pos_mask.mask.set_pos(controller.left_pos());
-            if controller.was_pressed(Button::L1) {
-                s.manual_mode.rotate_ccw();
-            }
-            if controller.was_pressed(Button::R1) {
-                s.manual_mode.rotate_cw();
-            }
-            if controller.was_pressed(Button::Left) || controller.was_pressed(Button::Right) {
+            if controller.was_pressed(Button::Right) {
                 s.manual_mode.flip_h();
             }
-            if controller.was_pressed(Button::Up) || controller.was_pressed(Button::Down) {
+            if controller.was_pressed(Button::Up) {
                 s.manual_mode.flip_v();
+            }
+            if controller.was_pressed(Button::Left) {
+                s.manual_mode.rotate_ccw();
+            }
+            if controller.was_pressed(Button::Down) {
+                s.manual_mode.rotate_cw();
             }
             match s.get_active_mode() {
                 state::Mode::OffMode => (), // no controls need to be set
