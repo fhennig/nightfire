@@ -49,6 +49,9 @@ pub struct State {
     select_mode: bool,
     white_pulse: Envelope,
     active_mode: Mode,
+    // rainbow
+    rainbow: models::Rainbow,
+    is_rainbow: bool,
     // masks
     /// The value mask is a full mask, overall brightness
     pub value_mask: mask::ActivatableMask<mask::AddMask<mask::SolidMask, mask::PosMask>>,
@@ -67,6 +70,8 @@ impl State {
             white_pulse: Envelope::new_pulse(Duration::from_millis(1800)),
             select_mode: false,
             active_mode: active_mode,
+            rainbow: models::Rainbow::new(),
+            is_rainbow: false,
             value_mask: mask::ActivatableMask::new(mask::AddMask::new(mask::SolidMask::new(), mask::PosMask::new()), false),
             music_mask: mask::ActivatableMask::new(mask::SolidMask::new(), false),
             pulse_mask: mask::ActivatableMask::new(mask::EnvMask::new_random_pulse(), false),
@@ -106,6 +111,10 @@ impl State {
         self.pulse_mask.switch_active();
     }
 
+    pub fn switch_rainbow(&mut self) {
+        self.is_rainbow = !self.is_rainbow;
+    }
+
     pub fn set_intensity(&mut self, intensity: f32) {
         self.music_mask.mask.set_val(intensity.into());
     }
@@ -119,7 +128,13 @@ impl State {
         } else {
             let mut color = match self.active_mode {
                 Mode::OffMode => models::Colors::black(),
-                Mode::ManualMode => self.manual_mode.get_color(light_id.pos()),
+                Mode::ManualMode => {
+                    if self.is_rainbow {
+                        self.rainbow.get_color()
+                    } else {
+                        self.manual_mode.get_color(light_id.pos())
+                    }
+                }
             };
             color = self.music_mask.get_masked_color(light_id, color);
             color = self.value_mask.get_masked_color(light_id, color);

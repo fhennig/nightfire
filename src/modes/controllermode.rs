@@ -1,27 +1,14 @@
-use crate::coord;
 use crate::coord::Positionable;
 use crate::lightid::LightId;
-use crate::mask::{self, EnvMask, Mask};
-use crate::models::{self, Color, HueMap, PinValue};
+use crate::models::{self, Color, PinValue};
 use palette::Hsv;
 
 /// Should always be in [0, 1]
 pub type ControllerFloat = PinValue;
 
-#[derive(PartialEq)]
-pub enum HueMode {
-    Color,
-    Rainbow,
-    FourColors,
-}
-
 pub struct ControllerMode {
-    // Hue sources
-    hue_mode: HueMode,
     /// An animated hue source that goes through the colors of the rainbow.
-    rainbow_solid: models::RainbowSolid,
-    /// The solid color that can be set with the stick.
-    pub const_solid: models::ConstSolid,
+    rainbow_solid: models::Rainbow,
     // saturation and value.
     saturation: ControllerFloat,
 }
@@ -29,49 +16,13 @@ pub struct ControllerMode {
 impl ControllerMode {
     pub fn new() -> ControllerMode {
         ControllerMode {
-            rainbow_solid: models::RainbowSolid::new(),
-            const_solid: models::ConstSolid::new(),
+            rainbow_solid: models::Rainbow::new(),
             // set & val
             saturation: 1.,
-            // mode settings
-            hue_mode: HueMode::Color,
-        }
-    }
-
-    pub fn activate_rainbow_color(&mut self) {
-        if self.hue_mode == HueMode::Rainbow {
-            self.hue_mode = HueMode::Color;
-        } else {
-            self.hue_mode = HueMode::Rainbow;
         }
     }
 
     pub fn set_saturation(&mut self, saturation: ControllerFloat) {
         self.saturation = saturation;
-    }
-
-    fn get_basecolor(&self, pos: coord::Coordinate) -> Color {
-        match self.hue_mode {
-            HueMode::Color => Color::from(Hsv::new(
-                self.const_solid.hue_at(pos),
-                self.saturation,
-                1.,
-            )),
-            HueMode::Rainbow => Color::from(Hsv::new(
-                self.rainbow_solid.hue_at(pos),
-                self.saturation,
-                1.,
-            )),
-            HueMode::FourColors => Color::from(Hsv::new(
-                self.const_solid.hue_at(pos),
-                self.saturation,
-                1.,
-            )),
-        }
-    }
-
-    pub fn get_color(&self, light_id: &LightId) -> Color {
-        let mut color = self.get_basecolor(light_id.pos());
-        color
     }
 }

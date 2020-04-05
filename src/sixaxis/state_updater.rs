@@ -176,6 +176,9 @@ impl StateUpdater {
             if controller.was_pressed(Button::Triangle) {
                 s.switch_pulse_mode();
             }
+            if controller.was_pressed(Button::Square) {
+                s.switch_rainbow();
+            }
             // color rotations
             if controller.was_pressed(Button::Right) {
                 s.manual_mode.flip_h();
