@@ -208,8 +208,8 @@ impl StateUpdater {
                     // set saturation and value from the triggers
                     let saturation = 1. - controller.right_trigger();
                     let value = 1. - controller.left_trigger();
+                    s.value_mask.mask.set_val(value);
                     s.controller_mode.set_saturation(saturation);
-                    s.controller_mode.set_value(value);
                 }
                 state::Mode::ManualMode => {
                     if !controller.is_pressed(Button::Circle) {

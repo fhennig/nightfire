@@ -52,6 +52,10 @@ pub struct State {
     select_mode: bool,
     white_pulse: Envelope,
     active_mode: Mode,
+    // masks
+    /// The value mask is a full mask, overall brightness
+    pub value_mask: mask::ActivatableMask<mask::SolidMask>,
+    /// The music masks gets brightness from the music
     pub music_mask: mask::ActivatableMask<mask::SolidMask>,
     pub pos_mask: mask::ActivatableMask<mask::PosMask>,
 }
@@ -70,6 +74,7 @@ impl State {
             active_mode: active_mode,
             music_mask: mask::ActivatableMask::new(mask::SolidMask::new(), false),
             pos_mask: mask::ActivatableMask::new(mask::PosMask::new(), false),
+            value_mask: mask::ActivatableMask::new(mask::SolidMask::new(), true),
         }
     }
 
@@ -120,6 +125,7 @@ impl State {
             };
             color = self.music_mask.get_masked_color(light_id, color);
             color = self.pos_mask.get_masked_color(light_id, color);
+            color = self.value_mask.get_masked_color(light_id, color);
             color
         }
     }

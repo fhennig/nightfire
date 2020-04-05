@@ -24,7 +24,6 @@ pub struct ControllerMode {
     pub const_solid: models::ConstSolid,
     // saturation and value.
     saturation: ControllerFloat,
-    value: ControllerFloat,
     pulse_mask: EnvMask,
     // other params
     pulse_active: bool,
@@ -39,7 +38,6 @@ impl ControllerMode {
             pulse_mask: mask::EnvMask::new_random_pulse(),
             // set & val
             saturation: 1.,
-            value: 1.,
             // mode settings
             hue_mode: HueMode::Color,
             pulse_active: false,
@@ -62,26 +60,22 @@ impl ControllerMode {
         self.saturation = saturation;
     }
 
-    pub fn set_value(&mut self, value: ControllerFloat) {
-        self.value = value;
-    }
-
     fn get_basecolor(&self, pos: coord::Coordinate) -> Color {
         match self.hue_mode {
             HueMode::Color => Color::from(Hsv::new(
                 self.const_solid.hue_at(pos),
                 self.saturation,
-                self.value,
+                1.,
             )),
             HueMode::Rainbow => Color::from(Hsv::new(
                 self.rainbow_solid.hue_at(pos),
                 self.saturation,
-                self.value,
+                1.,
             )),
             HueMode::FourColors => Color::from(Hsv::new(
                 self.const_solid.hue_at(pos),
                 self.saturation,
-                self.value,
+                1.,
             )),
         }
     }
