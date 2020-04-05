@@ -1,8 +1,8 @@
 use crate::envelope::Envelope;
 use crate::lightid::LightId;
 use crate::models;
+use crate::modes;
 use crate::mask::{self, Mask};
-use crate::modes::{ControllerMode, ManualMode};
 use crate::coord::Positionable;
 use std::time::Duration;
 
@@ -45,7 +45,7 @@ impl Mode {
 }
 
 pub struct State {
-    pub manual_mode: ManualMode,
+    pub manual_mode: modes::ManualMode,
     select_mode: bool,
     white_pulse: Envelope,
     active_mode: Mode,
@@ -62,7 +62,7 @@ pub struct State {
 
 impl State {
     pub fn new() -> State {
-        let man_mode = ManualMode::new();
+        let man_mode = modes::ManualMode::new();
         // set activate
         let active_mode = Mode::ManualMode;
         State {
