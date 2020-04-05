@@ -213,11 +213,21 @@ impl StateUpdater {
                 }
                 state::Mode::ManualMode => {
                     if !controller.is_pressed(Button::Circle) {
-                        match get_quad_from_controller(controller) {
-                            Some(quad) => match get_color_from_controller(controller) {
-                                Some(color) => s.manual_mode.set_color(quad, color),
-                                None => (),
-                            },
+                        // decide if a color should be set
+                        match get_color_from_controller(controller) {
+                            Some(color) => {
+                                // decide where to set
+                                if controller.is_pressed(Button::L1) {
+                                    s.manual_mode.set_major_diag(color);
+                                }
+                                if controller.is_pressed(Button::R1) {
+                                    s.manual_mode.set_minor_diag(color);
+                                }
+                                match get_quad_from_controller(controller) {
+                                    Some(quad) => s.manual_mode.set_color(quad, color),
+                                    None => (),
+                                }
+                            }
                             None => (),
                         }
                     }

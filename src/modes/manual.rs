@@ -34,6 +34,16 @@ impl ManualMode {
         self.br_color = color;
     }
 
+    pub fn set_major_diag(&mut self, color: m::Color) {
+        self.tl_color = color;
+        self.br_color = color;
+    }
+
+    pub fn set_minor_diag(&mut self, color: m::Color) {
+        self.tr_color = color;
+        self.bl_color = color;
+    }
+
     pub fn rotate_cw(&mut self) {
         let temp = self.tl_color;
         self.tl_color = self.bl_color;
