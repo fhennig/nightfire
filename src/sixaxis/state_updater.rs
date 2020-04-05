@@ -164,16 +164,23 @@ impl StateUpdater {
             }
         } else {
             // activate/deactivate music mode with the cross button
-            if controller.was_pressed(Button::Cross) {
+            if controller.was_pressed(Button::Start) {
                 s.switch_music_mode();
             }
+            // overall brightness mask
+            let value = controller.left_trigger();
+            s.value_mask.mask.set_val(value);
+            s.value_mask.set_active(controller.is_pressed(Button::Circle));
+            // position mask handling
             let pos_mask_active = controller.is_pressed(Button::Circle)
                 || s.get_active_mode() == state::Mode::Controller;
             s.pos_mask.set_active(pos_mask_active);
             s.pos_mask.mask.set_pos(controller.left_pos());
+            // pulse mode
             if controller.was_pressed(Button::Triangle) {
                 s.switch_pulse_mode();
             }
+            // color rotations
             if controller.was_pressed(Button::Right) {
                 s.manual_mode.flip_h();
             }
@@ -207,8 +214,6 @@ impl StateUpdater {
                     }
                     // set saturation and value from the triggers
                     let saturation = 1. - controller.right_trigger();
-                    let value = 1. - controller.left_trigger();
-                    s.value_mask.mask.set_val(value);
                     s.controller_mode.set_saturation(saturation);
                 }
                 state::Mode::ManualMode => {

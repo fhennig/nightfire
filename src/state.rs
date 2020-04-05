@@ -66,7 +66,7 @@ impl State {
         let man_mode = ManualMode::new();
         let controller_mode = ControllerMode::new();
         // set activate
-        let active_mode = Mode::Controller;
+        let active_mode = Mode::ManualMode;
         State {
             manual_mode: man_mode,
             controller_mode: controller_mode,

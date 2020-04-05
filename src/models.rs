@@ -1,6 +1,6 @@
-use crate::lightid::LightId;
-use crate::envelope::Envelope;
 use crate::coord;
+use crate::envelope::Envelope;
+use crate::lightid::LightId;
 use palette::encoding::linear::Linear;
 use palette::encoding::Srgb;
 use palette::rgb::Rgb;
@@ -52,7 +52,11 @@ impl Colors {
     }
 
     pub fn mask(color: Color, value: f64) -> Color {
-        Color::new(color.red * value, color.green * value, color.blue * value)
+        if value == 1. {
+            color
+        } else {
+            Color::new(color.red * value, color.green * value, color.blue * value)
+        }
     }
 }
 
