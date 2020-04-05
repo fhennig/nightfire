@@ -171,6 +171,9 @@ impl StateUpdater {
                 || s.get_active_mode() == state::Mode::Controller;
             s.pos_mask.set_active(pos_mask_active);
             s.pos_mask.mask.set_pos(controller.left_pos());
+            if controller.was_pressed(Button::Triangle) {
+                s.switch_pulse_mode();
+            }
             if controller.was_pressed(Button::Right) {
                 s.manual_mode.flip_h();
             }
@@ -189,9 +192,6 @@ impl StateUpdater {
                     if controller.was_pressed(Button::Square) {
                         s.controller_mode.activate_rainbow_color();
                         // TODO here it would be nice if this button was a switch
-                    }
-                    if controller.was_pressed(Button::Triangle) {
-                        s.controller_mode.switch_pulse_active();
                     }
                     if controller.was_pressed(Button::L3) {
                         s.pos_mask.mask.switch_center_off();

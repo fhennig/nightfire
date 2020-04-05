@@ -58,6 +58,7 @@ pub struct State {
     /// The music masks gets brightness from the music
     pub music_mask: mask::ActivatableMask<mask::SolidMask>,
     pub pos_mask: mask::ActivatableMask<mask::PosMask>,
+    pulse_mask: mask::ActivatableMask<mask::EnvMask>,
 }
 
 impl State {
@@ -72,9 +73,10 @@ impl State {
             white_pulse: Envelope::new_pulse(Duration::from_millis(1800)),
             select_mode: false,
             active_mode: active_mode,
+            value_mask: mask::ActivatableMask::new(mask::SolidMask::new(), true),
             music_mask: mask::ActivatableMask::new(mask::SolidMask::new(), false),
             pos_mask: mask::ActivatableMask::new(mask::PosMask::new(), false),
-            value_mask: mask::ActivatableMask::new(mask::SolidMask::new(), true),
+            pulse_mask: mask::ActivatableMask::new(mask::EnvMask::new_random_pulse(), false),
         }
     }
 
@@ -107,6 +109,10 @@ impl State {
         self.music_mask.switch_active();
     }
 
+    pub fn switch_pulse_mode(&mut self) {
+        self.pulse_mask.switch_active();
+    }
+
     pub fn set_intensity(&mut self, intensity: f32) {
         self.music_mask.mask.set_val(intensity.into());
     }
@@ -126,6 +132,7 @@ impl State {
             color = self.music_mask.get_masked_color(light_id, color);
             color = self.pos_mask.get_masked_color(light_id, color);
             color = self.value_mask.get_masked_color(light_id, color);
+            color = self.pulse_mask.get_masked_color(light_id, color);
             color
         }
     }
