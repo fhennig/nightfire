@@ -668,6 +668,7 @@ dependencies = [
  "piston_window 0.107.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rosc 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "splines 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "statrs 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "stoppable_thread 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "yaml-rust 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -1317,6 +1318,14 @@ version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "statrs"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "rand 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "stb_truetype"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1725,6 +1734,7 @@ dependencies = [
 "checksum smallvec 0.6.13 (registry+https://github.com/rust-lang/crates.io-index)" = "f7b0758c52e15a8b5e3691eae6cc559f08eee9406e548a4477ba4e67770a82b6"
 "checksum smithay-client-toolkit 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)" = "2ccb8c57049b2a34d2cc2b203fa785020ba0129d31920ef0d317430adaf748fa"
 "checksum splines 3.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "292eb6468e454f89a24a848c8e918dc24ea8e5499e12609679c32f34773e9269"
+"checksum statrs 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)" = "cce16f6de653e88beca7bd13780d08e09d4489dbca1f9210e041bc4852481382"
 "checksum stb_truetype 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "f77b6b07e862c66a9f3e62a07588fee67cd90a9135a2b942409f195507b4fb51"
 "checksum stoppable_thread 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "e6700c1ed393aa9c1fff950032a64a4856436dadee820641ce1b914cab65019f"
 "checksum strsim 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "8ea5119cdb4c55b55d432abb513a0429384878c15dde60cc77b1c99de1a95a6a"
