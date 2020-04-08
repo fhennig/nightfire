@@ -102,6 +102,13 @@ impl SignalFilter {
         self.filters.len()
     }
 
+    fn get_freq_index(&self, f_start: &f32) -> usize {
+        match self.freqs.binary_search_by(|v| v.partial_cmp(f_start).unwrap()) {
+            Ok(r) => return r,
+            Err(r) => return r,
+        }
+    }
+
     pub fn add_audio(&mut self, audio_sample: &f32) -> Sample {
         let mut res = Sample::new_empty(self.num_filters());
         for i in 0..self.num_filters() {
@@ -110,8 +117,18 @@ impl SignalFilter {
         res
     }
 
+    fn get_slice_value(&self, f_start: &f32, f_end: &f32, sample: &Sample) -> f32 {
+        let i_start = self.get_freq_index(f_start);
+        let i_end = self.get_freq_index(f_end);
+        let mut v: f32 = 0.;
+        for i in i_start..i_end {
+            v = v.max(sample.vals[i]);
+        }
+        v
+    }
+
     pub fn get_bass(&self, sample: &Sample) -> f32 {
-        sample.vals[16]
+        self.get_slice_value(&60., &250., sample)
     }
 }
 
