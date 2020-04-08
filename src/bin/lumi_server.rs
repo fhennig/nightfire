@@ -1,14 +1,14 @@
 use clap::{App, Arg, ArgMatches};
 use log::info;
+use lumi::audio_processing;
 use lumi::conf::Conf;
+use lumi::jack;
 use lumi::osc::{start_recv, OscVal};
 use lumi::piblaster::{start_piblaster_thread, Light, Lights, PinModel};
 use lumi::piston::run_piston_thread;
 use lumi::sixaxis::state_updater::StateUpdater;
 use lumi::sixaxis::{read_controller, ControllerValsSink};
 use lumi::state::State;
-use lumi::jack;
-use lumi::audio_processing;
 use std::sync::{Arc, Mutex};
 use std::{error, thread, time};
 
@@ -18,9 +18,7 @@ struct AudioStateUpdater {
 
 impl AudioStateUpdater {
     pub fn new(state: Arc<Mutex<State>>) -> AudioStateUpdater {
-        AudioStateUpdater {
-            state: state,
-        }
+        AudioStateUpdater { state: state }
     }
 }
 
@@ -62,7 +60,10 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     // setup state
     let state = Arc::new(Mutex::new(State::new()));
     // read audio
-    let audio_client = jack::read_audio(Box::new(AudioStateUpdater::new(Arc::clone(&state))));
+    let audio_client = jack::read_audio(
+        "system:capture_1",
+        Box::new(AudioStateUpdater::new(Arc::clone(&state))),
+    );
     // start receiving osc
     let state_copy = Arc::clone(&state);
     let mut state_updater = StateUpdater::new(Arc::clone(&state));

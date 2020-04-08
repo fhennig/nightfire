@@ -1,3 +1,4 @@
+//! This module takes care of audio processing.
 use crate::audio_processing::{MyValues, SignalProcessor};
 use jack::{AsyncClient, AudioIn, Client, Control, Port, ProcessHandler, ProcessScope};
 use log::info;
@@ -39,8 +40,8 @@ impl ProcessHandler for JackHandler {
 }
 
 /// Starts to accept audio frames on the audio port and writes them to
-/// the channel.
-pub fn read_audio(vals_handler: Box<dyn ValsHandler>) -> AsyncClient<(), JackHandler> {
+/// the channel.  The port is something like "system:capture_1".
+pub fn read_audio(port: &str, vals_handler: Box<dyn ValsHandler>) -> AsyncClient<(), JackHandler> {
     info!("Starting processing.  Creating client and port ...");
     let client = jack::Client::new("lumi", jack::ClientOptions::empty())
         .unwrap()
@@ -57,7 +58,7 @@ pub fn read_audio(vals_handler: Box<dyn ValsHandler>) -> AsyncClient<(), JackHan
     // connect to the pulseaudio sink for convenience
     let res = active_client
         .as_client()
-        .connect_ports_by_name("system:capture_1", "lumi:in");
+        .connect_ports_by_name(port, "lumi:in");
     match res {
         Ok(_) => info!("Connected!!"),
         Err(error) => info!("Error: {}", error),

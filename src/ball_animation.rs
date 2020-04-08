@@ -17,7 +17,7 @@ pub fn create_window(vals: Arc<Mutex<MyValues>>) {
         let intensity = vals.lock().unwrap().intensity;
         window.draw_2d(&event, |context, graphics, _device| {
             clear(bg_color, graphics);
-            let size = 50f64 + 250f64 * (intensity as f64);
+            let size = 0f64 + 250f64 * (intensity as f64);
             ellipse(
                 fg_color,
                 [150.0 - (size / 2.0), 150.0 - (size / 2.0), size, size],
