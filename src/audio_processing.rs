@@ -29,9 +29,7 @@ impl MyValues {
     }
 
     pub fn new_null() -> MyValues {
-        MyValues {
-            intensity: 0.0,
-        }
+        MyValues { intensity: 0.0 }
     }
 }
 
@@ -103,10 +101,10 @@ impl SignalFilter {
         self.filters.len()
     }
 
-    fn get_freq_index(&self, f_start: &f32) -> usize {
+    fn get_freq_index(&self, f_start: f32) -> usize {
         match self
             .freqs
-            .binary_search_by(|v| v.partial_cmp(f_start).unwrap())
+            .binary_search_by(|v| v.partial_cmp(&f_start).unwrap())
         {
             Ok(r) => return r,
             Err(r) => return r,
@@ -121,7 +119,7 @@ impl SignalFilter {
         res
     }
 
-    fn get_slice_value(&self, f_start: &f32, f_end: &f32, sample: &Sample) -> f32 {
+    pub fn get_slice_value(&self, f_start: f32, f_end: f32, sample: &Sample) -> f32 {
         let i_start = self.get_freq_index(f_start);
         let i_end = self.get_freq_index(f_end);
         let mut v: f32 = 0.;
@@ -129,34 +127,6 @@ impl SignalFilter {
             v = v.max(sample.vals[i]);
         }
         v
-    }
-
-    pub fn get_sub_bass(&self, sample: &Sample) -> f32 {
-        self.get_slice_value(&20., &60., sample)
-    }
-
-    pub fn get_bass(&self, sample: &Sample) -> f32 {
-        self.get_slice_value(&60., &250., sample)
-    }
-
-    pub fn get_low_mid(&self, sample: &Sample) -> f32 {
-        self.get_slice_value(&250., &500., sample)
-    }
-
-    pub fn get_mid(&self, sample: &Sample) -> f32 {
-        self.get_slice_value(&500., &2_000., sample)
-    }
-
-    pub fn get_upper_mid(&self, sample: &Sample) -> f32 {
-        self.get_slice_value(&2_000., &4_000., sample)
-    }
-
-    pub fn get_presence(&self, sample: &Sample) -> f32 {
-        self.get_slice_value(&4_000., &6_000., sample)
-    }
-
-    pub fn get_briliance(&self, sample: &Sample) -> f32 {
-        self.get_slice_value(&6_000., &22_000., sample)
     }
 }
 
@@ -223,15 +193,15 @@ impl SignalProcessor {
         self.hist.get_mut(0).unwrap()
     }
 
-    pub fn get_current_values(&self) -> MyValues {
-        let decay: f32 = 0.95;
-        let max_intensity_from_hist = self
-            .hist
+    fn get_range_decayed(&self, f_start: f32, f_end: f32, decay: f32) -> f32 {
+        self.hist
             .iter()
-            .cloned()
             .enumerate()
-            .map(|(i, val)| self.filter.get_bass(&val) * decay.powi(i.try_into().unwrap()))
-            .fold(-1. / 0., f32::max);
-        MyValues::new(max_intensity_from_hist)
+            .map(|(i, val)| self.filter.get_slice_value(f_start, f_end, &val) * decay.powi(i.try_into().unwrap()))
+            .fold(-1. / 0., f32::max)
+    }
+
+    pub fn get_current_values(&self) -> MyValues {
+        MyValues::new(self.get_range_decayed(60., 250., 0.95))
     }
 }
