@@ -178,9 +178,8 @@ pub struct SignalProcessor {
 
 impl SignalProcessor {
     /// creates and initializes a new signal processor.
-    pub fn new() -> SignalProcessor {
+    pub fn new(sample_freq: f32) -> SignalProcessor {
         let history_len = 10;
-        let sample_freq = 48000f32;
         let fps = 100f32;
         let subsample_frame_size = (sample_freq / fps) as usize;
         let filter = SignalFilter::new(1., 22_000., sample_freq, 50);

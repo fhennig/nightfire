@@ -14,9 +14,9 @@ pub struct JackHandler {
 }
 
 impl JackHandler {
-    fn new(audio_in_port: Port<AudioIn>, handler: Box<dyn ValsHandler>) -> JackHandler {
+    fn new(sample_freq: f32, audio_in_port: Port<AudioIn>, handler: Box<dyn ValsHandler>) -> JackHandler {
         JackHandler {
-            signal_processor: SignalProcessor::new(),
+            signal_processor: SignalProcessor::new(sample_freq),
             audio_in_port: audio_in_port,
             vals_handler: handler,
         }
@@ -47,10 +47,12 @@ pub fn read_audio(port: &str, vals_handler: Box<dyn ValsHandler>) -> AsyncClient
         .unwrap()
         .0;
 
+    let sample_rate = client.sample_rate() as f32;
+
     let spec = jack::AudioIn::default();
     let audio_in_port = client.register_port("in", spec).unwrap();
 
-    let p_handler = JackHandler::new(audio_in_port, vals_handler);
+    let p_handler = JackHandler::new(sample_rate, audio_in_port, vals_handler);
 
     let active_client = client.activate_async((), p_handler).unwrap();
     info!("Async processhandling started.");
