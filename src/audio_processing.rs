@@ -127,8 +127,32 @@ impl SignalFilter {
         v
     }
 
+    pub fn get_sub_bass(&self, sample: &Sample) -> f32 {
+        self.get_slice_value(&20., &60., sample)
+    }
+
     pub fn get_bass(&self, sample: &Sample) -> f32 {
         self.get_slice_value(&60., &250., sample)
+    }
+
+    pub fn get_low_mid(&self, sample: &Sample) -> f32 {
+        self.get_slice_value(&250., &500., sample)
+    }
+
+    pub fn get_mid(&self, sample: &Sample) -> f32 {
+        self.get_slice_value(&500., &2_000., sample)
+    }
+
+    pub fn get_upper_mid(&self, sample: &Sample) -> f32 {
+        self.get_slice_value(&2_000., &4_000., sample)
+    }
+
+    pub fn get_presence(&self, sample: &Sample) -> f32 {
+        self.get_slice_value(&4_000., &6_000., sample)
+    }
+
+    pub fn get_briliance(&self, sample: &Sample) -> f32 {
+        self.get_slice_value(&6_000., &22_000., sample)
     }
 }
 
