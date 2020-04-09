@@ -44,6 +44,16 @@ impl ManualMode {
         self.bl_color = color;
     }
 
+    pub fn set_bottom(&mut self, color: m::Color) {
+        self.bl_color = color;
+        self.br_color = color;
+    }
+
+    pub fn set_top(&mut self, color: m::Color) {
+        self.tl_color = color;
+        self.tr_color = color;
+    }
+
     pub fn rotate_cw(&mut self) {
         let temp = self.tl_color;
         self.tl_color = self.bl_color;

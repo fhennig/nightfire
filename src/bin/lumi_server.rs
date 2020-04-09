@@ -24,7 +24,26 @@ impl AudioStateUpdater {
 
 impl jack::ValsHandler for AudioStateUpdater {
     fn take_vals(&mut self, vals: audio_processing::MyValues) {
+        // let color = lumi::models::Color::new(vals.low as f64, 0., vals.high as f64);
         self.state.lock().unwrap().set_intensity(vals.low);
+        /*
+        let mut state = self.state.lock().unwrap();
+        let c1 = lumi::models::Color::new(
+            vals.low as f64,
+            // vals.mid as f64,
+            // (vals.mid - (vals.low * 0.2)).max(0.) as f64,
+            // (vals.mid.powi(3) * 0.8) as f64,
+            (vals.mid.powi(2) - vals.high).max(0.) as f64,
+            0.,
+        );
+        let c2 = lumi::models::Color::new(
+            0.,
+            vals.mid.powi(2) as f64,
+            vals.high.powi(3) as f64,
+        );
+        state.manual_mode.set_bottom(c1);
+        state.manual_mode.set_top(c2);
+*/
     }
 }
 
@@ -63,16 +82,6 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let audio_client = jack::read_audio(
         "system:capture_1",
         Box::new(AudioStateUpdater::new(Arc::clone(&state))),
-    );
-    // start receiving osc
-    let state_copy = Arc::clone(&state);
-    let mut state_updater = StateUpdater::new(Arc::clone(&state));
-    let osc_receiver = start_recv(
-        "0.0.0.0:33766".parse().unwrap(),
-        Box::new(move |osc_val: OscVal| match osc_val {
-            OscVal::ControllerValues(c_vals) => state_updater.take_vals(c_vals),
-            OscVal::AudioV1(vals) => state_copy.lock().unwrap().set_intensity(vals.low),
-        }),
     );
     // run controller
     let updater = Box::new(StateUpdater::new(Arc::clone(&state)));

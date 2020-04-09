@@ -13,6 +13,7 @@ pub fn create_window(vals: Arc<Mutex<MyValues>>) {
         .exit_on_esc(true)
         .build()
         .unwrap();
+    window.set_max_fps(50);
     while let Some(event) = window.next() {
         let low = vals.lock().unwrap().low as f64;
         let mid = vals.lock().unwrap().mid as f64;

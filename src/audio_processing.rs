@@ -197,7 +197,8 @@ impl SignalProcessor {
     }
 
     fn decay(&self, i: usize) -> f32 {
-        1. - (1. / (1. + (-0.5 * (i as f32) + 5.).exp()))
+        //1. - (1. / (1. + (-0.8 * (i as f32) + 5.).exp()))
+        0.8f32.powi(i as i32)
     }
 
     fn get_range_decayed(&self, f_start: f32, f_end: f32) -> f32 {
@@ -205,7 +206,7 @@ impl SignalProcessor {
             .iter()
             .enumerate()
             .map(|(i, val)| {
-                self.filter.get_slice_value(f_start, f_end, &val)
+                self.filter.get_slice_value(f_start, f_end, &val).powi(5)
                     * self.decay(i)
             })
             .fold(-1. / 0., f32::max)
@@ -213,7 +214,7 @@ impl SignalProcessor {
 
     pub fn get_current_values(&self) -> MyValues {
         MyValues::new(
-            self.get_range_decayed(70., 230.),  // bass
+            self.get_range_decayed(130., 280.),  // bass
             self.get_range_decayed(350., 3_000.),  // mids
             //self.get_range_decayed(350., 1_800.),
             //self.get_range_decayed(1_800., 3_500.),

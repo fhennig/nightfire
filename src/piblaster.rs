@@ -91,7 +91,7 @@ impl Lights {
 
 pub fn start_piblaster_thread(mut lights: Lights, state: Arc<Mutex<State>>) -> StoppableHandle<Lights> {
     spawn(move |stopped| {
-        let p = Duration::from_millis(30);
+        let p = Duration::from_millis(20);
         while !stopped.get() {
             thread::sleep(p);
             for id in LightId::all() {
