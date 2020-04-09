@@ -24,7 +24,7 @@ impl AudioStateUpdater {
 
 impl jack::ValsHandler for AudioStateUpdater {
     fn take_vals(&mut self, vals: audio_processing::MyValues) {
-        self.state.lock().unwrap().set_intensity(vals.intensity);
+        self.state.lock().unwrap().set_intensity(vals.low);
     }
 }
 
@@ -71,7 +71,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         "0.0.0.0:33766".parse().unwrap(),
         Box::new(move |osc_val: OscVal| match osc_val {
             OscVal::ControllerValues(c_vals) => state_updater.take_vals(c_vals),
-            OscVal::AudioV1(vals) => state_copy.lock().unwrap().set_intensity(vals.intensity),
+            OscVal::AudioV1(vals) => state_copy.lock().unwrap().set_intensity(vals.low),
         }),
     );
     // run controller

@@ -1,7 +1,7 @@
 mod osc_sender;
-use crate::sixaxis::ControllerValues;
-use crate::audio_processing::MyValues;
 pub use self::osc_sender::OscSender;
+use crate::audio_processing::MyValues;
+use crate::sixaxis::ControllerValues;
 use log::{debug, info};
 use std::convert::TryInto;
 use std::net::{SocketAddrV4, UdpSocket};
@@ -32,12 +32,18 @@ pub fn encode(val: OscVal) -> Vec<u8> {
             args: vec![rosc::OscType::Blob(c_vals.buf.to_vec())],
         },
         OscVal::AudioV1(vals) => {
-            let val = vals.intensity;
-            let high_v = vals.high_intensity;
+            let low = vals.low;
+            let mid = vals.mid;
+            let high = vals.high;
             rosc::OscMessage {
-            addr: OscVal::AudioV1(vals).addr(),
-            args: vec![rosc::OscType::Float(val), rosc::OscType::Float(high_v)],
-        }}
+                addr: OscVal::AudioV1(vals).addr(),
+                args: vec![
+                    rosc::OscType::Float(low),
+                    rosc::OscType::Float(mid),
+                    rosc::OscType::Float(high),
+                ],
+            }
+        }
     };
     rosc::encoder::encode(&rosc::OscPacket::Message(msg)).unwrap()
 }
@@ -60,13 +66,13 @@ fn unpack(msg: rosc::OscMessage) -> Option<OscVal> {
                 } else {
                     None // incorrect blob length
                 }
-            },
+            }
             _ => None, // incorrect args
         },
         "/audio/v1" => match &msg.args[..] {
-            [rosc::OscType::Float(low_intensity), rosc::OscType::Float(high_intensity)] => {
-                Some(OscVal::AudioV1(MyValues::new(*low_intensity, *high_intensity)))
-            }
+            [rosc::OscType::Float(low), rosc::OscType::Float(mid), rosc::OscType::Float(high)] => Some(
+                OscVal::AudioV1(MyValues::new(*low, *mid, *high)),
+            ),
             _ => None,
         },
         &_ => None, // unknown address
@@ -75,7 +81,10 @@ fn unpack(msg: rosc::OscMessage) -> Option<OscVal> {
 
 /// Starts a stoppable thread that receives OSC messages on the specified address as UDP,
 /// parses the messages and updates the state accordingly
-pub fn start_recv(recv_addr: SocketAddrV4, mut handler: Box<dyn FnMut(OscVal) + Send + Sync>) -> StoppableHandle<()> {
+pub fn start_recv(
+    recv_addr: SocketAddrV4,
+    mut handler: Box<dyn FnMut(OscVal) + Send + Sync>,
+) -> StoppableHandle<()> {
     info!("Opening socket for receiving on {}", recv_addr);
     let socket = UdpSocket::bind(recv_addr).unwrap(); // TODO better error handling here
     spawn(move |stopped| {
@@ -93,4 +102,3 @@ pub fn start_recv(recv_addr: SocketAddrV4, mut handler: Box<dyn FnMut(OscVal) + 
         }
     })
 }
-

@@ -14,23 +14,31 @@ pub fn create_window(vals: Arc<Mutex<MyValues>>) {
         .build()
         .unwrap();
     while let Some(event) = window.next() {
-        let intensity = vals.lock().unwrap().intensity as f64;
-        let high_itensity = vals.lock().unwrap().high_intensity as f64;
+        let low = vals.lock().unwrap().low as f64;
+        let mid = vals.lock().unwrap().mid as f64;
+        let high = vals.lock().unwrap().high as f64;
         window.draw_2d(&event, |context, graphics, _device| {
             clear(bg_color, graphics);
-            let size = 0f64 + 250f64 * intensity;
             rectangle(
                 [0.5f32; 4],
-                [0f64, 0., intensity * 300., 20.],
+                [0f64, 0., low * 300., 20.],
                 context.transform,
                 graphics,
             );
             rectangle(
                 [0.5f32; 4],
-                [0f64, 20., high_itensity * 300., 20.],
+                [0f64, 20., mid * 300., 20.],
                 context.transform,
                 graphics,
             );
+            rectangle(
+                [0.5f32; 4],
+                [0f64, 40., high * 300., 20.],
+                context.transform,
+                graphics,
+            );
+            
+            let size = 0f64 + 250f64 * low;
             ellipse(
                 fg_color,
                 [150.0 - (size / 2.0), 150.0 - (size / 2.0), size, size],

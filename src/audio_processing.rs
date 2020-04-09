@@ -17,20 +17,22 @@ use std::vec::Vec;
 /// to visualize the current audio signal.
 #[derive(Debug, Clone)]
 pub struct MyValues {
-    pub intensity: f32,
-    pub high_intensity: f32,
+    pub low: f32,
+    pub mid: f32,
+    pub high: f32,
 }
 
 impl MyValues {
-    pub fn new(low_intensity: f32, high_intensity: f32) -> MyValues {
+    pub fn new(low: f32, mid: f32, high: f32) -> MyValues {
         MyValues {
-            intensity: low_intensity.max(0.0).min(1.0),
-            high_intensity: high_intensity.max(0.0).min(1.0),
+            low: low.max(0.0).min(1.0),
+            mid: mid.max(0.0).min(1.0),
+            high: high.max(0.0).min(1.0),
         }
     }
 
     pub fn new_null() -> MyValues {
-        MyValues::new(0.0, 0.0)
+        MyValues::new(0.0, 0.0, 0.0)
     }
 }
 
@@ -155,10 +157,10 @@ pub struct SignalProcessor {
 impl SignalProcessor {
     /// creates and initializes a new signal processor.
     pub fn new(sample_freq: f32) -> SignalProcessor {
-        let history_len = 10;
+        let history_len = 100;
         let fps = 100f32;
         let subsample_frame_size = (sample_freq / fps) as usize;
-        let filter = SignalFilter::new(1., 22_000., sample_freq, 50);
+        let filter = SignalFilter::new(1., 22_000., sample_freq, 100);
         let empty_sample = filter.null_sample();
         SignalProcessor {
             hist: vec![empty_sample; history_len].into_iter().collect(),
@@ -194,22 +196,28 @@ impl SignalProcessor {
         self.hist.get_mut(0).unwrap()
     }
 
-    fn get_range_decayed(&self, f_start: f32, f_end: f32, decay: f32) -> f32 {
+    fn decay(&self, i: usize) -> f32 {
+        1. - (1. / (1. + (-0.5 * (i as f32) + 5.).exp()))
+    }
+
+    fn get_range_decayed(&self, f_start: f32, f_end: f32) -> f32 {
         self.hist
             .iter()
             .enumerate()
             .map(|(i, val)| {
                 self.filter.get_slice_value(f_start, f_end, &val)
-                    * decay.powi(i.try_into().unwrap())
+                    * self.decay(i)
             })
             .fold(-1. / 0., f32::max)
     }
 
     pub fn get_current_values(&self) -> MyValues {
         MyValues::new(
-            self.get_range_decayed(60., 250., 0.95),
-            // self.get_range_decayed(500., 2_000., 0.95),
-            self.get_range_decayed(250., 4_000., 0.95),
+            self.get_range_decayed(70., 230.),  // bass
+            self.get_range_decayed(350., 3_000.),  // mids
+            //self.get_range_decayed(350., 1_800.),
+            //self.get_range_decayed(1_800., 3_500.),
+            self.get_range_decayed(10_000., 22_000.),  // cripsp
         )
     }
 }
