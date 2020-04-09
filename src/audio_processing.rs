@@ -18,18 +18,19 @@ use std::vec::Vec;
 #[derive(Debug, Clone)]
 pub struct MyValues {
     pub intensity: f32,
+    pub high_intensity: f32,
 }
 
 impl MyValues {
-    pub fn new(intensity: f32) -> MyValues {
-        let intensity = intensity.max(0.0).min(1.0);
+    pub fn new(low_intensity: f32, high_intensity: f32) -> MyValues {
         MyValues {
-            intensity: intensity,
+            intensity: low_intensity.max(0.0).min(1.0),
+            high_intensity: high_intensity.max(0.0).min(1.0),
         }
     }
 
     pub fn new_null() -> MyValues {
-        MyValues { intensity: 0.0 }
+        MyValues::new(0.0, 0.0)
     }
 }
 
@@ -197,11 +198,18 @@ impl SignalProcessor {
         self.hist
             .iter()
             .enumerate()
-            .map(|(i, val)| self.filter.get_slice_value(f_start, f_end, &val) * decay.powi(i.try_into().unwrap()))
+            .map(|(i, val)| {
+                self.filter.get_slice_value(f_start, f_end, &val)
+                    * decay.powi(i.try_into().unwrap())
+            })
             .fold(-1. / 0., f32::max)
     }
 
     pub fn get_current_values(&self) -> MyValues {
-        MyValues::new(self.get_range_decayed(60., 250., 0.95))
+        MyValues::new(
+            self.get_range_decayed(60., 250., 0.95),
+            // self.get_range_decayed(500., 2_000., 0.95),
+            self.get_range_decayed(250., 4_000., 0.95),
+        )
     }
 }

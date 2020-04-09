@@ -33,9 +33,10 @@ pub fn encode(val: OscVal) -> Vec<u8> {
         },
         OscVal::AudioV1(vals) => {
             let val = vals.intensity;
+            let high_v = vals.high_intensity;
             rosc::OscMessage {
             addr: OscVal::AudioV1(vals).addr(),
-            args: vec![rosc::OscType::Float(val)],
+            args: vec![rosc::OscType::Float(val), rosc::OscType::Float(high_v)],
         }}
     };
     rosc::encoder::encode(&rosc::OscPacket::Message(msg)).unwrap()
@@ -63,8 +64,8 @@ fn unpack(msg: rosc::OscMessage) -> Option<OscVal> {
             _ => None, // incorrect args
         },
         "/audio/v1" => match &msg.args[..] {
-            [rosc::OscType::Float(intensity)] => {
-                Some(OscVal::AudioV1(MyValues::new(*intensity)))
+            [rosc::OscType::Float(low_intensity), rosc::OscType::Float(high_intensity)] => {
+                Some(OscVal::AudioV1(MyValues::new(*low_intensity, *high_intensity)))
             }
             _ => None,
         },
