@@ -15,7 +15,7 @@ use std::vec::Vec;
 /// This struct represents the values that are extracted from the
 /// audio signal at every iteration.  These values are used downstream
 /// to visualize the current audio signal.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct MyValues {
     pub intensity: f32,
 }
@@ -29,7 +29,9 @@ impl MyValues {
     }
 
     pub fn new_null() -> MyValues {
-        MyValues { intensity: 0.0 }
+        MyValues {
+            intensity: 0.0,
+        }
     }
 }
 
@@ -46,7 +48,7 @@ fn make_filter(f_s: f32, f_c: f32, q: f32) -> bq::DirectForm2Transposed<f32> {
 }
 
 #[derive(Debug, Clone)]
-struct Sample {
+pub struct Sample {
     vals: Vec<f32>,
 }
 
@@ -102,7 +104,10 @@ impl SignalFilter {
     }
 
     fn get_freq_index(&self, f_start: &f32) -> usize {
-        match self.freqs.binary_search_by(|v| v.partial_cmp(f_start).unwrap()) {
+        match self
+            .freqs
+            .binary_search_by(|v| v.partial_cmp(f_start).unwrap())
+        {
             Ok(r) => return r,
             Err(r) => return r,
         }
