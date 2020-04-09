@@ -76,8 +76,7 @@ struct SignalFilter {
 }
 
 impl SignalFilter {
-    fn new(f_start: f32, f_end: f32, n_filters: usize) -> SignalFilter {
-        let f_s = 48000f32;
+    fn new(f_start: f32, f_end: f32, f_s: f32, n_filters: usize) -> SignalFilter {
         let q = 5f32;
         let freqs: Vec<f32> =
             statrs::generate::log_spaced(n_filters, f_start.log(10.).into(), f_end.log(10.).into())
@@ -181,10 +180,10 @@ impl SignalProcessor {
     /// creates and initializes a new signal processor.
     pub fn new() -> SignalProcessor {
         let history_len = 10;
-        let sample_freq: usize = 48000;
-        let fps = 100;
-        let subsample_frame_size = sample_freq / fps as usize;
-        let filter = SignalFilter::new(1., 22_000., 50);
+        let sample_freq = 48000f32;
+        let fps = 100f32;
+        let subsample_frame_size = (sample_freq / fps) as usize;
+        let filter = SignalFilter::new(1., 22_000., sample_freq, 50);
         let empty_sample = filter.null_sample();
         SignalProcessor {
             hist: vec![empty_sample; history_len].into_iter().collect(),
