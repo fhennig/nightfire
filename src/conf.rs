@@ -1,14 +1,9 @@
 use crate::lightid::LightId;
 use crate::piblaster as pb;
-use crate::piblaster::{Lights, Pin};
-use std::fs::read_to_string;
 use std::path::Path;
-use std::vec::Vec;
-use yaml_rust::YamlLoader;
 
 pub struct Conf {
-    pub lights: Lights,
-    pub address: String,
+    pub lights: pb::Lights,
 }
 
 fn str_to_light_id(str: &str) -> LightId {
@@ -22,24 +17,12 @@ fn str_to_light_id(str: &str) -> LightId {
 }
 
 impl Conf {
-    /// Iterates through a couple of paths to find a config file.
-    pub fn find_path() -> Option<&'static Path> {
-        let paths = vec![Path::new("conf.yaml"), Path::new("/etc/lumi/conf.yaml")];
-        let mut found_config_path: Option<&Path> = None;
-        for path in paths {
-            if path.exists() {
-                found_config_path = Some(path);
-                break;
-            }
-        }
-        found_config_path
-    }
+    pub fn new() -> Conf {
+        let conf_path = Conf::find_path().expect("Config file could not be found!");
+        let yaml_str = std::fs::read_to_string(conf_path).expect("Error reading config file.");
 
-    pub fn new(path: &str) -> Conf {
-        // TODO accept path here
-        let yaml_str = read_to_string(path).unwrap();
-
-        let docs = YamlLoader::load_from_str(&yaml_str).unwrap();
+        let docs =
+            yaml_rust::YamlLoader::load_from_str(&yaml_str).expect("Error parsing config file.");
         let conf = &docs[0];
         let pi_blaster_path = conf["pi-blaster"].as_str().unwrap().to_string();
         let lights = conf["lights"]
@@ -59,11 +42,20 @@ impl Conf {
                 )
             })
             .collect();
-        let lights = Lights::new(lights, &pi_blaster_path);
-        let address = conf["address"].as_str().unwrap().to_string();
-        Conf {
-            lights: lights,
-            address: address,
+        let lights = pb::Lights::new(lights, &pi_blaster_path);
+        Conf { lights: lights }
+    }
+
+    /// Iterates through a couple of paths to find a config file.
+    fn find_path() -> Option<&'static Path> {
+        let paths = vec![Path::new("conf.yaml"), Path::new("/etc/lumi/conf.yaml")];
+        let mut found_config_path: Option<&Path> = None;
+        for path in paths {
+            if path.exists() {
+                found_config_path = Some(path);
+                break;
+            }
         }
+        found_config_path
     }
 }

@@ -58,11 +58,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     // read commandline arguments
     let matches = get_args();
     // read config
-    let conf_path = Conf::find_path();
-    let conf = match conf_path {
-        Some(path) => Conf::new(path.to_str().unwrap()),
-        None => panic!(), // TODO make this nicer
-    };
+    let conf = Conf::new();
     // setup state
     let state = Arc::new(Mutex::new(State::new()));
     // read audio
