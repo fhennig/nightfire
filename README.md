@@ -47,24 +47,28 @@ sudo apt install libudev-dev:armhf libfox-1.6-dev:armhf
   
 ### Builing for arm
 
-    cargo build --release --target armv7-unknown-linux-gnueabihf --bin lumi
-    
-### Build the Website
+To deploy on the Raspberry Pi, the software needs to be compiled for
+the ARM architecture.
 
-    cd client
-    npm start build
+    cargo build --release --target armv7-unknown-linux-gnueabihf --bin lumi_server
     
-Copy the contents of the build directory to `/usr/local/lib/lumi/web/`.
-
     
 ### System Dependencies
 
-- pi-blaster
+These things need to be installed on the Raspberry Pi.
+
+- `pi-blaster`: Is needed to set the pins, controlling the LEDs.
+  pi-blaster can be found on
+  [github](https://github.com/sarfata/pi-blaster)
+- `libjack0`: This dependency is required because lumi is compiled
+  with jack support.  You don't actually need to install jack if you
+  don't want to do audio processing, but the library still needs to be
+  there.  Can be installed with `sudo apt install libjack0`.
 
 
 ### Installation
 
-The binary and config file needs to be in `/opt/lumi`.
+The binary and config file (`conf.yaml`) needs to be in `/opt/lumi`.
 
 #### systemd
 
@@ -84,6 +88,40 @@ put the following in `/etc/systemd/system/lumi.service`:
     [Install]
     WantedBy=multi-user.target
 
+
+## Configuration
+
+The software is configurated in a `conf.yaml` file that should be in
+the working directory.  The config file could look like this:
+
+    audio-in: system:capture_1
+    pi-blaster: /dev/pi-blaster
+    lights:
+      Top:
+        r: 14
+        g: 15
+        b: 18
+      Bottom:
+        r: 23
+        g: 25
+        b: 24
+      Left:
+        r: 17
+        g: 27
+        b: 22
+      Right:
+        r: 10
+        g: 9
+        b: 11
+
+`audio-in` is a `device:port` entry that specifies which jack port to
+read from.  It can also be set to `off` to disable reading audio input.
+Do this if jack is not setup on the device.
+
+`pi-blaster` refers to the path of the pi-blaster device path.
+
+The numbers in the lights refer to GPIO pin numbers.  The number of a
+pin can be found [here](https://pinout.xyz/).
 
 
 ## Ideas
