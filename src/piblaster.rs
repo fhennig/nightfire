@@ -24,24 +24,34 @@ pub struct PinModel {
 #[allow(unused_must_use)]
 impl PinModel {
     pub fn new(pins: Vec<Pin>, path: &String) -> PinModel {
-        let map = HashMap::new();
         let mut model = PinModel {
-            pin_values: map,
+            pin_values: HashMap::new(),
             outfile: OpenOptions::new().write(true).open(path).unwrap(),
         };
+        // initialize to zero
         for pin in pins {
             let value = 0.0;
             model.set_pin(pin, value);
         }
+        model.write_out();
         model
     }
 
-    pub fn set_pin(&mut self, pin: Pin, value: PinValue) {
-        // TODO don't set if value is identical to current value
+    fn set_pin(&mut self, pin: Pin, value: PinValue) {
+        // don't set if value is identical to current value
+        match self.pin_values.get(&pin) {
+            Some(curr_val) => if value == *curr_val {
+                return;
+            }
+            None => (),
+        }
         self.pin_values.insert(pin, value);
         let s = format!("{}={}\n", pin, value);
         let s = s.as_bytes();
         self.outfile.write_all(s);
+    }
+
+    fn write_out(&mut self) {
         self.outfile.sync_data();
     }
 }
@@ -68,6 +78,7 @@ impl Light {
         pin_model.set_pin(self.r_pin, color.red);
         pin_model.set_pin(self.g_pin, color.green);
         pin_model.set_pin(self.b_pin, color.blue);
+        pin_model.write_out();
     }
 }
 
