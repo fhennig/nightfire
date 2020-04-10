@@ -189,15 +189,6 @@ little bandpass filters.
 I want to make a beat detection and I want to make a melody detection
 by looking specifically at the frequencies in the mid range.
 
-### Jack configuration in config file
-
-I need to be able to configure the audio_in port from the config file.
-I also need to be able to disable the jack module all together so
-people can use it without jack and it doesn't crash.  maybe a config
-option like: "audio: system:capture_1" to set the port or specify
-"audio: off" to disable jack explicitly.  If the "audio" option is
-missing from the config file, raise a warning.
-
 ### Light intensity normalization function
 
 I need a function that takes a linear 0 to 1 value and somehow maps it
