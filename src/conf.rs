@@ -1,9 +1,11 @@
 use crate::lightid::LightId;
 use crate::piblaster as pb;
+use log;
 use std::path::Path;
 
 pub struct Conf {
     pub lights: pb::Lights,
+    pub audio_in: Option<String>,
 }
 
 fn str_to_light_id(str: &str) -> LightId {
@@ -43,7 +45,22 @@ impl Conf {
             })
             .collect();
         let lights = pb::Lights::new(lights, &pi_blaster_path);
-        Conf { lights: lights }
+        // audio in
+        let mut audio_in = conf["audio-in"].as_str();
+        match audio_in {
+            Some(s) => {
+                if s == "off" {
+                    audio_in = None;
+                }
+            }
+            None => {
+                log::warn!("No audio in port specified in config! Audio processing turned off.")
+            }
+        }
+        Conf {
+            lights: lights,
+            audio_in: audio_in.map(|s| s.to_string()),
+        }
     }
 
     /// Iterates through a couple of paths to find a config file.

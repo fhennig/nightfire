@@ -62,10 +62,13 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     // setup state
     let state = Arc::new(Mutex::new(State::new()));
     // read audio
-    let audio_client = jack::read_audio(
-        "system:capture_1",
-        Box::new(AudioStateUpdater::new(Arc::clone(&state))),
-    );
+    let audio_client = match conf.audio_in {
+        Some(port) => Some(jack::read_audio(
+            &port,
+            Box::new(AudioStateUpdater::new(Arc::clone(&state))),
+        )),
+        None => None,
+    };
     // run controller
     let updater = Box::new(StateUpdater::new(Arc::clone(&state)));
     let controller = read_controller(updater);
