@@ -12,7 +12,7 @@ use stoppable_thread::{spawn, StoppableHandle};
 
 pub type Pin = i64;
 
-pub struct PinModel {
+struct PinModel {
     pin_values: HashMap<Pin, PinValue>,
     outfile: File,
 }
@@ -23,7 +23,7 @@ pub struct PinModel {
 /// in the hardware (PiBlaster).
 #[allow(unused_must_use)]
 impl PinModel {
-    pub fn new(pins: Vec<Pin>, path: &String) -> PinModel {
+    fn new(pins: Vec<Pin>, path: &String) -> PinModel {
         let mut model = PinModel {
             pin_values: HashMap::new(),
             outfile: OpenOptions::new().write(true).open(path).unwrap(),
@@ -40,8 +40,10 @@ impl PinModel {
     fn set_pin(&mut self, pin: Pin, value: PinValue) {
         // don't set if value is identical to current value
         match self.pin_values.get(&pin) {
-            Some(curr_val) => if value == *curr_val {
-                return;
+            Some(curr_val) => {
+                if value == *curr_val {
+                    return;
+                }
             }
             None => (),
         }
@@ -57,54 +59,63 @@ impl PinModel {
 }
 
 pub struct Light {
-    pin_model: Arc<Mutex<PinModel>>,
     pub r_pin: Pin,
     pub g_pin: Pin,
     pub b_pin: Pin,
 }
 
 impl Light {
-    pub fn new(pin_model: Arc<Mutex<PinModel>>, r_pin: Pin, g_pin: Pin, b_pin: Pin) -> Light {
+    pub fn new(r_pin: Pin, g_pin: Pin, b_pin: Pin) -> Light {
         Light {
-            pin_model: pin_model,
             r_pin: r_pin,
             g_pin: g_pin,
             b_pin: b_pin,
         }
     }
-
-    pub fn set_color(&self, color: &Color) {
-        let mut pin_model = self.pin_model.lock().unwrap();
-        pin_model.set_pin(self.r_pin, color.red);
-        pin_model.set_pin(self.g_pin, color.green);
-        pin_model.set_pin(self.b_pin, color.blue);
-        pin_model.write_out();
-    }
 }
 
 pub struct Lights {
+    pin_model: PinModel,
     light_map: HashMap<LightId, Light>,
 }
 
 impl Lights {
-    pub fn new(lights: Vec<(LightId, Light)>) -> Lights {
+    pub fn new(lights: Vec<(LightId, Light)>, path: &String) -> Lights {
         let mut map = HashMap::new();
+        let mut pins = Vec::new();
         for (light_id, light) in lights {
+            pins.push(light.r_pin);
+            pins.push(light.g_pin);
+            pins.push(light.b_pin);
             map.insert(light_id, light);
         }
-        Lights { light_map: map }
+        let pin_model = PinModel::new(pins, path);
+        Lights {
+            pin_model: pin_model,
+            light_map: map,
+        }
     }
 
     pub fn set_light(&mut self, id: &LightId, color: &Color) {
-        self.light_map.get(id).unwrap().set_color(&color);
+        let light = self.light_map.get(id).unwrap();
+        self.pin_model.set_pin(light.r_pin, color.red);
+        self.pin_model.set_pin(light.g_pin, color.green);
+        self.pin_model.set_pin(light.b_pin, color.blue);
+        self.pin_model.write_out();
     }
 }
 
-pub fn start_piblaster_thread(mut lights: Lights, state: Arc<Mutex<State>>) -> StoppableHandle<Lights> {
+/// Starts reading from the state and writing it to the lights.
+/// The fps parameter decides how many updates per second are executed.
+pub fn start_piblaster_thread(
+    mut lights: Lights,
+    state: Arc<Mutex<State>>,
+    fps: u64,
+) -> StoppableHandle<Lights> {
+    let dur = Duration::from_millis(1000 / fps);
     spawn(move |stopped| {
-        let p = Duration::from_millis(20);
         while !stopped.get() {
-            thread::sleep(p);
+            thread::sleep(dur);
             for id in LightId::all() {
                 let color = state.lock().unwrap().get_color(&id);
                 lights.set_light(&id, &color);

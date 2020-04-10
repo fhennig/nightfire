@@ -4,7 +4,7 @@ use lumi::audio_processing;
 use lumi::conf::Conf;
 use lumi::jack;
 use lumi::osc::{start_recv, OscVal};
-use lumi::piblaster::{start_piblaster_thread, Light, Lights, PinModel};
+use lumi::piblaster::{start_piblaster_thread, Light, Lights};
 use lumi::piston::run_piston_thread;
 use lumi::sixaxis::state_updater::StateUpdater;
 use lumi::sixaxis::{read_controller, ControllerValsSink};
@@ -54,14 +54,12 @@ fn get_args() -> ArgMatches<'static> {
 }
 
 fn init_pin_setting(conf: &Conf) -> Lights {
-    let pin_model = PinModel::new(conf.all_pins(), &conf.pi_blaster_path);
-    let pin_model = Arc::new(Mutex::new(pin_model));
     let lights = conf
         .lights
         .iter()
-        .map(|(id, r, g, b)| (*id, Light::new(Arc::clone(&pin_model), *r, *g, *b)))
+        .map(|(id, r, g, b)| (*id, Light::new(*r, *g, *b)))
         .collect();
-    Lights::new(lights)
+    Lights::new(lights, &conf.pi_blaster_path)
 }
 
 #[allow(unused_variables)]
@@ -87,7 +85,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let updater = Box::new(StateUpdater::new(Arc::clone(&state)));
     let controller = read_controller(updater);
     // start piblaster
-    let piblaster = start_piblaster_thread(init_pin_setting(&conf), Arc::clone(&state));
+    let piblaster = start_piblaster_thread(init_pin_setting(&conf), Arc::clone(&state), 50);
     // debug window
     if matches.is_present("debug") {
         run_piston_thread(Arc::clone(&state));
