@@ -18,9 +18,9 @@ struct PinModel {
 }
 
 /// The PinModel models the pins that we have and the actual values on
-/// each pin.  It supports setting and getting individual pin values.
-/// It has handlers, which then take care of setting the actual values
-/// in the hardware (PiBlaster).
+/// each pin.  It supports setting individual pin values.  Writing
+/// needs to be triggered extra, so multiple pins can be set before
+/// all data is written out.
 #[allow(unused_must_use)]
 impl PinModel {
     fn new(pins: Vec<Pin>, path: &String) -> PinModel {

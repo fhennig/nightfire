@@ -1,13 +1,11 @@
 use clap::{App, Arg, ArgMatches};
-use log::info;
 use lumi::audio_processing;
 use lumi::conf::Conf;
 use lumi::jack;
-use lumi::osc::{start_recv, OscVal};
-use lumi::piblaster::{start_piblaster_thread, Light, Lights};
+use lumi::piblaster::start_piblaster_thread;
 use lumi::piston::run_piston_thread;
+use lumi::sixaxis::read_controller;
 use lumi::sixaxis::state_updater::StateUpdater;
-use lumi::sixaxis::{read_controller, ControllerValsSink};
 use lumi::state::State;
 use std::sync::{Arc, Mutex};
 use std::{error, thread, time};
@@ -27,23 +25,23 @@ impl jack::ValsHandler for AudioStateUpdater {
         // let color = lumi::models::Color::new(vals.low as f64, 0., vals.high as f64);
         self.state.lock().unwrap().set_intensity(vals.low);
         /*
-        let mut state = self.state.lock().unwrap();
-        let c1 = lumi::models::Color::new(
-            vals.low as f64,
-            // vals.mid as f64,
-            // (vals.mid - (vals.low * 0.2)).max(0.) as f64,
-            // (vals.mid.powi(3) * 0.8) as f64,
-            (vals.mid.powi(2) - vals.high).max(0.) as f64,
-            0.,
-        );
-        let c2 = lumi::models::Color::new(
-            0.,
-            vals.mid.powi(2) as f64,
-            vals.high.powi(3) as f64,
-        );
-        state.manual_mode.set_bottom(c1);
-        state.manual_mode.set_top(c2);
-*/
+                let mut state = self.state.lock().unwrap();
+                let c1 = lumi::models::Color::new(
+                    vals.low as f64,
+                    // vals.mid as f64,
+                    // (vals.mid - (vals.low * 0.2)).max(0.) as f64,
+                    // (vals.mid.powi(3) * 0.8) as f64,
+                    (vals.mid.powi(2) - vals.high).max(0.) as f64,
+                    0.,
+                );
+                let c2 = lumi::models::Color::new(
+                    0.,
+                    vals.mid.powi(2) as f64,
+                    vals.high.powi(3) as f64,
+                );
+                state.manual_mode.set_bottom(c1);
+                state.manual_mode.set_top(c2);
+        */
     }
 }
 
@@ -51,15 +49,6 @@ fn get_args() -> ArgMatches<'static> {
     App::new("lumi")
         .arg(Arg::with_name("debug").long("debug"))
         .get_matches()
-}
-
-fn init_pin_setting(conf: &Conf) -> Lights {
-    let lights = conf
-        .lights
-        .iter()
-        .map(|(id, r, g, b)| (*id, Light::new(*r, *g, *b)))
-        .collect();
-    Lights::new(lights, &conf.pi_blaster_path)
 }
 
 #[allow(unused_variables)]
@@ -85,7 +74,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let updater = Box::new(StateUpdater::new(Arc::clone(&state)));
     let controller = read_controller(updater);
     // start piblaster
-    let piblaster = start_piblaster_thread(init_pin_setting(&conf), Arc::clone(&state), 50);
+    let piblaster = start_piblaster_thread(conf.lights, Arc::clone(&state), 50);
     // debug window
     if matches.is_present("debug") {
         run_piston_thread(Arc::clone(&state));

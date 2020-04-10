@@ -1,13 +1,13 @@
-use crate::piblaster::Pin;
 use crate::lightid::LightId;
+use crate::piblaster as pb;
+use crate::piblaster::{Lights, Pin};
 use std::fs::read_to_string;
 use std::path::Path;
 use std::vec::Vec;
 use yaml_rust::YamlLoader;
 
 pub struct Conf {
-    pub pi_blaster_path: String,
-    pub lights: Vec<(LightId, Pin, Pin, Pin)>,
+    pub lights: Lights,
     pub address: String,
 }
 
@@ -41,6 +41,7 @@ impl Conf {
 
         let docs = YamlLoader::load_from_str(&yaml_str).unwrap();
         let conf = &docs[0];
+        let pi_blaster_path = conf["pi-blaster"].as_str().unwrap().to_string();
         let lights = conf["lights"]
             .as_hash()
             .unwrap()
@@ -50,28 +51,19 @@ impl Conf {
                 let pin_map = entry.1;
                 (
                     light_id,
-                    pin_map["r"].as_i64().unwrap(),
-                    pin_map["g"].as_i64().unwrap(),
-                    pin_map["b"].as_i64().unwrap(),
+                    pb::Light::new(
+                        pin_map["r"].as_i64().unwrap(),
+                        pin_map["g"].as_i64().unwrap(),
+                        pin_map["b"].as_i64().unwrap(),
+                    ),
                 )
             })
             .collect();
-        let pi_blaster_path = conf["pi-blaster"].as_str().unwrap().to_string();
+        let lights = Lights::new(lights, &pi_blaster_path);
         let address = conf["address"].as_str().unwrap().to_string();
         Conf {
             lights: lights,
-            pi_blaster_path: pi_blaster_path,
             address: address,
         }
-    }
-
-    pub fn all_pins(&self) -> Vec<Pin> {
-        let mut pins = Vec::new();
-        for (_, r, g, b) in &self.lights {
-            pins.push(*r);
-            pins.push(*g);
-            pins.push(*b);
-        }
-        pins
     }
 }
