@@ -26,7 +26,7 @@ piston_window = "0.107.0"
 hidapi = { version = "1.2.1", features = ["linux-static-hidraw"], default-features = false }
 # audio
 jack = "0.6"
-biquad = { path = "../biquad-rs" }
+biquad = "0.3.1"
 statrs = "0.12"
 # network
 rosc = "0.3"
