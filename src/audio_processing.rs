@@ -79,8 +79,7 @@ struct SignalFilter {
 }
 
 impl SignalFilter {
-    fn new(f_start: f32, f_end: f32, f_s: f32, n_filters: usize) -> SignalFilter {
-        let q = 5f32;
+    fn new(f_start: f32, f_end: f32, f_s: f32, q: f32, n_filters: usize) -> SignalFilter {
         let freqs: Vec<f32> =
             statrs::generate::log_spaced(n_filters, f_start.log(10.).into(), f_end.log(10.).into())
                 .into_iter()
@@ -156,11 +155,12 @@ pub struct SignalProcessor {
 
 impl SignalProcessor {
     /// creates and initializes a new signal processor.
-    pub fn new(sample_freq: f32) -> SignalProcessor {
+    /// The sample frequency must be given (typical value: 48,000Hz)
+    pub fn new(sample_freq: f32, q: f32, n_filters: usize) -> SignalProcessor {
         let history_len = 100;
         let fps = 100f32;
         let subsample_frame_size = (sample_freq / fps) as usize;
-        let filter = SignalFilter::new(1., 22_000., sample_freq, 100);
+        let filter = SignalFilter::new(1., 22_000., sample_freq, q, n_filters);
         let empty_sample = filter.null_sample();
         SignalProcessor {
             hist: vec![empty_sample; history_len].into_iter().collect(),
@@ -179,6 +179,10 @@ impl SignalProcessor {
             self.get_current_sample().merge_in(&new_sample);
             self.register_sample_added();
         }
+    }
+
+    pub fn num_filters(&self) -> usize {
+        self.filter.num_filters()
     }
 
     fn register_sample_added(&mut self) {
@@ -208,6 +212,16 @@ impl SignalProcessor {
             .map(|(i, val)| {
                 self.filter.get_slice_value(f_start, f_end, &val).powi(5)
                     * self.decay(i)
+            })
+            .fold(-1. / 0., f32::max)
+    }
+
+    pub fn get_filter_decayed(&self, f_index: usize) -> f32 {
+        self.hist
+            .iter()
+            .enumerate()
+            .map(|(i, val)| {
+                val.vals[f_index] * self.decay(i)
             })
             .fold(-1. / 0., f32::max)
     }

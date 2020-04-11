@@ -19,7 +19,7 @@ impl AudioStateUpdater {
     pub fn new(state: Arc<Mutex<State>>) -> AudioStateUpdater {
         AudioStateUpdater {
             state: state,
-            signal_processor: audio_processing::SignalProcessor::new(48_000f32),
+            signal_processor: audio_processing::SignalProcessor::new(48_000f32, 5., 100),
         }
     }
 }

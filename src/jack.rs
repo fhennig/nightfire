@@ -12,7 +12,11 @@ pub struct JackHandler {
 }
 
 impl JackHandler {
-    fn new(sample_freq: f32, audio_in_port: Port<AudioIn>, handler: Box<dyn ValsHandler>) -> JackHandler {
+    fn new(
+        sample_freq: f32,
+        audio_in_port: Port<AudioIn>,
+        handler: Box<dyn ValsHandler>,
+    ) -> JackHandler {
         JackHandler {
             audio_in_port: audio_in_port,
             vals_handler: handler,
@@ -52,13 +56,10 @@ pub fn read_audio(port: &str, vals_handler: Box<dyn ValsHandler>) -> AsyncClient
     info!("Async processhandling started.");
 
     // connect to the pulseaudio sink for convenience
-    let res = active_client
+    active_client
         .as_client()
-        .connect_ports_by_name(port, "lumi:in");
-    match res {
-        Ok(_) => info!("Connected!!"),
-        Err(error) => info!("Error: {}", error),
-    }
+        .connect_ports_by_name(port, "lumi:in")
+        .expect("Failed to connect client to audio in port");
 
     active_client
 }

@@ -1,51 +1,72 @@
-use crate::audio_processing::MyValues;
+use crate::audio_processing::{MyValues, SignalProcessor};
+use crate::jack;
 use piston_window::*;
 use std::sync::{Arc, Mutex};
+use std::vec::Vec;
+
+pub struct EqViz {
+    sig_proc: SignalProcessor,
+    vals: Arc<Mutex<Vec<f32>>>,
+}
+
+impl EqViz {
+    pub fn new(n_filters: usize, q: f32) -> EqViz {
+        EqViz {
+            sig_proc: SignalProcessor::new(48_000., q, n_filters),
+            vals: Arc::new(Mutex::new(vec![0.; n_filters])),
+        }
+    }
+
+    pub fn get_shared_vals(&mut self) -> Arc<Mutex<Vec<f32>>> {
+        Arc::clone(&self.vals)
+    }
+}
+
+impl jack::ValsHandler for EqViz {
+    fn take_frame(&mut self, frame: &[f32]) {
+        self.sig_proc.add_audio_frame(frame);
+        let n = self.sig_proc.num_filters();
+        let mut vals = Vec::with_capacity(n);
+        for i in 0..n {
+            vals.push(self.sig_proc.get_filter_decayed(i));
+        }
+        println!("vals: {}", vals[15]);
+        let mut curr_vals = self.vals.lock().unwrap();
+        *curr_vals = vals;
+    }
+}
 
 fn itof(color_intensity: i32) -> f32 {
     (color_intensity as f32) / 255.0
 }
 
-pub fn create_window(vals: Arc<Mutex<MyValues>>) {
+pub fn create_window(vals: Arc<Mutex<Vec<f32>>>) {
     let bg_color = [itof(237), itof(235), itof(223), 1.0];
     let fg_color = [itof(64), itof(216), itof(133), 1.0];
-    let mut window: PistonWindow = WindowSettings::new("Hello Piston!", [300, 300])
+    let w = 500;
+    let h = 300;
+    let mut window: PistonWindow = WindowSettings::new("Hello Piston!", [500, 300])
         .exit_on_esc(true)
         .build()
         .unwrap();
+    let w = w as f64;
+    let h = h as f64;
     window.set_max_fps(50);
     while let Some(event) = window.next() {
-        let low = vals.lock().unwrap().low as f64;
-        let mid = vals.lock().unwrap().mid as f64;
-        let high = vals.lock().unwrap().high as f64;
+        let vs = vals.lock().unwrap();
+        let n = vs.len() as f64;
         window.draw_2d(&event, |context, graphics, _device| {
             clear(bg_color, graphics);
-            rectangle(
-                [0.5f32; 4],
-                [0f64, 0., low * 300., 20.],
-                context.transform,
-                graphics,
-            );
-            rectangle(
-                [0.5f32; 4],
-                [0f64, 20., mid * 300., 20.],
-                context.transform,
-                graphics,
-            );
-            rectangle(
-                [0.5f32; 4],
-                [0f64, 40., high * 300., 20.],
-                context.transform,
-                graphics,
-            );
-            
-            let size = 0f64 + 250f64 * low;
-            ellipse(
-                fg_color,
-                [150.0 - (size / 2.0), 150.0 - (size / 2.0), size, size],
-                context.transform,
-                graphics,
-            );
+            for i in 0..vs.len() {
+                let v = vs[i] as f64;
+                let i = i as f64;
+                rectangle(
+                    [0.5f32; 4],
+                    [(i / n) * w, (1f64 - v) * h, (1f64 / n) * w, v * h],
+                    context.transform,
+                    graphics,
+                );
+            }
         });
     }
 }
