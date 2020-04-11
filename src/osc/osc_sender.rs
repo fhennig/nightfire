@@ -1,7 +1,6 @@
 use crate::osc::{encode, OscVal};
 use crate::sixaxis::{ControllerValsSink, ControllerValues};
 use crate::audio_processing::MyValues;
-use crate::jack::ValsHandler;
 use std::net::{SocketAddrV4, UdpSocket};
 
 pub struct OscSender {
@@ -23,14 +22,6 @@ impl OscSender {
 impl ControllerValsSink for OscSender {
     fn take_vals(&mut self, vals: ControllerValues) {
         let bytes = encode(OscVal::ControllerValues(vals));
-        self.socket.send_to(&bytes, self.to_addr).unwrap();
-    }
-}
-
-impl ValsHandler for OscSender {
-    fn take_vals(&mut self, vals: MyValues) {
-        log::info!("vals {:?}", vals);
-        let bytes = encode(OscVal::AudioV1(vals));
         self.socket.send_to(&bytes, self.to_addr).unwrap();
     }
 }

@@ -1,14 +1,12 @@
 //! This module takes care of audio processing.
-use crate::audio_processing::{MyValues, SignalProcessor};
 use jack::{AsyncClient, AudioIn, Client, Control, Port, ProcessHandler, ProcessScope};
 use log::info;
 
 pub trait ValsHandler: Send + Sync {
-    fn take_vals(&mut self, vals: MyValues);
+    fn take_frame(&mut self, frame: &[f32]);
 }
 
 pub struct JackHandler {
-    signal_processor: SignalProcessor,
     audio_in_port: Port<AudioIn>,
     vals_handler: Box<dyn ValsHandler>,
 }
@@ -16,7 +14,6 @@ pub struct JackHandler {
 impl JackHandler {
     fn new(sample_freq: f32, audio_in_port: Port<AudioIn>, handler: Box<dyn ValsHandler>) -> JackHandler {
         JackHandler {
-            signal_processor: SignalProcessor::new(sample_freq),
             audio_in_port: audio_in_port,
             vals_handler: handler,
         }
@@ -27,11 +24,8 @@ impl ProcessHandler for JackHandler {
     fn process(&mut self, client: &Client, process_scope: &ProcessScope) -> Control {
         // read frame from the port
         let audio = self.audio_in_port.as_slice(process_scope);
-        // add the latest audio to our signal processor
-        self.signal_processor.add_audio_frame(audio);
-        // push new values in the buffer
-        self.vals_handler
-            .take_vals(self.signal_processor.get_current_values());
+        // give it to the handler
+        self.vals_handler.take_frame(audio);
         // print CPU load
         info!("{}", client.cpu_load());
         // Continue the loop
