@@ -1,4 +1,4 @@
-use crate::audio_processing::{MyValues, SignalProcessor};
+use crate::audio_processing::SignalProcessor;
 use crate::jack;
 use piston_window::*;
 use std::sync::{Arc, Mutex};
@@ -10,10 +10,11 @@ pub struct EqViz {
 }
 
 impl EqViz {
-    pub fn new(n_filters: usize, q: f32) -> EqViz {
+    pub fn new(signal_processor: SignalProcessor) -> EqViz {
+        let n = signal_processor.num_filters();
         EqViz {
-            sig_proc: SignalProcessor::new(48_000., 20., 20_000., q, n_filters, 40., 1.),
-            vals: Arc::new(Mutex::new(vec![0.; n_filters])),
+            sig_proc: signal_processor,
+            vals: Arc::new(Mutex::new(vec![0.; n])),
         }
     }
 

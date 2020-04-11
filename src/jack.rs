@@ -12,11 +12,7 @@ pub struct JackHandler {
 }
 
 impl JackHandler {
-    fn new(
-        sample_freq: f32,
-        audio_in_port: Port<AudioIn>,
-        handler: Box<dyn ValsHandler>,
-    ) -> JackHandler {
+    fn new(audio_in_port: Port<AudioIn>, handler: Box<dyn ValsHandler>) -> JackHandler {
         JackHandler {
             audio_in_port: audio_in_port,
             vals_handler: handler,
@@ -31,26 +27,34 @@ impl ProcessHandler for JackHandler {
         // give it to the handler
         self.vals_handler.take_frame(audio);
         // print CPU load
-        info!("{}", client.cpu_load());
+        println!("{}", client.cpu_load());
         // Continue the loop
         Control::Continue
     }
 }
 
-/// Starts to accept audio frames on the audio port and writes them to
-/// the channel.  The port is something like "system:capture_1".
-pub fn read_audio(port: &str, vals_handler: Box<dyn ValsHandler>) -> AsyncClient<(), JackHandler> {
+pub fn open_client(name: &str) -> jack::Client {
     info!("Starting processing.  Creating client and port ...");
-    let client = jack::Client::new("lumi", jack::ClientOptions::empty())
-        .unwrap()
-        .0;
+    jack::Client::new(name, jack::ClientOptions::empty())
+        .expect("Failed to open jack client.")
+        .0
+}
 
-    let sample_rate = client.sample_rate() as f32;
+pub fn start_processing(
+    client: jack::Client,
+    port: &str,
+    vals_handler: Box<dyn ValsHandler>,
+) -> AsyncClient<(), JackHandler> {
+    let name = client.name();
 
     let spec = jack::AudioIn::default();
-    let audio_in_port = client.register_port("in", spec).unwrap();
+    let audio_in_port = client
+        .register_port("in", spec)
+        .expect("Failed to register port.");
 
-    let p_handler = JackHandler::new(sample_rate, audio_in_port, vals_handler);
+    let port_name = format!("{}:{}", name, "in");
+
+    let p_handler = JackHandler::new(audio_in_port, vals_handler);
 
     let active_client = client.activate_async((), p_handler).unwrap();
     info!("Async processhandling started.");
@@ -58,7 +62,7 @@ pub fn read_audio(port: &str, vals_handler: Box<dyn ValsHandler>) -> AsyncClient
     // connect to the pulseaudio sink for convenience
     active_client
         .as_client()
-        .connect_ports_by_name(port, "lumi:in")
+        .connect_ports_by_name(port, &port_name)
         .expect("Failed to connect client to audio in port");
 
     active_client

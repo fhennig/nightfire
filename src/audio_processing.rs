@@ -9,7 +9,6 @@
 use biquad as bq;
 use biquad::Biquad;
 use std::collections::VecDeque;
-use std::convert::TryInto;
 use std::vec::Vec;
 
 /// This struct represents the values that are extracted from the
@@ -210,7 +209,8 @@ impl SignalProcessor {
     fn decay(&self, i: usize) -> f32 {
         //1. - (1. / (1. + (-0.8 * (i as f32) + 5.).exp()))
         // TODO decay should be time dependent, not per sample.
-        0.8f32.powi(i as i32)
+        // 0.8f32.powi(i as i32)
+        (1. - 0.1 * (i as f32)).max(0.)
     }
 
     fn get_range_decayed(&self, f_start: f32, f_end: f32) -> f32 {

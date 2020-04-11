@@ -16,11 +16,17 @@ struct AudioStateUpdater {
 }
 
 impl AudioStateUpdater {
-    pub fn new(state: Arc<Mutex<State>>) -> AudioStateUpdater {
+    pub fn new(state: Arc<Mutex<State>>, sample_rate: f32) -> AudioStateUpdater {
         AudioStateUpdater {
             state: state,
             signal_processor: audio_processing::SignalProcessor::new(
-                48_000., 20., 20_000., 3., 100, 50., 4.,
+                sample_rate,
+                20.,
+                20_000.,
+                3.,
+                100,
+                50.,
+                4.,
             ),
         }
     }
@@ -70,10 +76,12 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let state = Arc::new(Mutex::new(State::new()));
     // read audio
     let audio_client = match conf.audio_in {
-        Some(port) => Some(jack::read_audio(
-            &port,
-            Box::new(AudioStateUpdater::new(Arc::clone(&state))),
-        )),
+        Some(port) => {
+            let client = jack::open_client("lumi");
+            let sample_rate = client.sample_rate() as f32;
+            let proc = Box::new(AudioStateUpdater::new(Arc::clone(&state), sample_rate));
+            Some(jack::start_processing(client, &port, proc))
+        }
         None => None,
     };
     // run controller
