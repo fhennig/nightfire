@@ -43,8 +43,6 @@ fn itof(color_intensity: i32) -> f32 {
 pub fn create_window(vals: Arc<Mutex<Vec<f32>>>) {
     let bg_color = [itof(237), itof(235), itof(223), 1.0];
     let fg_color = [itof(64), itof(216), itof(133), 1.0];
-    let w = 500;
-    let h = 300;
     let mut window: PistonWindow = WindowSettings::new("Hello Piston!", [500, 300])
         .exit_on_esc(true)
         .build()
@@ -61,7 +59,7 @@ pub fn create_window(vals: Arc<Mutex<Vec<f32>>>) {
                 let v = vs[i] as f64;
                 let i = i as f64;
                 rectangle(
-                    [0.5f32; 4],
+                    fg_color,
                     [(i / n) * w, (1f64 - v) * h, (1f64 / n) * w, v * h],
                     context.transform,
                     graphics,
