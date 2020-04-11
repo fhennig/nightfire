@@ -3,10 +3,10 @@ use lumi::audio_processing;
 use lumi::conf::Conf;
 use lumi::jack;
 use lumi::piblaster::start_piblaster_thread;
-use lumi::ui::piston::run_piston_thread;
 use lumi::sixaxis::read_controller;
 use lumi::sixaxis::state_updater::StateUpdater;
 use lumi::state::State;
+use lumi::ui::piston::run_piston_thread;
 use std::sync::{Arc, Mutex};
 use std::{error, thread, time};
 
@@ -19,7 +19,9 @@ impl AudioStateUpdater {
     pub fn new(state: Arc<Mutex<State>>) -> AudioStateUpdater {
         AudioStateUpdater {
             state: state,
-            signal_processor: audio_processing::SignalProcessor::new(48_000f32, 5., 100),
+            signal_processor: audio_processing::SignalProcessor::new(
+                48_000., 20., 20_000., 3., 100, 50., 4.,
+            ),
         }
     }
 }

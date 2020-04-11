@@ -4,7 +4,7 @@ use lumi::jack;
 use lumi::ui::eq;
 
 fn main() {
-    let matches = App::new("eq")
+    let matches = App::new("lumi")
         .arg(Arg::with_name("q").short("q").takes_value(true))
         .arg(Arg::with_name("n").short("n").takes_value(true))
         .get_matches();

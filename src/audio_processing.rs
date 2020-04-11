@@ -156,11 +156,18 @@ pub struct SignalProcessor {
 impl SignalProcessor {
     /// creates and initializes a new signal processor.
     /// The sample frequency must be given (typical value: 48,000Hz)
-    pub fn new(sample_freq: f32, q: f32, n_filters: usize) -> SignalProcessor {
-        let history_len = 100;
-        let fps = 100f32;
+    pub fn new(
+        sample_freq: f32,
+        f_start: f32,
+        f_end: f32,
+        q: f32,
+        n_filters: usize,
+        fps: f32,
+        hist_len: f32,  // in seconds
+    ) -> SignalProcessor {
+        let history_len: usize = (fps * hist_len) as usize;
         let subsample_frame_size = (sample_freq / fps) as usize;
-        let filter = SignalFilter::new(1., 22_000., sample_freq, q, n_filters);
+        let filter = SignalFilter::new(f_start, f_end, sample_freq, q, n_filters);
         let empty_sample = filter.null_sample();
         SignalProcessor {
             hist: vec![empty_sample; history_len].into_iter().collect(),
@@ -202,6 +209,7 @@ impl SignalProcessor {
 
     fn decay(&self, i: usize) -> f32 {
         //1. - (1. / (1. + (-0.8 * (i as f32) + 5.).exp()))
+        // TODO decay should be time dependent, not per sample.
         0.8f32.powi(i as i32)
     }
 
@@ -209,10 +217,7 @@ impl SignalProcessor {
         self.hist
             .iter()
             .enumerate()
-            .map(|(i, val)| {
-                self.filter.get_slice_value(f_start, f_end, &val).powi(5)
-                    * self.decay(i)
-            })
+            .map(|(i, val)| self.filter.get_slice_value(f_start, f_end, &val) * self.decay(i))
             .fold(-1. / 0., f32::max)
     }
 
@@ -220,19 +225,17 @@ impl SignalProcessor {
         self.hist
             .iter()
             .enumerate()
-            .map(|(i, val)| {
-                val.vals[f_index] * self.decay(i)
-            })
+            .map(|(i, val)| val.vals[f_index] * self.decay(i))
             .fold(-1. / 0., f32::max)
     }
 
     pub fn get_current_values(&self) -> MyValues {
         MyValues::new(
-            self.get_range_decayed(130., 280.),  // bass
-            self.get_range_decayed(350., 3_000.),  // mids
+            self.get_range_decayed(130., 280.),   // bass
+            self.get_range_decayed(350., 3_000.), // mids
             //self.get_range_decayed(350., 1_800.),
             //self.get_range_decayed(1_800., 3_500.),
-            self.get_range_decayed(10_000., 22_000.),  // cripsp
+            self.get_range_decayed(10_000., 22_000.), // cripsp
         )
     }
 }

@@ -12,7 +12,7 @@ pub struct EqViz {
 impl EqViz {
     pub fn new(n_filters: usize, q: f32) -> EqViz {
         EqViz {
-            sig_proc: SignalProcessor::new(48_000., q, n_filters),
+            sig_proc: SignalProcessor::new(48_000., 20., 20_000., q, n_filters, 40., 1.),
             vals: Arc::new(Mutex::new(vec![0.; n_filters])),
         }
     }
@@ -30,7 +30,6 @@ impl jack::ValsHandler for EqViz {
         for i in 0..n {
             vals.push(self.sig_proc.get_filter_decayed(i));
         }
-        println!("vals: {}", vals[15]);
         let mut curr_vals = self.vals.lock().unwrap();
         *curr_vals = vals;
     }
