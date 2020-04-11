@@ -49,10 +49,10 @@ pub fn create_window(vals: Arc<Mutex<Vec<f32>>>) {
         .exit_on_esc(true)
         .build()
         .unwrap();
-    let w = w as f64;
-    let h = h as f64;
     window.set_max_fps(50);
     while let Some(event) = window.next() {
+        let w = window.size().width;
+        let h = window.size().height;
         let vs = vals.lock().unwrap();
         let n = vs.len() as f64;
         window.draw_2d(&event, |context, graphics, _device| {

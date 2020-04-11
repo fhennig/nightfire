@@ -3,7 +3,7 @@ use lumi::audio_processing;
 use lumi::conf::Conf;
 use lumi::jack;
 use lumi::piblaster::start_piblaster_thread;
-use lumi::piston::run_piston_thread;
+use lumi::ui::piston::run_piston_thread;
 use lumi::sixaxis::read_controller;
 use lumi::sixaxis::state_updater::StateUpdater;
 use lumi::state::State;
