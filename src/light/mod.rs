@@ -1,7 +1,6 @@
 mod color;
 mod coord;
 mod envelope;
-pub mod lightid;
 mod manual;
 mod mask;
 mod state;

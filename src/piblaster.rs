@@ -1,5 +1,5 @@
 use crate::light::{Color, PinValue, State};
-use crate::light::lightid::LightId;
+use crate::lightid::LightId;
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
 use std::io::Write;

@@ -1,4 +1,4 @@
-use crate::light::lightid::LightId;
+use crate::lightid::LightId;
 use crate::piblaster as pb;
 use log;
 use std::path::Path;

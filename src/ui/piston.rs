@@ -1,4 +1,4 @@
-use crate::light::lightid::LightId;
+use crate::lightid::LightId;
 use crate::light as li;
 use piston_window::*;
 use std::sync::{Arc, Mutex};
