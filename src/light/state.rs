@@ -1,7 +1,6 @@
 use crate::light::color;
-use crate::light::coord::Positionable;
+use crate::light::coord;
 use crate::light::envelope::Envelope;
-use crate::light::lightid::LightId;
 use crate::light::manual;
 use crate::light::mask::{self, Mask};
 use std::time::Duration;
@@ -122,7 +121,7 @@ impl State {
         self.music_mask.mask.set_val(intensity.into());
     }
 
-    pub fn get_color(&self, light_id: &LightId) -> color::Color {
+    pub fn get_color(&self, pos: &coord::Coordinate) -> color::Color {
         if self.select_mode {
             color::Colors::mask(
                 self.active_mode.get_color(),
@@ -135,13 +134,13 @@ impl State {
                     if self.is_rainbow {
                         self.rainbow.get_color()
                     } else {
-                        self.manual_mode.get_color(light_id.pos())
+                        self.manual_mode.get_color(pos)
                     }
                 }
             };
-            color = self.music_mask.get_masked_color(light_id, color);
-            color = self.value_mask.get_masked_color(light_id, color);
-            color = self.pulse_mask.get_masked_color(light_id, color);
+            color = self.music_mask.get_masked_color(&pos, color);
+            color = self.value_mask.get_masked_color(&pos, color);
+            color = self.pulse_mask.get_masked_color(&pos, color);
             color
         }
     }

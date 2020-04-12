@@ -117,7 +117,7 @@ pub fn start_piblaster_thread(
         while !stopped.get() {
             thread::sleep(dur);
             for id in LightId::all() {
-                let color = state.lock().unwrap().get_color(&id);
+                let color = state.lock().unwrap().get_color(&id.pos());
                 lights.set_light(&id, &color);
             }
         }

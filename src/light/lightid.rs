@@ -12,10 +12,8 @@ impl LightId {
     pub fn all() -> Vec<LightId> {
         vec![LightId::Top, LightId::Bottom, LightId::Left, LightId::Right]
     }
-}
 
-impl coord::Positionable for LightId {
-    fn pos(&self) -> coord::Coordinate {
+    pub fn pos(&self) -> coord::Coordinate {
         match &self {
             LightId::Top => coord::Coordinate(-1.0, 1.0),
             LightId::Bottom => coord::Coordinate(1.0, -1.0),

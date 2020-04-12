@@ -134,7 +134,7 @@ fn get_color_from_controller(controller: &Controller) -> Option<color::Color> {
 
 fn get_quad_from_controller(controller: &Controller) -> Option<coord::Quadrant> {
     if controller.left_pos().length() > 0.75 {
-        Some(coord::Quadrant::from(controller.left_pos()))
+        Some(coord::Quadrant::from(&controller.left_pos()))
     } else {
         None
     }

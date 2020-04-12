@@ -1,4 +1,5 @@
 use crate::light::lightid::LightId;
+use crate::light::coord;
 use crate::light::state::State;
 use piston_window::*;
 use std::sync::{Arc, Mutex};
@@ -8,8 +9,8 @@ fn fix_int(val: f32) -> f32 {
     ((1. - val).powi(2) * -1.) + 1.
 }
 
-fn piston_color(state: &Arc<Mutex<State>>, light_id: &LightId) -> [f32; 4] {
-    let color = state.lock().unwrap().get_color(light_id);
+fn piston_color(state: &Arc<Mutex<State>>, pos: &coord::Coordinate) -> [f32; 4] {
+    let color = state.lock().unwrap().get_color(&pos);
     [
         fix_int(color.red as f32),
         fix_int(color.green as f32),
@@ -42,10 +43,30 @@ pub fn run_piston_thread(state: Arc<Mutex<State>>) {
         window.draw_2d(&e, |c, g, _| {
             clear([0.5, 0.5, 0.5, 1.0], g);
 
-            rectangle(piston_color(&state, &LightId::Top), stripe, get_transf(c, 135., w, n), g);
-            rectangle(piston_color(&state, &LightId::Bottom), stripe, get_transf(c, -45., w, n), g);
-            rectangle(piston_color(&state, &LightId::Left), stripe, get_transf(c, 45., w, n), g);
-            rectangle(piston_color(&state, &LightId::Right), stripe, get_transf(c, -135., w, n), g);
+            rectangle(
+                piston_color(&state, &LightId::Top.pos()),
+                stripe,
+                get_transf(c, 135., w, n),
+                g,
+            );
+            rectangle(
+                piston_color(&state, &LightId::Bottom.pos()),
+                stripe,
+                get_transf(c, -45., w, n),
+                g,
+            );
+            rectangle(
+                piston_color(&state, &LightId::Left.pos()),
+                stripe,
+                get_transf(c, 45., w, n),
+                g,
+            );
+            rectangle(
+                piston_color(&state, &LightId::Right.pos()),
+                stripe,
+                get_transf(c, -135., w, n),
+                g,
+            );
 
             let position = state.lock().unwrap().value_mask.mask.mask2.position;
             let x = n + position.0 * n;

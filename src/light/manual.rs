@@ -88,7 +88,7 @@ impl ManualMode {
         self.br_color = t2;
     }
 
-    pub fn get_color(&self, pos: c::Coordinate) -> m::Color {
+    pub fn get_color(&self, pos: &c::Coordinate) -> m::Color {
         match c::Quadrant::from(pos) {
             c::Quadrant::TL => self.tl_color,
             c::Quadrant::TR => self.tr_color,

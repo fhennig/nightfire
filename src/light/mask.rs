@@ -6,8 +6,8 @@ use std::time::Duration;
 
 pub trait Mask {
     fn get_value(&self, pos: &coord::Coordinate) -> PinValue;
-    fn get_masked_color(&self, pos: &dyn coord::Positionable, color: Color) -> Color {
-        let value = self.get_value(&pos.pos());
+    fn get_masked_color(&self, pos: &coord::Coordinate, color: Color) -> Color {
+        let value = self.get_value(&pos);
         Colors::mask(color, value)
     }
 }
@@ -109,7 +109,7 @@ impl DiscretePosMask {
 
 impl Mask for DiscretePosMask {
     fn get_value(&self, pos: &coord::Coordinate) -> PinValue {
-        match coord::Quadrant::from(*pos) {
+        match coord::Quadrant::from(pos) {
             coord::Quadrant::TL => self.top_left,
             coord::Quadrant::TR => self.top_right,
             coord::Quadrant::BL => self.bot_left,
