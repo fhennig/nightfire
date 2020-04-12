@@ -1,8 +1,8 @@
 use clap::{App, Arg};
-use lumi::conf;
-use lumi::jack;
-use lumi::ui::eq;
+use lumi::audio::jack;
 use lumi::audio::SignalProcessor;
+use lumi::conf;
+use lumi::ui::eq;
 
 fn main() {
     // argparsing
@@ -10,8 +10,14 @@ fn main() {
         .arg(Arg::with_name("q").short("q").takes_value(true))
         .arg(Arg::with_name("n").short("n").takes_value(true))
         .get_matches();
-    let q = matches.value_of("q").map(|v| v.parse().unwrap()).unwrap_or(1.);
-    let n_filters = matches.value_of("n").map(|v| v.parse().unwrap()).unwrap_or(100);
+    let q = matches
+        .value_of("q")
+        .map(|v| v.parse().unwrap())
+        .unwrap_or(1.);
+    let n_filters = matches
+        .value_of("n")
+        .map(|v| v.parse().unwrap())
+        .unwrap_or(100);
     // open jack client
     let client = jack::open_client("eq_display");
     let sample_rate = client.sample_rate() as f32;

@@ -1,6 +1,5 @@
 pub mod audio;
 pub mod conf;
-pub mod jack;
 pub mod light;
 pub mod lightid;
 pub mod osc;
