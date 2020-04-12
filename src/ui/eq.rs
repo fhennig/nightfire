@@ -1,4 +1,4 @@
-use crate::audio_processing::SignalProcessor;
+use crate::audio::SignalProcessor;
 use crate::jack;
 use piston_window::*;
 use std::sync::{Arc, Mutex};

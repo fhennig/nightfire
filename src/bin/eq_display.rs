@@ -2,7 +2,7 @@ use clap::{App, Arg};
 use lumi::conf;
 use lumi::jack;
 use lumi::ui::eq;
-use lumi::audio_processing::SignalProcessor;
+use lumi::audio::SignalProcessor;
 
 fn main() {
     // argparsing

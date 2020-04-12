@@ -1,6 +1,6 @@
 mod osc_sender;
 pub use self::osc_sender::OscSender;
-use crate::audio_processing::MyValues;
+use crate::audio::MyValues;
 use crate::sixaxis::ControllerValues;
 use log::{debug, info};
 use std::convert::TryInto;

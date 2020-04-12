@@ -1,5 +1,5 @@
 use clap::{App, Arg, ArgMatches};
-use lumi::audio_processing;
+use lumi::audio;
 use lumi::conf::Conf;
 use lumi::jack;
 use lumi::piblaster::start_piblaster_thread;
@@ -11,7 +11,7 @@ use std::sync::{Arc, Mutex};
 use std::{error, thread, time};
 
 struct AudioStateUpdater {
-    signal_processor: audio_processing::SignalProcessor,
+    signal_processor: audio::SignalProcessor,
     state: Arc<Mutex<State>>,
 }
 
@@ -19,7 +19,7 @@ impl AudioStateUpdater {
     pub fn new(state: Arc<Mutex<State>>, sample_rate: f32) -> AudioStateUpdater {
         AudioStateUpdater {
             state: state,
-            signal_processor: audio_processing::SignalProcessor::new(
+            signal_processor: audio::SignalProcessor::new(
                 sample_rate,
                 20.,
                 20_000.,

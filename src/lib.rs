@@ -1,4 +1,4 @@
-pub mod audio_processing;
+pub mod audio;
 pub mod conf;
 pub mod jack;
 pub mod light;
