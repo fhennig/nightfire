@@ -1,6 +1,5 @@
 use crate::light::lightid::LightId;
-use crate::light::coord;
-use crate::light::state::State;
+use crate::light as li;
 use piston_window::*;
 use std::sync::{Arc, Mutex};
 
@@ -9,7 +8,7 @@ fn fix_int(val: f32) -> f32 {
     ((1. - val).powi(2) * -1.) + 1.
 }
 
-fn piston_color(state: &Arc<Mutex<State>>, pos: &coord::Coordinate) -> [f32; 4] {
+fn piston_color(state: &Arc<Mutex<li::State>>, pos: &li::Coordinate) -> [f32; 4] {
     let color = state.lock().unwrap().get_color(&pos);
     [
         fix_int(color.red as f32),
@@ -28,7 +27,7 @@ fn get_transf(context: Context, rot: f64, w: f64, n: f64) -> [[f64; 3]; 2] {
         .trans(w * -0.5, w * 0.5)
 }
 
-pub fn run_piston_thread(state: Arc<Mutex<State>>) {
+pub fn run_piston_thread(state: Arc<Mutex<li::State>>) {
     println!("Startin window thread!");
     let n = 200.;
     let w = 50.;

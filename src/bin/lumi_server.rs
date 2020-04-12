@@ -5,7 +5,7 @@ use lumi::jack;
 use lumi::piblaster::start_piblaster_thread;
 use lumi::sixaxis::read_controller;
 use lumi::sixaxis::state_updater::StateUpdater;
-use lumi::light::state::State;
+use lumi::light::State;
 use lumi::ui::piston::run_piston_thread;
 use std::sync::{Arc, Mutex};
 use std::{error, thread, time};

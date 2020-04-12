@@ -1,4 +1,4 @@
-use crate::light::color::PinValue;
+use crate::light::PinValue;
 use palette::RgbHue;
 
 #[derive(Copy, Clone)]

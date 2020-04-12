@@ -1,4 +1,4 @@
-use crate::light::{color, coord, state};
+use crate::light::{Color, State, Mode, Coordinate, Quadrant};
 use crate::sixaxis::{Axis, Button, ControllerValsSink, ControllerValues};
 use log::debug;
 use palette::Hsv;
@@ -26,20 +26,20 @@ impl Controller {
         self.curr_vals = new_vals;
     }
 
-    fn left_pos(&self) -> coord::Coordinate {
+    fn left_pos(&self) -> Coordinate {
         let l_x = self.curr_vals.get_axis_val(Axis::LX);
         let l_y = self.curr_vals.get_axis_val(Axis::LY);
         let l_x = ((l_x as f64) / 255.0 - 0.5) * 2.0;
         let l_y = ((l_y as f64 / 255.0 - 0.5) * -1.0) * 2.0;
-        coord::Coordinate(l_x, l_y)
+        Coordinate(l_x, l_y)
     }
 
-    fn right_pos(&self) -> coord::Coordinate {
+    fn right_pos(&self) -> Coordinate {
         let r_x = self.curr_vals.get_axis_val(Axis::RX);
         let r_y = self.curr_vals.get_axis_val(Axis::RY);
         let r_x = ((r_x as f64) / 255.0 - 0.5) * 2.0;
         let r_y = ((r_y as f64 / 255.0 - 0.5) * -1.0) * 2.0;
-        coord::Coordinate(r_x, r_y)
+        Coordinate(r_x, r_y)
     }
 
     /// Returns a value in [0, 1]
@@ -101,19 +101,19 @@ impl Controller {
 }
 
 pub struct StateUpdater {
-    state: Arc<Mutex<state::State>>,
+    state: Arc<Mutex<State>>,
     controller: Controller,
 }
 
 /// A function for the selection mode.  Looks at both sticks and gets
 /// a mode from that.
-fn get_mode_from_controller(controller: &Controller) -> Option<state::Mode> {
+fn get_mode_from_controller(controller: &Controller) -> Option<Mode> {
     if controller.left_pos().length() >= 0.75 {
-        Some(state::Mode::from_angle(
+        Some(Mode::from_angle(
             controller.left_pos().angle().unwrap(),
         ))
     } else if controller.right_pos().length() >= 0.75 {
-        Some(state::Mode::from_angle(
+        Some(Mode::from_angle(
             controller.right_pos().angle().unwrap(),
         ))
     } else {
@@ -121,27 +121,27 @@ fn get_mode_from_controller(controller: &Controller) -> Option<state::Mode> {
     }
 }
 
-fn get_color_from_controller(controller: &Controller) -> Option<color::Color> {
+fn get_color_from_controller(controller: &Controller) -> Option<Color> {
     if controller.right_pos().length() > 0.75 {
         let hue = controller.right_pos().hue_from_angle().unwrap();
         let saturation = 1. - controller.right_trigger();
         let value = 1. - controller.left_trigger();
-        Some(color::Color::from(Hsv::new(hue, saturation, value)))
+        Some(Color::from(Hsv::new(hue, saturation, value)))
     } else {
         None
     }
 }
 
-fn get_quad_from_controller(controller: &Controller) -> Option<coord::Quadrant> {
+fn get_quad_from_controller(controller: &Controller) -> Option<Quadrant> {
     if controller.left_pos().length() > 0.75 {
-        Some(coord::Quadrant::from(&controller.left_pos()))
+        Some(Quadrant::from(&controller.left_pos()))
     } else {
         None
     }
 }
 
 impl StateUpdater {
-    pub fn new(state: Arc<Mutex<state::State>>) -> StateUpdater {
+    pub fn new(state: Arc<Mutex<State>>) -> StateUpdater {
         let empty_vals = ControllerValues::new_empty();
         StateUpdater {
             state: state,
@@ -192,8 +192,8 @@ impl StateUpdater {
                 s.manual_mode.rotate_cw();
             }
             match s.get_active_mode() {
-                state::Mode::OffMode => (), // no controls need to be set
-                state::Mode::ManualMode => {
+                Mode::OffMode => (), // no controls need to be set
+                Mode::ManualMode => {
                     if !controller.is_pressed(Button::Circle) {
                         // decide if a color should be set
                         match get_color_from_controller(controller) {
