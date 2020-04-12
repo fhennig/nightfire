@@ -1,9 +1,9 @@
-use crate::envelope::Envelope;
-use crate::lightid::LightId;
-use crate::models;
-use crate::manual;
-use crate::mask::{self, Mask};
-use crate::coord::Positionable;
+use crate::light::color;
+use crate::light::coord::Positionable;
+use crate::light::envelope::Envelope;
+use crate::light::lightid::LightId;
+use crate::light::manual;
+use crate::light::mask::{self, Mask};
 use std::time::Duration;
 
 /// The overall mode.  There are a couple of high level modes.  Should
@@ -36,10 +36,10 @@ impl Mode {
         }
     }
 
-    fn get_color(&self) -> models::Color {
+    fn get_color(&self) -> color::Color {
         match self {
-            Mode::OffMode => models::Colors::blue(),
-            Mode::ManualMode => models::Colors::yellow(),
+            Mode::OffMode => color::Colors::blue(),
+            Mode::ManualMode => color::Colors::yellow(),
         }
     }
 }
@@ -50,7 +50,7 @@ pub struct State {
     white_pulse: Envelope,
     active_mode: Mode,
     // rainbow
-    rainbow: models::Rainbow,
+    rainbow: color::Rainbow,
     is_rainbow: bool,
     // masks
     /// The value mask is a full mask, overall brightness
@@ -70,9 +70,12 @@ impl State {
             white_pulse: Envelope::new_pulse(Duration::from_millis(1800)),
             select_mode: false,
             active_mode: active_mode,
-            rainbow: models::Rainbow::new(),
+            rainbow: color::Rainbow::new(),
             is_rainbow: false,
-            value_mask: mask::ActivatableMask::new(mask::AddMask::new(mask::SolidMask::new(), mask::PosMask::new()), false),
+            value_mask: mask::ActivatableMask::new(
+                mask::AddMask::new(mask::SolidMask::new(), mask::PosMask::new()),
+                false,
+            ),
             music_mask: mask::ActivatableMask::new(mask::SolidMask::new(), false),
             pulse_mask: mask::ActivatableMask::new(mask::EnvMask::new_random_pulse(), false),
         }
@@ -119,15 +122,15 @@ impl State {
         self.music_mask.mask.set_val(intensity.into());
     }
 
-    pub fn get_color(&self, light_id: &LightId) -> models::Color {
+    pub fn get_color(&self, light_id: &LightId) -> color::Color {
         if self.select_mode {
-            models::Colors::mask(
+            color::Colors::mask(
                 self.active_mode.get_color(),
                 self.white_pulse.get_current_value(),
             )
         } else {
             let mut color = match self.active_mode {
-                Mode::OffMode => models::Colors::black(),
+                Mode::OffMode => color::Colors::black(),
                 Mode::ManualMode => {
                     if self.is_rainbow {
                         self.rainbow.get_color()

@@ -1,4 +1,4 @@
-use crate::coord;
+use crate::light::coord;
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum LightId {

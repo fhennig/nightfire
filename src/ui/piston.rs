@@ -1,5 +1,5 @@
-use crate::lightid::LightId;
-use crate::state::State;
+use crate::light::lightid::LightId;
+use crate::light::state::State;
 use piston_window::*;
 use std::sync::{Arc, Mutex};
 

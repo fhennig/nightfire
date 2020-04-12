@@ -1,4 +1,4 @@
-use crate::models::PinValue;
+use crate::light::color::PinValue;
 use palette::RgbHue;
 use splines::{Interpolation, Key, Spline};
 use std::time::{Duration, SystemTime};

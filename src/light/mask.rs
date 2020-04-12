@@ -1,6 +1,6 @@
-use crate::coord;
-use crate::envelope::Envelope;
-use crate::models::{Color, Colors, PinValue};
+use crate::light::color::{Color, Colors, PinValue};
+use crate::light::coord;
+use crate::light::envelope::Envelope;
 use splines::{Interpolation, Key, Spline};
 use std::time::Duration;
 

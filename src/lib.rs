@@ -1,14 +1,8 @@
 pub mod audio_processing;
 pub mod conf;
-pub mod coord;
-pub mod envelope;
 pub mod jack;
-pub mod lightid;
-pub mod manual;
-pub mod mask;
-pub mod models;
+pub mod light;
 pub mod osc;
 pub mod piblaster;
 pub mod sixaxis;
-pub mod state;
 pub mod ui;

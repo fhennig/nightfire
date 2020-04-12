@@ -1,7 +1,5 @@
-use crate::coord;
-use crate::models;
+use crate::light::{color, coord, state};
 use crate::sixaxis::{Axis, Button, ControllerValsSink, ControllerValues};
-use crate::state;
 use log::debug;
 use palette::Hsv;
 use std::sync::{Arc, Mutex};
@@ -123,12 +121,12 @@ fn get_mode_from_controller(controller: &Controller) -> Option<state::Mode> {
     }
 }
 
-fn get_color_from_controller(controller: &Controller) -> Option<models::Color> {
+fn get_color_from_controller(controller: &Controller) -> Option<color::Color> {
     if controller.right_pos().length() > 0.75 {
         let hue = controller.right_pos().hue_from_angle().unwrap();
         let saturation = 1. - controller.right_trigger();
         let value = 1. - controller.left_trigger();
-        Some(models::Color::from(Hsv::new(hue, saturation, value)))
+        Some(color::Color::from(Hsv::new(hue, saturation, value)))
     } else {
         None
     }
@@ -168,7 +166,8 @@ impl StateUpdater {
                 s.switch_music_mode();
             }
             // overall brightness mask
-            s.value_mask.set_active(controller.is_pressed(Button::Circle));
+            s.value_mask
+                .set_active(controller.is_pressed(Button::Circle));
             s.value_mask.mask.mask1.set_val(controller.left_trigger());
             // position mask handling
             s.value_mask.mask.mask2.set_pos(controller.left_pos());

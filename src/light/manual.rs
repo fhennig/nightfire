@@ -1,5 +1,5 @@
-use crate::coord as c;
-use crate::models as m;
+use crate::light::coord as c;
+use crate::light::color as m;
 
 pub struct ManualMode {
     tl_color: m::Color,

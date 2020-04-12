@@ -1,6 +1,6 @@
-use crate::lightid::LightId;
-use crate::models::{Color, PinValue};
-use crate::state::State;
+use crate::light::color::{Color, PinValue};
+use crate::light::lightid::LightId;
+use crate::light::state::State;
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
 use std::io::Write;

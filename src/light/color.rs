@@ -1,10 +1,7 @@
-use crate::coord;
-use crate::envelope::Envelope;
-use crate::lightid::LightId;
+use crate::light::envelope::Envelope;
 use palette::encoding::linear::Linear;
 use palette::encoding::Srgb;
 use palette::rgb::Rgb;
-use palette::RgbHue;
 use palette::Hsv;
 use std::time;
 
@@ -71,7 +68,7 @@ impl Rainbow {
             rainbow_riser: Envelope::new_riser(time::Duration::from_millis(10000)),
         }
     }
-    
+
     pub fn get_color(&self) -> Color {
         Color::from(Hsv::new(self.rainbow_riser.get_value_as_hue(), 1., 1.))
     }
