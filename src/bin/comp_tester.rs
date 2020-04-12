@@ -2,9 +2,9 @@ use std::vec::Vec;
 
 
 fn main() {
-    let start = std::time::SystemTime::now();
-    let n = 100_000;
+    let n = 30_000;
     let vec: Vec<usize> = (0..n).collect();
+    let start = std::time::SystemTime::now();
     let mut sum: usize = 0;
     for i in 0..n {
         sum += vec[i] * vec[n - i - 1] / 1000;

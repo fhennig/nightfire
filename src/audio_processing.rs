@@ -210,7 +210,8 @@ impl SignalProcessor {
         //1. - (1. / (1. + (-0.8 * (i as f32) + 5.).exp()))
         // TODO decay should be time dependent, not per sample.
         // 0.8f32.powi(i as i32)
-        (1. - 0.1 * (i as f32)).max(0.)
+        let d = 0.1;  // 0.1 -> slow. 0.9 -> fast
+        (1. - d * (i as f32)).max(0.)
     }
 
     fn get_range_decayed(&self, f_start: f32, f_end: f32) -> f32 {
