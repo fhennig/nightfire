@@ -11,6 +11,8 @@ pub type Color = Rgb<Linear<Srgb>, PinValue>;
 
 #[allow(dead_code)]
 pub trait ColorsExt {
+    fn _self(&self) -> &Color;
+    
     fn black() -> Color {
         Color::new(0.0, 0.0, 0.0)
     }
@@ -47,16 +49,21 @@ pub trait ColorsExt {
         Color::new(1.0, 0.0, 1.0)
     }
 
-    fn mask(color: Color, value: f64) -> Color {
+    fn mask(&self, value: f64) -> Color {
         if value == 1. {
-            color
+            *self._self()
         } else {
+            let color = self._self();
             Color::new(color.red * value, color.green * value, color.blue * value)
         }
     }
 }
 
-impl ColorsExt for Color {}
+impl ColorsExt for Color {
+    fn _self(&self) -> &Color {
+        self
+    }
+}
 
 
 pub struct Rainbow {

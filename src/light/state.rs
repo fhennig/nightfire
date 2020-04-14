@@ -124,10 +124,7 @@ impl State {
 
     pub fn get_color(&self, pos: &coord::Coordinate) -> color::Color {
         if self.select_mode {
-            color::Color::mask(
-                self.active_mode.get_color(),
-                self.white_pulse.get_current_value(),
-            )
+            self.active_mode.get_color().mask(self.white_pulse.get_current_value())
         } else {
             let mut color = match self.active_mode {
                 Mode::OffMode => color::Color::black(),
