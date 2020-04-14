@@ -1,4 +1,4 @@
-use crate::light::color::{Color, Colors, PinValue};
+use crate::light::{Color, ColorsExt, PinValue};
 use crate::light::coord;
 use crate::light::envelope::Envelope;
 use splines::{Interpolation, Key, Spline};
@@ -8,7 +8,7 @@ pub trait Mask {
     fn get_value(&self, pos: &coord::Coordinate) -> PinValue;
     fn get_masked_color(&self, pos: &coord::Coordinate, color: Color) -> Color {
         let value = self.get_value(&pos);
-        Colors::mask(color, value)
+        Color::mask(color, value)
     }
 }
 

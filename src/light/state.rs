@@ -1,4 +1,5 @@
 use crate::light::color;
+use crate::light::ColorsExt;
 use crate::light::coord;
 use crate::light::envelope::Envelope;
 use crate::light::manual;
@@ -37,8 +38,8 @@ impl Mode {
 
     fn get_color(&self) -> color::Color {
         match self {
-            Mode::OffMode => color::Colors::blue(),
-            Mode::ManualMode => color::Colors::yellow(),
+            Mode::OffMode => color::Color::blue(),
+            Mode::ManualMode => color::Color::yellow(),
         }
     }
 }
@@ -123,13 +124,13 @@ impl State {
 
     pub fn get_color(&self, pos: &coord::Coordinate) -> color::Color {
         if self.select_mode {
-            color::Colors::mask(
+            color::Color::mask(
                 self.active_mode.get_color(),
                 self.white_pulse.get_current_value(),
             )
         } else {
             let mut color = match self.active_mode {
-                Mode::OffMode => color::Colors::black(),
+                Mode::OffMode => color::Color::black(),
                 Mode::ManualMode => {
                     if self.is_rainbow {
                         self.rainbow.get_color()

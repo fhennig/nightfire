@@ -1,4 +1,5 @@
 use crate::light::coord as c;
+use crate::light::ColorsExt;
 use crate::light::color as m;
 
 pub struct ManualMode {
@@ -11,10 +12,10 @@ pub struct ManualMode {
 impl ManualMode {
     pub fn new() -> ManualMode {
         ManualMode {
-            tl_color: m::Colors::red(),
-            tr_color: m::Colors::yellow(),
-            bl_color: m::Colors::blue(),
-            br_color: m::Colors::green(),
+            tl_color: m::Color::red(),
+            tr_color: m::Color::yellow(),
+            bl_color: m::Color::blue(),
+            br_color: m::Color::green(),
         }
     }
 

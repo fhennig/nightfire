@@ -9,47 +9,45 @@ use std::time;
 pub type PinValue = f64;
 pub type Color = Rgb<Linear<Srgb>, PinValue>;
 
-pub struct Colors;
-
 #[allow(dead_code)]
-impl Colors {
-    pub fn black() -> Color {
+pub trait ColorsExt {
+    fn black() -> Color {
         Color::new(0.0, 0.0, 0.0)
     }
 
-    pub fn white() -> Color {
+    fn white() -> Color {
         Color::new(1.0, 1.0, 1.0)
     }
 
-    pub fn rosy_pink() -> Color {
+    fn rosy_pink() -> Color {
         Color::new(1.0, 0.1, 0.7)
     }
 
-    pub fn red() -> Color {
+    fn red() -> Color {
         Color::new(1.0, 0.0, 0.0)
     }
 
-    pub fn yellow() -> Color {
+    fn yellow() -> Color {
         Color::new(1.0, 1.0, 0.0)
     }
 
-    pub fn green() -> Color {
+    fn green() -> Color {
         Color::new(0.0, 1.0, 0.0)
     }
 
-    pub fn cyan() -> Color {
+    fn cyan() -> Color {
         Color::new(0.0, 1.0, 1.0)
     }
 
-    pub fn blue() -> Color {
+    fn blue() -> Color {
         Color::new(0.0, 0.0, 1.0)
     }
 
-    pub fn magenta() -> Color {
+    fn magenta() -> Color {
         Color::new(1.0, 0.0, 1.0)
     }
 
-    pub fn mask(color: Color, value: f64) -> Color {
+    fn mask(color: Color, value: f64) -> Color {
         if value == 1. {
             color
         } else {
@@ -57,6 +55,9 @@ impl Colors {
         }
     }
 }
+
+impl ColorsExt for Color {}
+
 
 pub struct Rainbow {
     rainbow_riser: Envelope,
