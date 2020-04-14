@@ -3,12 +3,15 @@ use crate::light::coord;
 use crate::light::envelope::Envelope;
 use splines::{Interpolation, Key, Spline};
 use std::time::Duration;
+use palette::Mix;
 
+/// A mask.  It needs to be able to receive a position and color and
+/// return a masked color.
 pub trait Mask {
     fn get_value(&self, pos: &coord::Coordinate) -> PinValue;
     fn get_masked_color(&self, pos: &coord::Coordinate, color: Color) -> Color {
         let value = self.get_value(&pos);
-        color.mask(value)
+        color.mix(&Color::black(), 1. - value)
     }
 }
 
