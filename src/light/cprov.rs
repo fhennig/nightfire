@@ -2,6 +2,31 @@ use crate::light::coord as c;
 use crate::light::ColorsExt;
 use crate::light::color as m;
 
+/// A color map.  Maps any given coordinate to a color.
+pub trait ColorMap {
+    fn get_color(&self, pos: &c::Coordinate) -> m::Color;
+}
+
+pub struct StaticSolidMap {
+    color: m::Color,
+}
+
+impl StaticSolidMap {
+    pub fn new(color: m::Color) -> StaticSolidMap {
+        StaticSolidMap {
+            color: color,
+        }
+    }
+}
+
+impl ColorMap for StaticSolidMap {
+    fn get_color(&self, pos: &c::Coordinate) -> m::Color {
+        self.color
+    }
+}
+
+/// A manual color map.  Allows setting colors for each quadrant of
+/// the Coordinate system manually.
 pub struct ManualMode {
     tl_color: m::Color,
     tr_color: m::Color,
@@ -88,8 +113,10 @@ impl ManualMode {
         self.tr_color = t1;
         self.br_color = t2;
     }
+}
 
-    pub fn get_color(&self, pos: &c::Coordinate) -> m::Color {
+impl ColorMap for ManualMode {
+    fn get_color(&self, pos: &c::Coordinate) -> m::Color {
         match c::Quadrant::from(pos) {
             c::Quadrant::TL => self.tl_color,
             c::Quadrant::TR => self.tr_color,

@@ -2,7 +2,7 @@ use crate::light::color;
 use crate::light::ColorsExt;
 use crate::light::coord;
 use crate::light::envelope::Envelope;
-use crate::light::cprov::ManualMode;
+use crate::light::cprov::{ManualMode, ColorMap};
 use crate::light::mask::{self, Mask};
 use std::time::Duration;
 

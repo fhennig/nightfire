@@ -11,7 +11,7 @@ pub trait Mask {
     fn get_value(&self, pos: &coord::Coordinate) -> PinValue;
     fn get_masked_color(&self, pos: &coord::Coordinate, color: Color) -> Color {
         let value = self.get_value(&pos);
-        color.mix(&Color::black(), 1. - value)
+        Color::black().mix(&color, value)
     }
 }
 
