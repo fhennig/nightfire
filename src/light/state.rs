@@ -1,9 +1,9 @@
 use crate::light::color;
-use crate::light::ColorsExt;
 use crate::light::coord;
-use crate::light::envelope::Envelope;
 use crate::light::cprov::{self, ColorMap};
+use crate::light::envelope::Envelope;
 use crate::light::mask::{self, Mask};
+use crate::light::ColorsExt;
 use std::time::Duration;
 
 /// The overall mode.  There are a couple of high level modes.  Should
@@ -45,7 +45,7 @@ impl Mode {
 }
 
 pub struct State {
-    manual_mode: cprov::ManualMode,
+    manual_mode: cprov::MixMap<cprov::ManualMode, cprov::StaticSolidMap, mask::SolidMask>,
     select_mode: bool,
     white_pulse: Envelope,
     active_mode: Mode,
@@ -63,7 +63,12 @@ pub struct State {
 impl State {
     pub fn new() -> State {
         State {
-            manual_mode: cprov::ManualMode::new(),
+            manual_mode:
+                cprov::MixMap::<cprov::ManualMode, cprov::StaticSolidMap, mask::SolidMask>::new(
+                    cprov::ManualMode::new(),
+                    cprov::StaticSolidMap::new(color::Color::white()),
+                    mask::SolidMask::new(),
+                ),
             white_pulse: Envelope::new_pulse(Duration::from_millis(1800)),
             select_mode: false,
             active_mode: Mode::ManualMode,
@@ -79,7 +84,11 @@ impl State {
     }
 
     pub fn manual_mode(&mut self) -> &mut cprov::ManualMode {
-        &mut self.manual_mode
+        &mut self.manual_mode.map_0
+    }
+
+    pub fn white_mask(&mut self) -> &mut mask::SolidMask {
+        &mut self.manual_mode.mask
     }
 
     pub fn set_select_mode(&mut self, active: bool) {
@@ -125,7 +134,9 @@ impl State {
 
     pub fn get_color(&self, pos: &coord::Coordinate) -> color::Color {
         if self.select_mode {
-            self.active_mode.get_color().mask(self.white_pulse.get_current_value())
+            self.active_mode
+                .get_color()
+                .mask(self.white_pulse.get_current_value())
         } else {
             let mut color = match self.active_mode {
                 Mode::OffMode => color::Color::black(),

@@ -124,9 +124,8 @@ fn get_mode_from_controller(controller: &Controller) -> Option<Mode> {
 fn get_color_from_controller(controller: &Controller) -> Option<Color> {
     if controller.right_pos().length() > 0.75 {
         let hue = controller.right_pos().hue_from_angle().unwrap();
-        let saturation = 1. - controller.right_trigger();
         let value = 1. - controller.left_trigger();
-        Some(Color::from(Hsv::new(hue, saturation, value)))
+        Some(Color::from(Hsv::new(hue, 1., value)))
     } else {
         None
     }
@@ -194,6 +193,7 @@ impl StateUpdater {
             match s.get_active_mode() {
                 Mode::OffMode => (), // no controls need to be set
                 Mode::ManualMode => {
+                    s.white_mask().set_val(controller.right_trigger());
                     if !controller.is_pressed(Button::Circle) {
                         // decide if a color should be set
                         match get_color_from_controller(controller) {

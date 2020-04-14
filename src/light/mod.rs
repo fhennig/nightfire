@@ -1,8 +1,8 @@
-mod color;
-mod coord;
-mod envelope;
+pub mod color;
+pub mod coord;
+pub mod envelope;
 pub mod cprov;
-mod mask;
+pub mod mask;
 mod state;
 
 pub use color::Color;

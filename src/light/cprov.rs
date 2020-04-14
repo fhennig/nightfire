@@ -28,9 +28,9 @@ impl ColorMap for StaticSolidMap {
 /// A mix map. Takes two color maps, and mixes them according to a
 /// mask.
 pub struct MixMap<C1, C2, M> {
-    map_0: C1,
-    map_1: C2,
-    mask: M,
+    pub map_0: C1,
+    pub map_1: C2,
+    pub mask: M,
 }
 
 impl<C1, C2, M> MixMap<C1, C2, M> {
