@@ -180,16 +180,16 @@ impl StateUpdater {
             }
             // color rotations
             if controller.was_pressed(Button::Right) {
-                s.manual_mode.flip_h();
+                s.manual_mode().flip_h();
             }
             if controller.was_pressed(Button::Up) {
-                s.manual_mode.flip_v();
+                s.manual_mode().flip_v();
             }
             if controller.was_pressed(Button::Left) {
-                s.manual_mode.rotate_ccw();
+                s.manual_mode().rotate_ccw();
             }
             if controller.was_pressed(Button::Down) {
-                s.manual_mode.rotate_cw();
+                s.manual_mode().rotate_cw();
             }
             match s.get_active_mode() {
                 Mode::OffMode => (), // no controls need to be set
@@ -200,13 +200,13 @@ impl StateUpdater {
                             Some(color) => {
                                 // decide where to set
                                 if controller.is_pressed(Button::L1) {
-                                    s.manual_mode.set_major_diag(color);
+                                    s.manual_mode().set_major_diag(color);
                                 }
                                 if controller.is_pressed(Button::R1) {
-                                    s.manual_mode.set_minor_diag(color);
+                                    s.manual_mode().set_minor_diag(color);
                                 }
                                 match get_quad_from_controller(controller) {
-                                    Some(quad) => s.manual_mode.set_color(quad, color),
+                                    Some(quad) => s.manual_mode().set_color(quad, color),
                                     None => (),
                                 }
                             }

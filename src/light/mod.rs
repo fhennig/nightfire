@@ -12,3 +12,5 @@ pub use coord::Coordinate;
 pub use coord::Quadrant;
 pub use state::Mode;
 pub use state::State;
+pub use mask::Mask;
+

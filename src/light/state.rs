@@ -45,7 +45,7 @@ impl Mode {
 }
 
 pub struct State {
-    pub manual_mode: ManualMode,
+    manual_mode: ManualMode,
     select_mode: bool,
     white_pulse: Envelope,
     active_mode: Mode,
@@ -79,6 +79,10 @@ impl State {
             music_mask: mask::ActivatableMask::new(mask::SolidMask::new(), false),
             pulse_mask: mask::ActivatableMask::new(mask::EnvMask::new_random_pulse(), false),
         }
+    }
+
+    pub fn manual_mode(&mut self) -> &mut ManualMode {
+        &mut self.manual_mode
     }
 
     pub fn set_select_mode(&mut self, active: bool) {
