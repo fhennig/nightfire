@@ -1,7 +1,7 @@
 mod color;
 mod coord;
 mod envelope;
-mod manual;
+mod cprov;
 mod mask;
 mod state;
 

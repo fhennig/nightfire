@@ -2,7 +2,7 @@ use crate::light::color;
 use crate::light::ColorsExt;
 use crate::light::coord;
 use crate::light::envelope::Envelope;
-use crate::light::manual;
+use crate::light::cprov::ManualMode;
 use crate::light::mask::{self, Mask};
 use std::time::Duration;
 
@@ -45,7 +45,7 @@ impl Mode {
 }
 
 pub struct State {
-    pub manual_mode: manual::ManualMode,
+    pub manual_mode: ManualMode,
     select_mode: bool,
     white_pulse: Envelope,
     active_mode: Mode,
@@ -62,7 +62,7 @@ pub struct State {
 
 impl State {
     pub fn new() -> State {
-        let man_mode = manual::ManualMode::new();
+        let man_mode = ManualMode::new();
         // set activate
         let active_mode = Mode::ManualMode;
         State {
