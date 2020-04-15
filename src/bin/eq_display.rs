@@ -1,8 +1,8 @@
 use clap::{App, Arg};
-use lumi::audio::jack;
-use lumi::audio::SignalProcessor;
-use lumi::conf;
-use lumi::ui::eq;
+use nightfire::audio::jack;
+use nightfire::audio::SignalProcessor;
+use nightfire::conf;
+use nightfire::ui::eq;
 
 fn main() {
     // argparsing

@@ -1,11 +1,11 @@
 use clap::{App, Arg, ArgMatches};
-use lumi::audio::{self, jack};
-use lumi::conf::Conf;
-use lumi::light::State;
-use lumi::piblaster::start_piblaster_thread;
-use lumi::sixaxis::read_controller;
-use lumi::sixaxis::state_updater::StateUpdater;
-use lumi::ui::piston::run_piston_thread;
+use nightfire::audio::{self, jack};
+use nightfire::conf::Conf;
+use nightfire::light::State;
+use nightfire::piblaster::start_piblaster_thread;
+use nightfire::sixaxis::read_controller;
+use nightfire::sixaxis::state_updater::StateUpdater;
+use nightfire::ui::piston::run_piston_thread;
 use std::sync::{Arc, Mutex};
 use std::{error, thread, time};
 
@@ -38,7 +38,7 @@ impl jack::ValsHandler for AudioStateUpdater {
         self.state.lock().unwrap().set_intensity(vals.low);
         /*
                         let mut state = self.state.lock().unwrap();
-                        let c1 = lumi::models::Color::new(
+                        let c1 = nightfire::models::Color::new(
                             vals.low as f64,
                             // vals.mid as f64,
                             // (vals.mid - (vals.low * 0.2)).max(0.) as f64,
@@ -46,7 +46,7 @@ impl jack::ValsHandler for AudioStateUpdater {
                             (vals.mid.powi(2) - vals.high).max(0.) as f64,
                             0.,
                         );
-                        let c2 = lumi::models::Color::new(
+                        let c2 = nightfire::models::Color::new(
                             0.,
                             vals.mid.powi(2) as f64,
                             vals.high.powi(3) as f64,

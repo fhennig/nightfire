@@ -80,14 +80,6 @@ impl State {
         self.value_layer.mask.mask.mask2.set_pos(pos);
     }
 
-    pub fn get_value_mask_pos(&self) -> coord::Coordinate {
-        self.value_layer.mask.mask.mask2.position
-    }
-
-    pub fn is_off(&self) -> bool {
-        self.active_mode == Mode::OffMode
-    }
-
     pub fn switch_music_mode(&mut self) {
         self.music_mask.switch_active();
     }
@@ -99,6 +91,18 @@ impl State {
     pub fn set_intensity(&mut self, intensity: f32) {
         self.music_mask.mask.set_val(intensity.into());
     }
+
+    // inspection functions for debug UI
+
+    pub fn get_value_mask_pos(&self) -> coord::Coordinate {
+        self.value_layer.mask.mask.mask2.position
+    }
+
+    pub fn is_off(&self) -> bool {
+        self.active_mode == Mode::OffMode
+    }
+
+    // color creation
 
     fn get_basecolor(&self, pos: &coord::Coordinate) -> color::Color {
         match self.active_mode {

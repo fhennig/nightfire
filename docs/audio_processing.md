@@ -11,36 +11,11 @@ Interfaces with JACK audio, and can take any audio stream.  It's
 suggested to use Carla with it to do some audio processing, and pipe
 it into this software afterwards.
 
-
-## TODO
-
-Problem: the microphone has a lot of static noise.
--> Try using --pcm, might solve interferance with sound and
-pi-blaster.
-
-Also try using waiting time of 16.6ms to get to ~60fps.
-
-I did write a piblaster output module and managed to compile it all
-for the rpi.  I hardcoded the connection and did it without carla.
-
-The result was that it was laggy.  I still have to check the exact fps
-that pi-blaster supports, but I think it is not that high.  I need
-60fps at least.  I tried 10, that worked, but 100 was laggy.
-
-Maybe next try the rust library for interfacing and check the
-permissions it needs to run.  Running as sudo would be annoying.
-
-Maybe, if I want to make it all work with midi anyways, I might as
-well drop the audio processing for now and take the signal straight
-from the DJ software.
-
-
 ## Jack, Carla, Midi
 
 Currently the project registers itself as a jack client and connects
 to an audio stream, which it processes and then displays in a variety
-of ways.  The clients it connects to are hardcoded at compile time
-(e.g. system:capture_1).
+of ways.
 
 ### Modularizing
 
