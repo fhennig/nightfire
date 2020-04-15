@@ -1,23 +1,37 @@
 use prost::Message;
+mod beats;
 
-/// The beats module is loaded from the proto file.
-pub mod beats {
-    include!(concat!(env!("OUT_DIR"), "/beats.rs"));
+/// Takes a beat grid and returns the BPM and frame offset if present.
+fn bpm_offset(beats: &beats::BeatGrid) -> Option<(f64, i32)> {
+    if let Some(bpm) = beats.bpm.map(|bpm| bpm.bpm).flatten() {
+        if let Some(offset) = beats.first_beat.map(|beat| beat.frame_position).flatten() {
+            return Some((bpm, offset));
+        }
+    }
+    None
 }
 
 fn main() {
     let conn = sqlite::open("/home/felix/.mixxx/mixxxdb.sqlite").unwrap();
     let mut curr = conn
-        .prepare("SELECT title, beats FROM library;")
+        .prepare(
+            "
+            SELECT li.title, li.beats, lo.location FROM library li, track_locations lo
+            WHERE beats IS NOT NULL
+              AND li.location = lo.id
+              AND lo.location IS NOT NULL
+              AND li.title IS NOT NULL
+            ;",
+        )
         .unwrap()
         .cursor();
     while let Some(vals) = curr.next().unwrap() {
-        let title = vals[0].as_string();
-        let beats = vals[1].as_binary();
-        if beats.is_none() || title.is_none() {
-            continue;
+        let title = vals[0].as_string().unwrap();
+        let beats = vals[1].as_binary().unwrap();
+        let loc = vals[2].as_string().unwrap();
+        let beats = beats::BeatGrid::decode(beats).unwrap();
+        if let Some((bpm, offset)) = bpm_offset(&beats) {
+            println!("{:?} :: {:?} :: {:?} :: {:?}", title, bpm, offset, loc);
         }
-        let beats = beats::BeatGrid::decode(beats.unwrap());
-        println!("{:?} :: {:?}", title.unwrap(), beats);
     }
 }
