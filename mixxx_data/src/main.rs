@@ -1,9 +1,9 @@
 mod beats;
 use prost::Message;
-use simplemad::Decoder;
+use rodio::Source;
 use std::fs::File;
 use std::path::Path;
-use std::time::Duration;
+use std::io::BufReader;
 
 /// Takes a beat grid and returns the BPM and frame offset if present.
 /// The frame_offset is in frames of the file.
@@ -44,14 +44,8 @@ fn main() {
         if count == 50 {
             let path = Path::new(loc);
             let file = File::open(&path).unwrap();
-            let headers = Decoder::decode_headers(file).unwrap();
-            let duration = headers
-                .filter_map(|r| match r {
-                    Ok(f) => Some(f.duration),
-                    Err(_) => None,
-                })
-                .fold(Duration::new(0, 0), |acc, dtn| acc + dtn);
-            println!("{:?}", duration);
+            let source = rodio::Decoder::new(BufReader::new(file)).unwrap();
+            println!("sample_rate: {}", source.sample_rate());
             break;
         }
     }

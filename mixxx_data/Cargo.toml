@@ -9,4 +9,4 @@ edition = "2018"
 [dependencies]
 sqlite = "0.24"
 prost = "0.6"
-simplemad = "0.9"
+rodio = "0.11.0"
