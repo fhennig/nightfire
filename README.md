@@ -1,6 +1,6 @@
-# lumi
+# nightfire
 
-`lumi` is an audio to light project.
+`nightfire` is an audio to light project.
 
 At the moment it consists of a server that runs on a Raspberry Pi and
 controls GPIO attached RGB lights.  It reads input from a playstation
@@ -50,7 +50,7 @@ sudo apt install libudev-dev:armhf libfox-1.6-dev:armhf
 To deploy on the Raspberry Pi, the software needs to be compiled for
 the ARM architecture.
 
-    cargo build --release --target armv7-unknown-linux-gnueabihf --bin lumi_server
+    cargo build --release --target armv7-unknown-linux-gnueabihf --bin nightfire_server
     
     
 ### System Dependencies
@@ -60,7 +60,7 @@ These things need to be installed on the Raspberry Pi.
 - `pi-blaster`: Is needed to set the pins, controlling the LEDs.
   pi-blaster can be found on
   [github](https://github.com/sarfata/pi-blaster)
-- `libjack0`: This dependency is required because lumi is compiled
+- `libjack0`: This dependency is required because nightfire is compiled
   with jack support.  You don't actually need to install jack if you
   don't want to do audio processing, but the library still needs to be
   there.  Can be installed with `sudo apt install libjack0`.
@@ -68,22 +68,22 @@ These things need to be installed on the Raspberry Pi.
 
 ### Installation
 
-The binary and config file (`conf.yaml`) needs to be in `/opt/lumi`.
+The binary and config file (`conf.yaml`) needs to be in `/opt/nightfire`.
 
 #### systemd
 
-put the following in `/etc/systemd/system/lumi.service`:
+put the following in `/etc/systemd/system/nightfire.service`:
 
     [Unit]
-    Description=The Lumi light server
+    Description=The Nightfire light server
     After=pi-blaster.service
     Requires=pi-blaster.service
     
     [Service]
     Type=simple
     Environment=RUST_BACKTRACE=1
-    WorkingDirectory=/opt/lumi
-    ExecStart=/opt/lumi/lumi
+    WorkingDirectory=/opt/nightfire
+    ExecStart=/opt/nightfire/nightfire
     
     [Install]
     WantedBy=multi-user.target
