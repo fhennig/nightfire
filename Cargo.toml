@@ -2,4 +2,5 @@
 
 members = [
     "nightfire",
+    "mixxx_data",
 ]
