@@ -151,11 +151,9 @@ impl StateUpdater {
                 s.switch_music_mode();
             }
             // overall brightness mask
-            s.value_mask
-                .set_active(controller.is_pressed(Button::Circle));
-            s.value_mask.mask.mask1.set_val(controller.left_trigger());
-            // position mask handling
-            s.value_mask.mask.mask2.set_pos(controller.left_pos());
+            s.set_value_mask_active(controller.is_pressed(Button::Circle));
+            s.set_value_mask_base(controller.left_trigger());
+            s.set_value_mask_pos(controller.left_pos());
             // pulse mode
             if controller.was_pressed(Button::Triangle) {
                 s.switch_pulse_mode();
@@ -177,7 +175,7 @@ impl StateUpdater {
                 Mode::OffMode => (), // no controls need to be set
                 Mode::RainbowMode => (),
                 Mode::ManualMode => {
-                    s.white_mask().set_val(controller.right_trigger());
+                    s.white_layer().mask.set_val(1. - controller.right_trigger());
                     if !controller.is_pressed(Button::Circle) {
                         // decide if a color should be set
                         match get_color_from_controller(controller) {

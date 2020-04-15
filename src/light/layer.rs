@@ -1,6 +1,6 @@
-use crate::light::{Coordinate, Color};
+use crate::light::{Coordinate, Color, ColorsExt};
 use crate::light::cprov::{ColorMap, StaticSolidMap};
-use crate::light::mask::Mask;
+use crate::light::mask::{Mask, ActivatableMask};
 use palette::Mix;
 
 /// A color map layer is similar to a color map.  However, a layer can
@@ -19,7 +19,7 @@ pub trait ColorMapLayer {
 /// fully transparent.
 pub struct MaskedColorMapLayer<C, M> {
     map: C,
-    mask: M,
+    pub mask: M,
 }
 
 impl<C, M> ColorMapLayer for MaskedColorMapLayer<C, M>
@@ -36,13 +36,25 @@ where
 /// a mask.
 pub type SolidLayer<M> = MaskedColorMapLayer<StaticSolidMap, M>;
 
+pub type MaskLayer<M> = SolidLayer<ActivatableMask<M>>;
+
 pub struct Layers;
 
 impl Layers {
+    /// Creates a layer with a solid color and a given mask.
     pub fn new_solid<M: Mask>(color: Color, mask: M) -> SolidLayer<M> {
         MaskedColorMapLayer::<StaticSolidMap, M> {
             map: StaticSolidMap::new(color),
             mask: mask,
+        }
+    }
+
+    /// Creates a black layer with an activatable mask.  The mask is
+    /// off by default.
+    pub fn new_mask<M: Mask>(mask: M) -> MaskLayer<M> {
+        MaskedColorMapLayer::<StaticSolidMap, ActivatableMask<M>> {
+            map: StaticSolidMap::new(Color::black()),
+            mask: ActivatableMask::<M>::new(mask, false),
         }
     }
 }

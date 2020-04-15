@@ -67,7 +67,7 @@ pub fn run_piston_thread(state: Arc<Mutex<li::State>>) {
                 g,
             );
 
-            let position = state.lock().unwrap().value_mask.mask.mask2.position;
+            let position = state.lock().unwrap().get_value_mask_pos();
             let x = n + position.0 * n;
             let y = n + position.1 * -n; // invert
 
