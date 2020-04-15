@@ -105,22 +105,6 @@ pub struct StateUpdater {
     controller: Controller,
 }
 
-/// A function for the selection mode.  Looks at both sticks and gets
-/// a mode from that.
-fn get_mode_from_controller(controller: &Controller) -> Option<Mode> {
-    if controller.left_pos().length() >= 0.75 {
-        Some(Mode::from_angle(
-            controller.left_pos().angle().unwrap(),
-        ))
-    } else if controller.right_pos().length() >= 0.75 {
-        Some(Mode::from_angle(
-            controller.right_pos().angle().unwrap(),
-        ))
-    } else {
-        None
-    }
-}
-
 fn get_color_from_controller(controller: &Controller) -> Option<Color> {
     if controller.right_pos().length() > 0.75 {
         let hue = controller.right_pos().hue_from_angle().unwrap();
@@ -153,11 +137,13 @@ impl StateUpdater {
     fn update_state(&self, controller: &Controller) {
         let mut s = self.state.lock().unwrap();
         // select mode
-        s.set_select_mode(controller.is_pressed(Button::PS));
-        if s.is_select_mode() {
-            match get_mode_from_controller(controller) {
-                Some(mode) => s.set_active_mode(mode),
-                None => (),
+        if controller.is_pressed(Button::PS) {
+            if controller.is_pressed(Button::Up) {
+                s.set_active_mode(Mode::ManualMode);
+            } else if controller.is_pressed(Button::Down) {
+                s.set_active_mode(Mode::OffMode);
+            } else if controller.is_pressed(Button::Left) {
+                s.set_active_mode(Mode::RainbowMode);
             }
         } else {
             // activate/deactivate music mode with the cross button
@@ -174,9 +160,6 @@ impl StateUpdater {
             if controller.was_pressed(Button::Triangle) {
                 s.switch_pulse_mode();
             }
-            if controller.was_pressed(Button::Square) {
-                s.switch_rainbow();
-            }
             // color rotations
             if controller.was_pressed(Button::Right) {
                 s.manual_mode().flip_h();
@@ -192,6 +175,7 @@ impl StateUpdater {
             }
             match s.get_active_mode() {
                 Mode::OffMode => (), // no controls need to be set
+                Mode::RainbowMode => (),
                 Mode::ManualMode => {
                     s.white_mask().set_val(controller.right_trigger());
                     if !controller.is_pressed(Button::Circle) {

@@ -1,10 +1,8 @@
 use crate::light::color;
 use crate::light::coord;
 use crate::light::cprov::{self, ColorMap};
-use crate::light::envelope::Envelope;
 use crate::light::mask::{self, Mask};
 use crate::light::ColorsExt;
-use std::time::Duration;
 
 /// The overall mode.  There are a couple of high level modes.  Should
 /// the lights be off?  Should a be a constant setting?  Should a be
@@ -13,45 +11,14 @@ use std::time::Duration;
 pub enum Mode {
     OffMode,
     ManualMode,
-}
-
-impl Mode {
-    /// takes a number in [-1, 1) and returns a number, which circle
-    /// segment it was.  Hard coded for six segments for now.
-    pub fn from_angle(angle: f64) -> Mode {
-        if angle < -0.8333 {
-            Mode::OffMode
-        } else if angle < -0.5 {
-            Mode::ManualMode
-        } else if angle < -0.1666 {
-            Mode::ManualMode
-        } else if angle < 0.1666 {
-            Mode::OffMode
-        } else if angle < 0.5 {
-            Mode::ManualMode
-        } else if angle < 0.8333 {
-            Mode::ManualMode
-        } else {
-            Mode::OffMode
-        }
-    }
-
-    fn get_color(&self) -> color::Color {
-        match self {
-            Mode::OffMode => color::Color::blue(),
-            Mode::ManualMode => color::Color::yellow(),
-        }
-    }
+    RainbowMode,
 }
 
 pub struct State {
+    // color source
     manual_mode: cprov::MixMap<cprov::ManualMode, cprov::StaticSolidMap, mask::SolidMask>,
-    select_mode: bool,
-    white_pulse: Envelope,
-    active_mode: Mode,
-    // rainbow
     rainbow: color::Rainbow,
-    is_rainbow: bool,
+    active_mode: Mode,
     // masks
     /// The value mask is a full mask, overall brightness
     pub value_mask: mask::ActivatableMask<mask::AddMask<mask::SolidMask, mask::PosMask>>,
@@ -69,11 +36,9 @@ impl State {
                     cprov::StaticSolidMap::new(color::Color::white()),
                     mask::SolidMask::new(),
                 ),
-            white_pulse: Envelope::new_pulse(Duration::from_millis(1800)),
-            select_mode: false,
-            active_mode: Mode::ManualMode,
             rainbow: color::Rainbow::new(),
-            is_rainbow: false,
+            active_mode: Mode::ManualMode,
+            // masks
             value_mask: mask::ActivatableMask::new(
                 mask::AddMask::new(mask::SolidMask::new(), mask::PosMask::new()),
                 false,
@@ -89,19 +54,6 @@ impl State {
 
     pub fn white_mask(&mut self) -> &mut mask::SolidMask {
         &mut self.manual_mode.mask
-    }
-
-    pub fn set_select_mode(&mut self, active: bool) {
-        if self.select_mode != active {
-            self.select_mode = active;
-            if self.select_mode {
-                self.white_pulse.reset();
-            }
-        }
-    }
-
-    pub fn is_select_mode(&self) -> bool {
-        self.select_mode
     }
 
     pub fn set_active_mode(&mut self, mode: Mode) {
@@ -124,34 +76,23 @@ impl State {
         self.pulse_mask.switch_active();
     }
 
-    pub fn switch_rainbow(&mut self) {
-        self.is_rainbow = !self.is_rainbow;
-    }
-
     pub fn set_intensity(&mut self, intensity: f32) {
         self.music_mask.mask.set_val(intensity.into());
     }
 
-    pub fn get_color(&self, pos: &coord::Coordinate) -> color::Color {
-        if self.select_mode {
-            self.active_mode
-                .get_color()
-                .mask(self.white_pulse.get_current_value())
-        } else {
-            let mut color = match self.active_mode {
-                Mode::OffMode => color::Color::black(),
-                Mode::ManualMode => {
-                    if self.is_rainbow {
-                        self.rainbow.get_color()
-                    } else {
-                        self.manual_mode.get_color(pos)
-                    }
-                }
-            };
-            color = self.music_mask.get_masked_color(&pos, color);
-            color = self.value_mask.get_masked_color(&pos, color);
-            color = self.pulse_mask.get_masked_color(&pos, color);
-            color
+    fn get_basecolor(&self, pos: &coord::Coordinate) -> color::Color {
+        match self.active_mode {
+            Mode::OffMode => color::Color::black(),
+            Mode::ManualMode => self.manual_mode.get_color(pos),
+            Mode::RainbowMode => self.rainbow.get_color(),
         }
+    }
+
+    pub fn get_color(&self, pos: &coord::Coordinate) -> color::Color {
+        let mut color = self.get_basecolor(pos);
+        color = self.music_mask.get_masked_color(&pos, color);
+        color = self.value_mask.get_masked_color(&pos, color);
+        color = self.pulse_mask.get_masked_color(&pos, color);
+        color
     }
 }
