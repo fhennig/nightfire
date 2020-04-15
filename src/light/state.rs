@@ -1,6 +1,7 @@
 use crate::light::color;
 use crate::light::coord;
 use crate::light::cprov::{self, ColorMap};
+use crate::light::layer::{ColorMapLayer, Layers, SolidLayer};
 use crate::light::mask::{self, Mask};
 use crate::light::ColorsExt;
 
@@ -19,6 +20,8 @@ pub struct State {
     manual_mode: cprov::MixMap<cprov::ManualMode, cprov::StaticSolidMap, mask::SolidMask>,
     rainbow: color::Rainbow,
     active_mode: Mode,
+    // white layer
+    white_layer: SolidLayer<mask::SolidMask>,
     // masks
     /// The value mask is a full mask, overall brightness
     pub value_mask: mask::ActivatableMask<mask::AddMask<mask::SolidMask, mask::PosMask>>,
@@ -38,6 +41,8 @@ impl State {
                 ),
             rainbow: color::Rainbow::new(),
             active_mode: Mode::ManualMode,
+            // ...
+            white_layer: Layers::new_solid(color::Color::white(), mask::SolidMask::new()),
             // masks
             value_mask: mask::ActivatableMask::new(
                 mask::AddMask::new(mask::SolidMask::new(), mask::PosMask::new()),
@@ -89,7 +94,8 @@ impl State {
     }
 
     pub fn get_color(&self, pos: &coord::Coordinate) -> color::Color {
-        let mut color = self.get_basecolor(pos);
+        let mut color = self.get_basecolor(&pos);
+        color = self.white_layer.get_color(&pos, color);
         color = self.music_mask.get_masked_color(&pos, color);
         color = self.value_mask.get_masked_color(&pos, color);
         color = self.pulse_mask.get_masked_color(&pos, color);
