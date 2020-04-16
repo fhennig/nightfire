@@ -1,6 +1,6 @@
 use clap::{App, Arg};
 use nightfire::audio::jack;
-use nightfire::audio::SignalProcessor;
+use nightfire_audio::SignalProcessor;
 use nightfire::conf;
 use nightfire::ui::eq;
 

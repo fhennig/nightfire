@@ -1,11 +1,6 @@
 //! This module creates 'semantic' values from audio frame buffers.
 //! Currently there is only a simple function that extracts the max
-//! sample from a frame.  Later on there will be FFT, filtering,
-//! creating intensity values for multiple frequency bands etc.
-//!
-//! Also currently the values are created only from the current frame,
-//! in the future instead there should be a processing struct that
-//! remembers a history of the signal to generate smoother curves.
+//! sample from a frame.
 use biquad as bq;
 use biquad::Biquad;
 use std::collections::VecDeque;

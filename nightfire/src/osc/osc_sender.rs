@@ -1,6 +1,6 @@
 use crate::osc::{encode, OscVal};
 use crate::sixaxis::{ControllerValsSink, ControllerValues};
-use crate::audio::MyValues;
+use nightfire_audio::MyValues;
 use std::net::{SocketAddrV4, UdpSocket};
 
 pub struct OscSender {

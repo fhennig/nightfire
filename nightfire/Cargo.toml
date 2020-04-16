@@ -7,6 +7,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# internal
+nightfire_audio = { path = "../nightfire_audio" }
 # commandline parsing
 clap = "2.33.0"
 # config file
@@ -26,7 +28,5 @@ piston_window = "0.107.0"
 hidapi = { version = "1.2.1", features = ["linux-static-hidraw"], default-features = false }
 # audio
 jack = "0.6"
-biquad = "0.3.1"
-statrs = "0.12"
 # network
 rosc = "0.3"

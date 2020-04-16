@@ -1,11 +1,12 @@
 use clap::{App, Arg, ArgMatches};
-use nightfire::audio::{self, jack};
+use nightfire::audio::jack;
 use nightfire::conf::Conf;
 use nightfire::light::State;
 use nightfire::piblaster::start_piblaster_thread;
 use nightfire::sixaxis::read_controller;
 use nightfire::sixaxis::state_updater::StateUpdater;
 use nightfire::ui::piston::run_piston_thread;
+use nightfire_audio as audio;
 use std::sync::{Arc, Mutex};
 use std::{error, thread, time};
 
