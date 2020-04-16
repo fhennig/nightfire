@@ -26,7 +26,7 @@ impl AudioStateUpdater {
                 3.,
                 100,
                 50.,
-                4.,
+                Some(4.),
             ),
         }
     }

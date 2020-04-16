@@ -22,7 +22,7 @@ fn main() {
     let client = jack::open_client("eq_display");
     let sample_rate = client.sample_rate() as f32;
     // prepare processor
-    let sig_proc = SignalProcessor::new(sample_rate, 20., 20_000., q, n_filters, 50., 0.3);
+    let sig_proc = SignalProcessor::new(sample_rate, 20., 20_000., q, n_filters, 50., Some(0.3));
     let mut proc = eq::EqViz::new(sig_proc);
     let state = proc.get_shared_vals();
     // get port from config

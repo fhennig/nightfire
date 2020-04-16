@@ -127,9 +127,12 @@ impl SignalFilter {
 }
 
 pub struct SignalProcessor {
-    /// The intensity history calculated from the last n buffers.
-    /// We push to the front (newest element at index 0).
+    /// The intensity history calculated from the last n buffers.  We
+    /// push to the front (newest element at index 0).
     hist: VecDeque<Sample>,
+    /// The length of the history in samples. If it is None, the
+    /// history is unlimited.
+    hist_len: Option<usize>,
     filter: SignalFilter,
     /// How many audio samples should go in a subsample
     subsample_frame_size: usize,
@@ -147,6 +150,8 @@ pub struct SignalProcessor {
  * 40, 120, 350, 1k, 3k, 5k, 12k
  */
 
+
+
 impl SignalProcessor {
     /// creates and initializes a new signal processor.
     /// The sample frequency must be given (typical value: 48,000Hz)
@@ -157,14 +162,14 @@ impl SignalProcessor {
         q: f32,
         n_filters: usize,
         fps: f32,
-        hist_len: f32,  // in seconds
+        hist_len: Option<f32>,  // in seconds
     ) -> SignalProcessor {
-        let history_len: usize = (fps * hist_len) as usize;
         let subsample_frame_size = (sample_freq / fps) as usize;
         let filter = SignalFilter::new(f_start, f_end, sample_freq, q, n_filters);
         let empty_sample = filter.null_sample();
         SignalProcessor {
-            hist: vec![empty_sample; history_len].into_iter().collect(),
+            hist: vec![empty_sample].into_iter().collect(),
+            hist_len: hist_len.map(|hist_secs| (fps * hist_secs) as usize),
             filter: filter,
             subsample_frame_size: subsample_frame_size,
             missing_audio_samples: subsample_frame_size,
@@ -189,11 +194,16 @@ impl SignalProcessor {
     fn register_sample_added(&mut self) {
         self.missing_audio_samples -= 1;
         if self.missing_audio_samples == 0 {
-            // remove oldest element and push empty one
-            self.hist.pop_back();
+            // current sample is full.  Push a new empty one.
             self.hist.push_front(self.filter.null_sample());
             // reset sample counter
             self.missing_audio_samples = self.subsample_frame_size;
+            // if we have a max hist len and we have too many items, pop one.
+            if let Some(max_len) = self.hist_len {
+                if self.hist.len() > max_len {
+                    self.hist.pop_back();
+                }
+            }
         }
     }
 
