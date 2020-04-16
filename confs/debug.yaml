@@ -1,5 +1,5 @@
 pi-blaster: /dev/null
-audio-in: off
+audio-in: system:capture_1
 lights:
   Top:
     r: 14
