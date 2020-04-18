@@ -14,6 +14,5 @@ sqlite = "0.24"
 prost = "0.6"
 # audio file loading
 rodio = "0.11.0"
-# saving to numpy format
-npy = "0.4"
-npy-derive = "0.4"
+# saving to pickle format
+serde-pickle = "0.6"

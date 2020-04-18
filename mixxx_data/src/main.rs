@@ -55,7 +55,7 @@ fn load_track_info(db_file: String) -> Vec<TrackInfo> {
               AND lo.location IS NOT NULL
               AND li.title IS NOT NULL
               AND li.timesplayed > 0
-              AND li.artist LIKE '%astr%'
+              AND li.title LIKE '%dominator%'
             ;",
         )
         .unwrap()
@@ -87,9 +87,10 @@ fn read_track(track_info: &TrackInfo, out_file: String) {
         processor.add_sample(&sample);
     }
     let hist = processor.get_hist();
-    let hist: Vec<f32> = hist.iter().map(|s| s.get_vals_cloned()).collect::<Vec<Vec<f32>>>().concat();
+    let hist = hist.iter().map(|s| s.get_vals_cloned()).collect::<Vec<Vec<f32>>>();
     println!("{}", hist.len());
-    npy::to_file(out_file, hist);
+    let mut file = File::create(out_file).unwrap();
+    serde_pickle::to_writer(&mut file, &hist, true);
 }
 
 fn main() {
@@ -98,9 +99,9 @@ fn main() {
     let tracks: Vec<TrackInfo> = tracks
         .into_iter()
         .filter(|t| t.loc().exists())
-        .filter(|t| t.bpm == 138.)
+        // .filter(|t| t.bpm == 138.)
         .collect();
-    println!("{}", tracks[2].title);
-    read_track(&tracks[2], "adhana.npy".to_string());
+    println!("{}", tracks[0].title);
+    read_track(&tracks[0], "dominator.pickle".to_string());
     println!("{} total", tracks.len());
 }
