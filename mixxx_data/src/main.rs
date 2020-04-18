@@ -2,6 +2,7 @@ mod beats;
 use nightfire_audio as nfa;
 use prost::Message;
 use rodio::Source;
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
@@ -55,7 +56,7 @@ fn load_track_info(db_file: String) -> Vec<TrackInfo> {
               AND lo.location IS NOT NULL
               AND li.title IS NOT NULL
               AND li.timesplayed > 0
-              AND li.title LIKE '%dominator%'
+              AND li.artist LIKE '%amelie%'
             ;",
         )
         .unwrap()
@@ -74,23 +75,64 @@ fn load_track_info(db_file: String) -> Vec<TrackInfo> {
     tracks
 }
 
-fn read_track(track_info: &TrackInfo, out_file: String) {
-    let file = File::open(track_info.loc()).unwrap();
-    let source = rodio::Decoder::new(BufReader::new(file)).unwrap();
+/// Generates targets for an offset, bpm and subsample size.
+fn get_targets(
+    track_info: &TrackInfo,
+    sample_freq: f64,
+    subsample_size: usize,
+    len: usize,
+) -> Vec<bool> {
+    let stepsize = (60. / track_info.bpm) * sample_freq;
+    let offset = (track_info.offset as f64).rem_euclid(stepsize);
+    let beat_grid: Vec<bool> = (0..len)
+        .map(|i| ((i as f64) - offset).rem_euclid(stepsize) < 1.)
+        .collect();
+    // collapse into subsamples
+    beat_grid[..]
+        .chunks(subsample_size)
+        .map(|chunk| chunk.iter().any(|x| *x))
+        .collect()
+}
+
+/// Write the info into a pickle file with name out_file
+fn write_out(out_file: String, hist: &Vec<Vec<f32>>, target: &Vec<bool>) {
+    let mut file = File::create(out_file).expect("Could not create file.");
+    let out_struct = (("hist", hist), ("target", target));
+    serde_pickle::to_writer(&mut file, &out_struct, true);
+}
+
+/// Reads the track from file, processes it, generates targets and
+/// writes both to a pickle file named out_file.
+fn process_track(track_info: &TrackInfo, out_file: String) {
+    let file = File::open(track_info.loc()).expect("Could not open track file.");
+    let source = rodio::Decoder::new(BufReader::new(file)).expect("Could not parse track file.");
+    let sample_rate = source.sample_rate();
     println!("sample_rate: {}", source.sample_rate());
     let mut processor =
-        nfa::SignalProcessor::new(source.sample_rate() as f32, 20., 20_000., 3., 30, 50., None);
+        nfa::SignalProcessor::new(sample_rate as f32, 20., 20_000., 3., 30, 50., None);
     let channels = source.channels() as usize;
     let ch1 = source.step_by(channels);
+    let mut samples = 0;
     for sample in ch1 {
         let sample = (sample as f32) / (i16::max_value() as f32);
         processor.add_sample(&sample);
+        samples += 1;
     }
-    let hist = processor.get_hist();
-    let hist = hist.iter().map(|s| s.get_vals_cloned()).collect::<Vec<Vec<f32>>>();
+    let hist = processor
+        .get_hist()
+        .iter()
+        .map(|s| s.get_vals_cloned())
+        .collect::<Vec<Vec<f32>>>();
     println!("{}", hist.len());
-    let mut file = File::create(out_file).unwrap();
-    serde_pickle::to_writer(&mut file, &hist, true);
+    // generate targets for the history
+    let target = get_targets(
+        track_info,
+        sample_rate as f64,
+        processor.get_subsample_frame_size(),
+        samples,
+    );
+    // write file as pickle
+    write_out(out_file, &hist, &target);
 }
 
 fn main() {
@@ -102,6 +144,6 @@ fn main() {
         // .filter(|t| t.bpm == 138.)
         .collect();
     println!("{}", tracks[0].title);
-    read_track(&tracks[0], "dominator.pickle".to_string());
+    process_track(&tracks[0], "amelie.pickle".to_string());
     println!("{} total", tracks.len());
 }

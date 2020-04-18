@@ -178,6 +178,10 @@ impl SignalProcessor {
         }
     }
 
+    pub fn get_subsample_frame_size(&self) -> usize {
+        self.subsample_frame_size
+    }
+
     /// The audio_frame parameter is a view of a bufferslice from
     /// jack, which is 1024 or 512 floats big and represents a frame
     /// of samples.
