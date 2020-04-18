@@ -1,4 +1,5 @@
 mod beats;
+use nightfire_audio as nfa;
 use prost::Message;
 use rodio::Source;
 use std::fs::File;
@@ -54,6 +55,7 @@ fn load_track_info(db_file: String) -> Vec<TrackInfo> {
               AND lo.location IS NOT NULL
               AND li.title IS NOT NULL
               AND li.timesplayed > 0
+              AND li.artist LIKE '%astr%'
             ;",
         )
         .unwrap()
@@ -72,17 +74,33 @@ fn load_track_info(db_file: String) -> Vec<TrackInfo> {
     tracks
 }
 
+fn read_track(track_info: &TrackInfo, out_file: String) {
+    let file = File::open(track_info.loc()).unwrap();
+    let source = rodio::Decoder::new(BufReader::new(file)).unwrap();
+    println!("sample_rate: {}", source.sample_rate());
+    let mut processor =
+        nfa::SignalProcessor::new(source.sample_rate() as f32, 20., 20_000., 3., 30, 50., None);
+    let channels = source.channels() as usize;
+    let ch1 = source.step_by(channels);
+    for sample in ch1 {
+        let sample = (sample as f32) / (i16::max_value() as f32);
+        processor.add_sample(&sample);
+    }
+    let hist = processor.get_hist();
+    let hist: Vec<f32> = hist.iter().map(|s| s.get_vals_cloned()).collect::<Vec<Vec<f32>>>().concat();
+    println!("{}", hist.len());
+    npy::to_file(out_file, hist);
+}
+
 fn main() {
     let db_file = "/home/felix/.mixxx/mixxxdb.sqlite";
     let tracks = load_track_info(db_file.to_string());
     let tracks: Vec<TrackInfo> = tracks
         .into_iter()
         .filter(|t| t.loc().exists())
-        .filter(|t| t.bpm == 128.)
+        .filter(|t| t.bpm == 138.)
         .collect();
-    println!("{}", tracks[0].title);
-    // let file = File::open(&path).unwrap();
-    // let source = rodio::Decoder::new(BufReader::new(file)).unwrap();
-    // println!("sample_rate: {}", source.sample_rate());
+    println!("{}", tracks[2].title);
+    read_track(&tracks[2], "adhana.npy".to_string());
     println!("{} total", tracks.len());
 }

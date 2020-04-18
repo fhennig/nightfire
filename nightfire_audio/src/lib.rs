@@ -65,6 +65,10 @@ impl Sample {
             self.vals[i] = self.vals[i].max(other.vals[i]);
         }
     }
+
+    pub fn get_vals_cloned(&self) -> Vec<f32> {
+        self.vals.to_vec()
+    }
 }
 
 struct SignalFilter {
@@ -150,8 +154,6 @@ pub struct SignalProcessor {
  * 40, 120, 350, 1k, 3k, 5k, 12k
  */
 
-
-
 impl SignalProcessor {
     /// creates and initializes a new signal processor.
     /// The sample frequency must be given (typical value: 48,000Hz)
@@ -162,7 +164,7 @@ impl SignalProcessor {
         q: f32,
         n_filters: usize,
         fps: f32,
-        hist_len: Option<f32>,  // in seconds
+        hist_len: Option<f32>, // in seconds
     ) -> SignalProcessor {
         let subsample_frame_size = (sample_freq / fps) as usize;
         let filter = SignalFilter::new(f_start, f_end, sample_freq, q, n_filters);
@@ -181,10 +183,14 @@ impl SignalProcessor {
     /// of samples.
     pub fn add_audio_frame(&mut self, audio_frame: &[f32]) {
         for x in audio_frame {
-            let new_sample = self.filter.add_audio(x);
-            self.get_current_sample().merge_in(&new_sample);
-            self.register_sample_added();
+            self.add_sample(x);
         }
+    }
+
+    pub fn add_sample(&mut self, sample: &f32) {
+        let new_sample = self.filter.add_audio(sample);
+        self.get_current_sample().merge_in(&new_sample);
+        self.register_sample_added();
     }
 
     pub fn num_filters(&self) -> usize {
@@ -215,7 +221,7 @@ impl SignalProcessor {
         //1. - (1. / (1. + (-0.8 * (i as f32) + 5.).exp()))
         // TODO decay should be time dependent, not per sample.
         // 0.8f32.powi(i as i32)
-        let d = 0.1;  // 0.1 -> slow. 0.9 -> fast
+        let d = 0.1; // 0.1 -> slow. 0.9 -> fast
         (1. - d * (i as f32)).max(0.)
     }
 
@@ -243,5 +249,12 @@ impl SignalProcessor {
             //self.get_range_decayed(1_800., 3_500.),
             self.get_range_decayed(10_000., 22_000.), // cripsp
         )
+    }
+
+    /// returns the history back to front.  Expensive to call!!
+    pub fn get_hist(&self) -> Vec<Sample> {
+        let mut v = self.hist.iter().cloned().collect::<Vec<Sample>>();
+        v.reverse();
+        v
     }
 }
