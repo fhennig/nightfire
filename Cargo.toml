@@ -4,4 +4,5 @@ members = [
     "nightfire",
     "nightfire_audio",
     "mixxx_data",
+    "bpm_tapper",
 ]
