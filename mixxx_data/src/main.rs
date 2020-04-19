@@ -1,10 +1,10 @@
 #[macro_use]
 extern crate clap;
 mod beats;
+use dirs;
 use nightfire_audio as nfa;
 use prost::Message;
 use rodio::Source;
-use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
@@ -46,7 +46,7 @@ impl TrackInfo {
 /// Opens the mixxx db file and reads through the library.  Returns a
 /// list of track infos with tracks that have a least been played once
 /// and have a beat grid.
-fn load_track_info(db_file: String) -> Vec<TrackInfo> {
+fn load_track_info(db_file: PathBuf) -> Vec<TrackInfo> {
     let conn = sqlite::open(db_file).unwrap();
     let mut curr = conn
         .prepare(
@@ -104,7 +104,7 @@ fn write_out(out_file: String, track_info: &TrackInfo, hist: &Vec<Vec<f32>>, tar
         ("hist", hist),
         ("target", target),
     );
-    serde_pickle::to_writer(&mut file, &out_struct, true);
+    serde_pickle::to_writer(&mut file, &out_struct, true).expect("Failed writing file.");
 }
 
 /// Reads the track from file, processes it, generates targets and
@@ -146,16 +146,26 @@ fn get_args() -> clap::ArgMatches<'static> {
     (about: "Does awesome things")
     (@arg DB_FILE: --database
      +takes_value
-     default_value("/home/felix/.mixxx/mixxxdb.sqlite")
+     default_value("~/.mixxx/mixxxdb.sqlite")
      "Mixxx DB location")
     )
     .get_matches()
 }
 
+fn default_db_file() -> PathBuf {
+    let mut path = dirs::home_dir().expect("Could not get home dir.");
+    path.push(".mixxx");
+    path.push("mixxxdb.sqlite");
+    path
+}
+
 fn main() {
     let args = get_args();
-    let db_file = args.value_of("DB_FILE").unwrap();
-    let tracks = load_track_info(db_file.to_string());
+    let db_file = args
+        .value_of("DB_FILE")
+        .map(|s| PathBuf::from(s))
+        .unwrap_or(default_db_file());
+    let tracks = load_track_info(db_file);
     let tracks: Vec<TrackInfo> = tracks
         .into_iter()
         .filter(|t| t.loc().exists())
