@@ -47,7 +47,7 @@ impl TrackInfo {
 /// list of track infos with tracks that have a least been played once
 /// and have a beat grid.
 fn load_track_info(db_file: PathBuf) -> Vec<TrackInfo> {
-    let conn = sqlite::open(db_file).unwrap();
+    let conn = sqlite::open(db_file).expect("Could not open database file.");
     let mut curr = conn
         .prepare(
             "
@@ -60,7 +60,7 @@ fn load_track_info(db_file: PathBuf) -> Vec<TrackInfo> {
               AND li.timesplayed > 0
             ;",
         )
-        .unwrap()
+        .expect("Could not execute query on database.  Is the filename correct?")
         .cursor();
     let mut tracks: Vec<TrackInfo> = vec![];
     while let Some(vals) = curr.next().unwrap() {
@@ -146,8 +146,7 @@ fn get_args() -> clap::ArgMatches<'static> {
     (about: "Does awesome things")
     (@arg DB_FILE: --database
      +takes_value
-     default_value("~/.mixxx/mixxxdb.sqlite")
-     "Mixxx DB location")
+     "Mixxx DB location (default: ~/.mixxx/mixxxdb.sqlite)")
     )
     .get_matches()
 }
