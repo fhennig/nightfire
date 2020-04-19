@@ -56,7 +56,6 @@ fn load_track_info(db_file: String) -> Vec<TrackInfo> {
               AND lo.location IS NOT NULL
               AND li.title IS NOT NULL
               AND li.timesplayed > 0
-              AND li.artist LIKE '%amelie%'
             ;",
         )
         .unwrap()
@@ -95,9 +94,14 @@ fn get_targets(
 }
 
 /// Write the info into a pickle file with name out_file
-fn write_out(out_file: String, hist: &Vec<Vec<f32>>, target: &Vec<bool>) {
+fn write_out(out_file: String, track_info: &TrackInfo, hist: &Vec<Vec<f32>>, target: &Vec<bool>) {
     let mut file = File::create(out_file).expect("Could not create file.");
-    let out_struct = (("hist", hist), ("target", target));
+    let out_struct = (
+        ("title", &track_info.title),
+        ("bpm", track_info.bpm),
+        ("hist", hist),
+        ("target", target),
+    );
     serde_pickle::to_writer(&mut file, &out_struct, true);
 }
 
@@ -132,7 +136,7 @@ fn process_track(track_info: &TrackInfo, out_file: String) {
         samples,
     );
     // write file as pickle
-    write_out(out_file, &hist, &target);
+    write_out(out_file, &track_info, &hist, &target);
 }
 
 fn main() {
@@ -141,9 +145,11 @@ fn main() {
     let tracks: Vec<TrackInfo> = tracks
         .into_iter()
         .filter(|t| t.loc().exists())
-        // .filter(|t| t.bpm == 138.)
+        .filter(|t| t.bpm == 128.)
         .collect();
-    println!("{}", tracks[0].title);
-    process_track(&tracks[0], "amelie.pickle".to_string());
     println!("{} total", tracks.len());
+    for (i, track) in tracks.iter().enumerate() {
+        println!("{}", track.title);
+        process_track(&track, format!("data/{}.pickle", i));
+    }
 }
