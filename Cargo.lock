@@ -851,6 +851,7 @@ dependencies = [
 name = "mixxx_data"
 version = "0.1.0"
 dependencies = [
+ "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nightfire_audio 0.1.0",
  "prost 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rodio 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",

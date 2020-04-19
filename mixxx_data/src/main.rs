@@ -1,3 +1,5 @@
+#[macro_use]
+extern crate clap;
 mod beats;
 use nightfire_audio as nfa;
 use prost::Message;
@@ -139,8 +141,20 @@ fn process_track(track_info: &TrackInfo, out_file: String) {
     write_out(out_file, &track_info, &hist, &target);
 }
 
+fn get_args() -> clap::ArgMatches<'static> {
+    clap_app!(myapp =>
+    (about: "Does awesome things")
+    (@arg DB_FILE: --database
+     +takes_value
+     default_value("/home/felix/.mixxx/mixxxdb.sqlite")
+     "Mixxx DB location")
+    )
+    .get_matches()
+}
+
 fn main() {
-    let db_file = "/home/felix/.mixxx/mixxxdb.sqlite";
+    let args = get_args();
+    let db_file = args.value_of("DB_FILE").unwrap();
     let tracks = load_track_info(db_file.to_string());
     let tracks: Vec<TrackInfo> = tracks
         .into_iter()
