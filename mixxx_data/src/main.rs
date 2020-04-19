@@ -164,6 +164,9 @@ fn main() {
         .value_of("DB_FILE")
         .map(|s| PathBuf::from(s))
         .unwrap_or(default_db_file());
+    if !db_file.exists() {
+        panic!("Database file not found!");
+    }
     let tracks = load_track_info(db_file);
     let tracks: Vec<TrackInfo> = tracks
         .into_iter()
