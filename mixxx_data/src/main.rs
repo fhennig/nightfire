@@ -130,7 +130,7 @@ fn main() {
     let tracks: Vec<TrackInfo> = tracks
         .into_iter()
         .filter(|t| t.loc().exists())
-        .filter(|t| t.bpm == 128.)
+        .filter(|t| t.bpm == 110.)
         .collect();
     println!("{} total", tracks.len());
 

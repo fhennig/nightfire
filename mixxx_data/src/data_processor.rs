@@ -1,10 +1,10 @@
+use crate::track_info::TrackInfo;
 use crate::ProcessingParams;
 use rodio;
 use rodio::source::Source;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
-use crate::track_info::TrackInfo;
 
 /// Generates targets for an offset, bpm and subsample size.
 fn get_targets(
@@ -46,7 +46,12 @@ impl DataProcessor {
         result
     }
 
-    fn write_out(&self, track_info: &TrackInfo, hist: &Vec<Vec<f32>>, target: &Vec<bool>) {
+    fn write_out(
+        &self,
+        track_info: &TrackInfo,
+        hist: &Vec<Vec<f32>>,
+        target: &Vec<bool>,
+    ) -> String {
         // build file structure
         let loc = track_info.loc();
         let orig_file_str = loc.to_str().expect("Filename could not be encoded.");
@@ -57,14 +62,15 @@ impl DataProcessor {
             ("hist", hist),
             ("target", target),
         );
+        let path = self.get_out_path(&track_info);
         // open out file
-        let mut file =
-            File::create(self.get_out_path(&track_info)).expect("Could not create file.");
+        let mut file = File::create(&path).expect("Could not create file.");
         // write serialized
         serde_pickle::to_writer(&mut file, &out_struct, true).expect("Failed writing file.");
+        path.file_name().unwrap().to_str().unwrap().to_string()
     }
 
-    fn process_track(&self, track_info: &TrackInfo) {
+    fn process_track(&self, track_info: &TrackInfo) -> String {
         let file = File::open(track_info.loc()).expect("Could not open track file.");
         let source =
             rodio::Decoder::new(BufReader::new(file)).expect("Could not parse track file.");
@@ -93,14 +99,35 @@ impl DataProcessor {
             samples,
         );
         // write file as pickle
-        self.write_out(&track_info, &hist, &target);
+        self.write_out(&track_info, &hist, &target)
+    }
+
+    fn write_info_file(&self, track_files: &Vec<String>) {
+        let dict = (
+            ("f_low", self.params.low),
+            ("f_high", self.params.high),
+            ("q", self.params.q),
+            ("n_filters", self.params.n_filters),
+            ("rate", self.params.rate),
+            ("files", track_files),
+        );
+        let mut path = self.out_dir.to_owned();
+        path.push("info.pickle");
+        // open out file
+        let mut file = File::create(&path).expect("Could not create info file.");
+        // write serialized
+        serde_pickle::to_writer(&mut file, &dict, true).expect("Failed writing file.");
     }
 
     pub fn process_tracks(&self, tracks: &Vec<TrackInfo>) {
         // do processing
+        let mut track_files = vec![];
         for track in tracks {
             println!("{}", track.title);
-            self.process_track(&track);
+            let file = self.process_track(&track);
+            track_files.push(file);
         }
+        // write final info file
+        self.write_info_file(&track_files);
     }
 }
