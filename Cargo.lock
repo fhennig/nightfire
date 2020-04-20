@@ -161,6 +161,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "bpm_tapper"
 version = "0.1.0"
+dependencies = [
+ "piston_window 0.107.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "stoppable_thread 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "bytemuck"
