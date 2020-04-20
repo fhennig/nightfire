@@ -30,52 +30,84 @@ fn get_targets(
         .collect()
 }
 
-/// Write the info into a pickle file with name out_file
-fn write_out(out_file: String, track_info: &TrackInfo, hist: &Vec<Vec<f32>>, target: &Vec<bool>) {
-    let mut file = File::create(out_file).expect("Could not create file.");
-    let loc = track_info.loc();
-    let orig_file_str = loc.to_str().expect("Filename could not be encoded.");
-    let out_struct = (
-        ("title", &track_info.title),
-        ("bpm", track_info.bpm),
-        ("original_file", orig_file_str),
-        ("hist", hist),
-        ("target", target),
-    );
-    serde_pickle::to_writer(&mut file, &out_struct, true).expect("Failed writing file.");
+struct DataProcessor {
+    out_dir: PathBuf,
+    params: ProcessingParams,
 }
 
-/// Reads the track from file, processes it, generates targets and
-/// writes both to a pickle file named out_file.
-fn process_track(track_info: &TrackInfo, out_file: String, params: &ProcessingParams) {
-    let file = File::open(track_info.loc()).expect("Could not open track file.");
-    let source = rodio::Decoder::new(BufReader::new(file)).expect("Could not parse track file.");
-    let sample_rate = source.sample_rate();
-    println!("sample_rate: {}", source.sample_rate());
-    let mut processor = params.get_processor(sample_rate as f32);
-    let channels = source.channels() as usize;
-    let ch1 = source.step_by(channels);
-    let mut samples = 0;
-    for sample in ch1 {
-        let sample = (sample as f32) / (i16::max_value() as f32);
-        processor.add_sample(&sample);
-        samples += 1;
+impl DataProcessor {
+    pub fn new(out_dir: PathBuf, params: ProcessingParams) -> DataProcessor {
+        DataProcessor {
+            out_dir: out_dir,
+            params: params,
+        }
     }
-    let hist = processor
-        .get_hist()
-        .iter()
-        .map(|s| s.get_vals_cloned())
-        .collect::<Vec<Vec<f32>>>();
-    println!("{}", hist.len());
-    // generate targets for the history
-    let target = get_targets(
-        track_info,
-        sample_rate as f64,
-        processor.get_subsample_frame_size(),
-        samples,
-    );
-    // write file as pickle
-    write_out(out_file, &track_info, &hist, &target);
+
+    fn get_out_path(&self, track_info: &TrackInfo) -> PathBuf {
+        let loc = track_info.loc();
+        let filename = loc.file_stem().unwrap().to_str().unwrap();
+        let mut result = self.out_dir.to_owned();
+        result.push(format!("{}.{}", filename, "pickle"));
+        result
+    }
+
+    fn write_out(&self, track_info: &TrackInfo, hist: &Vec<Vec<f32>>, target: &Vec<bool>) {
+        // build file structure
+        let loc = track_info.loc();
+        let orig_file_str = loc.to_str().expect("Filename could not be encoded.");
+        let out_struct = (
+            ("title", &track_info.title),
+            ("bpm", track_info.bpm),
+            ("original_file", orig_file_str),
+            ("hist", hist),
+            ("target", target),
+        );
+        // open out file
+        let mut file =
+            File::create(self.get_out_path(&track_info)).expect("Could not create file.");
+        // write serialized
+        serde_pickle::to_writer(&mut file, &out_struct, true).expect("Failed writing file.");
+    }
+
+    fn process_track(&self, track_info: &TrackInfo) {
+        let file = File::open(track_info.loc()).expect("Could not open track file.");
+        let source =
+            rodio::Decoder::new(BufReader::new(file)).expect("Could not parse track file.");
+        let sample_rate = source.sample_rate();
+        println!("sample_rate: {}", source.sample_rate());
+        let mut processor = self.params.get_processor(sample_rate as f32);
+        let channels = source.channels() as usize;
+        let ch1 = source.step_by(channels);
+        let mut samples = 0;
+        for sample in ch1 {
+            let sample = (sample as f32) / (i16::max_value() as f32);
+            processor.add_sample(&sample);
+            samples += 1;
+        }
+        let hist = processor
+            .get_hist()
+            .iter()
+            .map(|s| s.get_vals_cloned())
+            .collect::<Vec<Vec<f32>>>();
+        println!("{}", hist.len());
+        // generate targets for the history
+        let target = get_targets(
+            track_info,
+            sample_rate as f64,
+            processor.get_subsample_frame_size(),
+            samples,
+        );
+        // write file as pickle
+        self.write_out(&track_info, &hist, &target);
+    }
+
+    pub fn process_tracks(&self, tracks: &Vec<TrackInfo>) {
+        // do processing
+        for (i, track) in tracks.iter().enumerate() {
+            println!("{}", track.title);
+            self.process_track(&track);
+        }
+    }
 }
 
 fn get_args() -> clap::ArgMatches<'static> {
@@ -190,6 +222,9 @@ fn main() {
     }
     // parse signal processing params
     let params = ProcessingParams::from_args(&args);
+    // out dir parsing
+    let out_dir = PathBuf::from(args.value_of("OUTPUT_DIR").unwrap());
+    
     // load track infos from DB
     let tracks = db::load_track_info(db_file);
     // select only 128 BPM tracks
@@ -199,9 +234,8 @@ fn main() {
         .filter(|t| t.bpm == 128.)
         .collect();
     println!("{} total", tracks.len());
-    // do processing
-    for (i, track) in tracks.iter().enumerate() {
-        println!("{}", track.title);
-        process_track(&track, format!("data/{}.pickle", i), &params);
-    }
+    
+    // create data processor
+    let proc = DataProcessor::new(out_dir, params);
+    proc.process_tracks(&tracks);
 }
