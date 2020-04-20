@@ -1,6 +1,6 @@
-use std::io;
-mod tapper;
 mod ui;
+use nightfire::tapper;
+use std::io;
 use std::sync::{Arc, Mutex};
 
 fn read_keyboard(beat_grid: Arc<Mutex<Option<tapper::BeatGrid>>>) {

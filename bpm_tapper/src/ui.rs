@@ -1,4 +1,4 @@
-use crate::tapper::BeatGrid;
+use nightfire::tapper::BeatGrid;
 use piston_window::*;
 use std::sync::{Arc, Mutex};
 

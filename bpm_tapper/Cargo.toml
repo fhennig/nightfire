@@ -7,6 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+nightfire = { path = "../nightfire" }
 # ui
 piston_window = "0.107.0"
 # stoppable thread
