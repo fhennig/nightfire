@@ -1,7 +1,7 @@
 [workspace]
 
 members = [
-    "nightfire",
+    "nf_lichtspiel",
     "nightfire_audio",
     "mixxx_data",
     "bpm_tapper",

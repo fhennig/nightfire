@@ -1,11 +1,11 @@
 use clap::{App, Arg, ArgMatches};
-use nightfire::audio::jack;
-use nightfire::conf::Conf;
-use nightfire::light::State;
-use nightfire::piblaster::start_piblaster_thread;
-use nightfire::sixaxis::read_controller;
-use nightfire::sixaxis::state_updater::StateUpdater;
-use nightfire::ui::piston::run_piston_thread;
+use nf_lichtspiel::audio::jack;
+use nf_lichtspiel::conf::Conf;
+use nf_lichtspiel::light::State;
+use nf_lichtspiel::piblaster::start_piblaster_thread;
+use nf_lichtspiel::sixaxis::read_controller;
+use nf_lichtspiel::sixaxis::state_updater::StateUpdater;
+use nf_lichtspiel::ui::piston::run_piston_thread;
 use nightfire_audio as audio;
 use std::sync::{Arc, Mutex};
 use std::{error, thread, time};
@@ -39,7 +39,7 @@ impl jack::ValsHandler for AudioStateUpdater {
         self.state.lock().unwrap().set_intensity(vals.low);
         /*
                         let mut state = self.state.lock().unwrap();
-                        let c1 = nightfire::models::Color::new(
+                        let c1 = nf_lichtspiel::models::Color::new(
                             vals.low as f64,
                             // vals.mid as f64,
                             // (vals.mid - (vals.low * 0.2)).max(0.) as f64,
@@ -47,7 +47,7 @@ impl jack::ValsHandler for AudioStateUpdater {
                             (vals.mid.powi(2) - vals.high).max(0.) as f64,
                             0.,
                         );
-                        let c2 = nightfire::models::Color::new(
+                        let c2 = nf_lichtspiel::models::Color::new(
                             0.,
                             vals.mid.powi(2) as f64,
                             vals.high.powi(3) as f64,

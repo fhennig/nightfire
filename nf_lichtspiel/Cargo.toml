@@ -1,5 +1,5 @@
 [package]
-name = "nightfire"
+name = "nf_lichtspiel"
 version = "0.2.0"
 authors = ["Felix Hennig"]
 edition = "2018"

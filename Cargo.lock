@@ -919,7 +919,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "nightfire"
+name = "nf_lichtspiel"
 version = "0.2.0"
 dependencies = [
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
