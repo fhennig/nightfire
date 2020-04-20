@@ -98,9 +98,12 @@ fn get_targets(
 /// Write the info into a pickle file with name out_file
 fn write_out(out_file: String, track_info: &TrackInfo, hist: &Vec<Vec<f32>>, target: &Vec<bool>) {
     let mut file = File::create(out_file).expect("Could not create file.");
+    let loc = track_info.loc();
+    let orig_file_str = loc.to_str().expect("Filename could not be encoded.");
     let out_struct = (
         ("title", &track_info.title),
         ("bpm", track_info.bpm),
+        ("original_file", orig_file_str),
         ("hist", hist),
         ("target", target),
     );
@@ -142,8 +145,8 @@ fn process_track(track_info: &TrackInfo, out_file: String, params: &ProcessingPa
 
 fn get_args() -> clap::ArgMatches<'static> {
     clap_app!(
-        myapp =>
-            (about: "Does awesome things")
+        mixxx_data =>
+            (about: "Processes audio files into spectograms for machine learning.")
             (@arg DB_FILE: --database
              +takes_value
              "Mixxx DB location (default: ~/.mixxx/mixxxdb.sqlite)")
@@ -155,12 +158,12 @@ fn get_args() -> clap::ArgMatches<'static> {
             (@arg F_HIGH: -h --high
              +takes_value
              +required
-             "lowest frequency to capture."
+             "highest frequency to capture."
             )
             (@arg Q: -q
              +takes_value
              +required
-             "highest frequency to capture."
+             "the q parameter for the filters."
             )
             (@arg NUM_FILTERS: -k --num_filters
              +takes_value
@@ -171,6 +174,11 @@ fn get_args() -> clap::ArgMatches<'static> {
              +takes_value
              +required
              "subsampling rate in Hz."
+            )
+            (@arg OUTPUT_DIR: -o --output_dir
+             +takes_value
+             +required
+             "the directory to put the results in."
             )
     )
     .get_matches()
