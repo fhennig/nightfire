@@ -32,6 +32,7 @@ pub struct DataProcessor {
 
 impl DataProcessor {
     pub fn new(out_dir: PathBuf, params: ProcessingParams) -> DataProcessor {
+        std::fs::create_dir_all(&out_dir).expect("Could not create output directory");
         DataProcessor {
             out_dir: out_dir,
             params: params,
