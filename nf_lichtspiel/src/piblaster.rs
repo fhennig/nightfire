@@ -1,4 +1,4 @@
-use crate::light::{Color, PinValue, State};
+use nightfire::light::{Color, PinValue, State};
 use crate::lightid::LightId;
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};

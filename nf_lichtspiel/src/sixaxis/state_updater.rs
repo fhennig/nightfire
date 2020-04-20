@@ -1,4 +1,4 @@
-use crate::light::{Color, State, Mode, Coordinate, Quadrant};
+use nightfire::light::{Color, State, Mode, Coordinate, Quadrant};
 use crate::sixaxis::{Axis, Button, ControllerValsSink, ControllerValues};
 use log::debug;
 use palette::Hsv;
