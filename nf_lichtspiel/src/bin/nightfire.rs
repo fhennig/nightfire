@@ -1,12 +1,12 @@
 use clap::{App, Arg, ArgMatches};
 use nf_lichtspiel::audio::jack;
 use nf_lichtspiel::conf::Conf;
-use nightfire::light::State;
 use nf_lichtspiel::piblaster::start_piblaster_thread;
 use nf_lichtspiel::sixaxis::read_controller;
 use nf_lichtspiel::sixaxis::state_updater::StateUpdater;
 use nf_lichtspiel::ui::piston::run_piston_thread;
-use nightfire_audio as audio;
+use nightfire::audio;
+use nightfire::light::State;
 use std::sync::{Arc, Mutex};
 use std::{error, thread, time};
 

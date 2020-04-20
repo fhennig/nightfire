@@ -1,8 +1,8 @@
 use clap::{App, Arg};
 use nf_lichtspiel::audio::jack;
-use nightfire_audio::SignalProcessor;
 use nf_lichtspiel::conf;
 use nf_lichtspiel::ui::eq;
+use nightfire::audio::SignalProcessor;
 
 fn main() {
     // argparsing

@@ -9,7 +9,6 @@ edition = "2018"
 [dependencies]
 # internal
 nightfire = { path = "../nightfire" }
-nightfire_audio = { path = "../nightfire_audio" }
 # commandline parsing
 clap = "2.33.0"
 # config file

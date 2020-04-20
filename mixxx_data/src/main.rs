@@ -2,7 +2,7 @@
 extern crate clap;
 mod beats;
 use dirs;
-use nightfire_audio as nfa;
+use nightfire::audio as nfa;
 use prost::Message;
 use rodio::Source;
 use std::fs::File;
@@ -159,6 +159,7 @@ fn default_db_file() -> PathBuf {
 }
 
 fn main() {
+    // arg loading
     let args = get_args();
     let db_file = args
         .value_of("DB_FILE")
@@ -167,13 +168,16 @@ fn main() {
     if !db_file.exists() {
         panic!("Database file not found!");
     }
+    // load track infos from DB
     let tracks = load_track_info(db_file);
+    // select only 128 BPM tracks
     let tracks: Vec<TrackInfo> = tracks
         .into_iter()
         .filter(|t| t.loc().exists())
         .filter(|t| t.bpm == 128.)
         .collect();
     println!("{} total", tracks.len());
+    // do processing
     for (i, track) in tracks.iter().enumerate() {
         println!("{}", track.title);
         process_track(&track, format!("data/{}.pickle", i));
