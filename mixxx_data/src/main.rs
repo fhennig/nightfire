@@ -137,8 +137,7 @@ fn main() {
     // select only 128 BPM tracks
     let tracks: Vec<TrackInfo> = tracks
         .into_iter()
-        .filter(|t| t.loc().exists())
-        .filter(|t| t.bpm == 110.)
+//        .filter(|t| t.bpm == 110.)
         .collect();
 
     // create data processor

@@ -4,6 +4,7 @@ use indicatif;
 use rayon::prelude::*;
 use rodio;
 use rodio::source::Source;
+use std::error::Error;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
@@ -54,10 +55,10 @@ impl DataProcessor {
         track_info: &TrackInfo,
         hist: &Vec<Vec<f32>>,
         target: &Vec<bool>,
-    ) -> String {
+    ) -> Result<String, Box<dyn Error + Send + Sync>> {
         // build file structure
         let loc = track_info.loc();
-        let orig_file_str = loc.to_str().expect("Filename could not be encoded.");
+        let orig_file_str = loc.to_str().ok_or("Path is not unicode.")?;
         let out_struct = (
             ("title", &track_info.title),
             ("bpm", track_info.bpm),
@@ -67,16 +68,15 @@ impl DataProcessor {
         );
         let path = self.get_out_path(&track_info);
         // open out file
-        let mut file = File::create(&path).expect("Could not create file.");
+        let mut file = File::create(&path)?;
         // write serialized
-        serde_pickle::to_writer(&mut file, &out_struct, true).expect("Failed writing file.");
-        path.file_name().unwrap().to_str().unwrap().to_string()
+        serde_pickle::to_writer(&mut file, &out_struct, true)?;
+        Ok(path.file_name().unwrap().to_str().unwrap().to_string())
     }
 
-    fn process_track(&self, track_info: &TrackInfo) -> String {
-        let file = File::open(track_info.loc()).expect("Could not open track file.");
-        let source =
-            rodio::Decoder::new(BufReader::new(file)).expect("Could not parse track file.");
+    fn process_track(&self, track_info: &TrackInfo) -> Result<String, Box<dyn Error + Send + Sync>> {
+        let file = File::open(track_info.loc())?;
+        let source = rodio::Decoder::new(BufReader::new(file))?;
         let sample_rate = source.sample_rate();
         let mut processor = self.params.get_processor(sample_rate as f32);
         let channels = source.channels() as usize;
@@ -135,12 +135,13 @@ impl DataProcessor {
         let track_files = tracks
             .par_iter()
             .map(|t| {
-                let file = self.process_track(&t);
-                bar.inc(1);
-                file
+                match self.process_track(&t) {
+                    Ok(file) => { bar.inc(1); file },
+                    Err(err) => panic!(err.to_string()),
+                }
             })
             .collect::<Vec<String>>();
-        
+
         // write final info file
         self.write_info_file(&track_files);
     }
