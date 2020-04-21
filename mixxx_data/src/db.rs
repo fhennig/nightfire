@@ -17,8 +17,8 @@ fn bpm_offset(beats: &beats::BeatGrid) -> Option<(f64, i32)> {
 
 /// Opens the mixxx db file and reads through the library.  Returns a
 /// list of track infos with tracks that have a least been played once
-/// and have a beat grid.
-pub fn load_track_info(db_file: PathBuf) -> Vec<TrackInfo> {
+/// and have a beat grid, have a location and have a title.
+pub fn load_track_info(db_file: &PathBuf) -> Vec<TrackInfo> {
     let conn = sqlite::open(db_file).expect("Could not open database file.");
     let mut curr = conn
         .prepare(

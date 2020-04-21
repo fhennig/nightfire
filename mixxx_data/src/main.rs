@@ -133,7 +133,7 @@ fn main() {
     }
 
     // load track infos from DB
-    let tracks = db::load_track_info(db_file);
+    let tracks = db::load_track_info(&db_file);
     // select only 128 BPM tracks
     let tracks: Vec<TrackInfo> = tracks
         .into_iter()
