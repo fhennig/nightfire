@@ -20,15 +20,36 @@ from functools import cached_property
 from typing import List
 
 
+class Sample:
+    def __init__(self, hist, beat_grid, info):
+        self.hist = hist
+        self.beat_grid = beat_grid
+        self.info = info
+
+
 class Song:
+    """A full song.  contains the feature sequence, as well as a beat grid
+    and some meta information."""
     def __init__(self, raw_dict):
         self.hist = raw_dict['hist']
         self.beat_grid = raw_dict['beat_grid']
         self.info = raw_dict['info']
 
+    @property
     def beat_indices(self) -> List[int]:
         """Returns the indices at which there is a beat."""
         return [i for i in range(len(self.beat_grid)) if self.beat_grid[i]]
+
+    def get_samples(self, indices, offset=0, length=1) -> List[Sample]:
+        """Returns a list of samples.  For each index, the range if covers is
+        calculated by adding the offset to the index and then taking a
+        slice of `length`.  If the slice is not fully within the
+        available data it is discarded.
+        """
+        slices = [(i + offset, i + offset + length) for i in indices
+                  if i + offset >= 0 and i + offset + length <= len(self.hist)]
+        return [Sample(self.hist[a:b], self.beat_grid[a:b], self.info)
+                for a, b in slices]
 
 
 class DataDir:
