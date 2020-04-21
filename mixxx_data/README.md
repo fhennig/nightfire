@@ -1,7 +1,8 @@
 # Mixxx data loader
 
-A small binary that loads tracks with beat grids from Mixxx, and
-creates training data for beat detection in the python
+A small binary that loads tracks with beat grids from
+[Mixxx](https://www.mixxx.org/), and creates training data for beat
+detection in the python
 [`pickle`](https://docs.python.org/3/library/pickle.html) format.
 
 ## Running
