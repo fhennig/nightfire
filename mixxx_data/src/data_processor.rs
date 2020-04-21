@@ -99,13 +99,13 @@ impl DataProcessor {
     /// that have been generated.
     fn update_info_file(&self) {
         // lock the info struct, then proceed
-        let out = self.data_set.write().unwrap().clone();  // TODO its not ideal that we clone here.
+        let out = self.data_set.write().unwrap();
         let mut path = self.out_dir.to_owned();
         path.push("info.pickle");
         // open out file
         let mut file = File::create(&path).expect("Could not create info file.");
         // write serialized
-        serde_pickle::to_writer(&mut file, &out, true).expect("Failed writing file.");
+        serde_pickle::to_writer(&mut file, &*out, true).expect("Failed writing file.");
     }
 
     fn get_out_path(&self, track_info: &ti::TrackInfo) -> PathBuf {
