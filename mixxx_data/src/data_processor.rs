@@ -1,5 +1,6 @@
 use crate::track_info::TrackInfo;
 use crate::ProcessingParams;
+use rayon::prelude::*;
 use rodio;
 use rodio::source::Source;
 use std::fs::File;
@@ -122,12 +123,10 @@ impl DataProcessor {
 
     pub fn process_tracks(&self, tracks: &Vec<TrackInfo>) {
         // do processing
-        let mut track_files = vec![];
-        for track in tracks {
-            println!("{}", track.title);
-            let file = self.process_track(&track);
-            track_files.push(file);
-        }
+        let track_files = tracks
+            .par_iter()
+            .map(|t| self.process_track(&t))
+            .collect::<Vec<String>>();
         // write final info file
         self.write_info_file(&track_files);
     }

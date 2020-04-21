@@ -46,6 +46,10 @@ fn get_args() -> clap::ArgMatches<'static> {
              +required
              "the directory to put the results in."
             )
+            (@arg NUM_THREADS: -t --threads
+             +takes_value
+             "the number of threads to use.  Defaults to using as many as makes sense on the CPU."
+             )
     )
     .get_matches()
 }
@@ -123,6 +127,10 @@ fn main() {
     let params = ProcessingParams::from_args(&args);
     // out dir parsing
     let out_dir = PathBuf::from(args.value_of("OUTPUT_DIR").unwrap());
+    // set threads of arg is given
+    if let Some(threads) = args.value_of("NUM_THREADS") {
+        std::env::set_var("RAYON_NUM_THREADS", threads);
+    }
 
     // load track infos from DB
     let tracks = db::load_track_info(db_file);
@@ -130,7 +138,7 @@ fn main() {
     let tracks: Vec<TrackInfo> = tracks
         .into_iter()
         .filter(|t| t.loc().exists())
-        .filter(|t| t.bpm == 110.)
+        //        .filter(|t| t.bpm == 110.)
         .collect();
     println!("{} total", tracks.len());
 
