@@ -20,29 +20,15 @@ from functools import cached_property
 from typing import List
 
 
-class DataSetInfo:
-    f_low: float
-    f_high: float
-    q: float
-    n_filters: int
-    rate: float
-    files: List[str]
+class Song:
+    def __init__(self, raw_dict):
+        self.hist = raw_dict['hist']
+        self.beat_grid = raw_dict['beat_grid']
+        self.info = raw_dict['info']
 
-    def __init__(self, attr_vals):
-        for key in attr_vals:
-            setattr(self, key, attr_vals[key])
-
-
-class DataFile:
-    title: str
-    bpm: float
-    original_file: str
-    hist: List[List[float]]
-    target: List[bool]
-
-    def __init__(self, attr_vals):
-        for key in attr_vals:
-            setattr(self, key, attr_vals[key])
+    def beat_indices(self) -> List[int]:
+        """Returns the indices at which there is a beat."""
+        return [i for i in range(len(self.beat_grid)) if self.beat_grid[i]]
 
 
 class DataDir:
@@ -55,18 +41,29 @@ class DataDir:
         self.directory = directory
 
     @cached_property
-    def info(self):
+    def _info(self):
         path = os.path.join(self.directory, "info.pickle")
         with open(path, 'rb') as f:
-            data = dict(pickle.load(f))
-        return DataSetInfo(data)
+            return pickle.load(f)
+
+    @property
+    def params(self):
+        return self._info['params']
+
+    @property
+    def to_process(self):
+        return self._info['to_process']
+
+    @property
+    def processed(self):
+        return self._info['processed']
+
+    @property
+    def failed(self):
+        return self._info['failed']
 
     def get_file(self, filename: str) -> DataFile:
         path = os.path.join(self.directory, filename)
         with open(path, 'rb') as f:
-            d = dict(pickle.load(f))
-            return DataFile(d)
+            return Song(pickle.load(f))
 
-    def __iter__(self):
-        for filename in self.info.files:
-            yield self.get_file(filename)
