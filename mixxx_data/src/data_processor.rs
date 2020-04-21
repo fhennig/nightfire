@@ -103,6 +103,9 @@ impl DataProcessor {
         self.write_out(&track_info, &hist, &target)
     }
 
+    /// Writes an info file in the directory, which contains info
+    /// about the signal processing parameters as well as the files
+    /// that have been generated.
     fn write_info_file(&self, track_files: &Vec<String>) {
         let dict = (
             ("f_low", self.params.low),
@@ -120,16 +123,24 @@ impl DataProcessor {
         serde_pickle::to_writer(&mut file, &dict, true).expect("Failed writing file.");
     }
 
+    /// Takes a list of track infos and processes them one by one,
+    /// writes an info file at the end.  The processing happens in
+    /// parallel.  The function also draws a progress bar on StdErr to
+    /// indicate how far the processing has progressed.
     pub fn process_tracks(&self, tracks: &Vec<TrackInfo>) {
         let bar = indicatif::ProgressBar::new(tracks.len() as u64);
+        bar.tick(); // draw the bar initially
+
         // do processing
         let track_files = tracks
             .par_iter()
             .map(|t| {
-                bar.tick();
-                self.process_track(&t)
+                let file = self.process_track(&t);
+                bar.inc(1);
+                file
             })
             .collect::<Vec<String>>();
+        
         // write final info file
         self.write_info_file(&track_files);
     }
