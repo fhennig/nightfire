@@ -14,9 +14,12 @@ except for the `database` parameter:
     -h, --high <F_HIGH>                highest frequency to capture.
     -l, --low <F_LOW>                  lowest frequency to capture.
     -k, --num_filters <NUM_FILTERS>    number of frequency bands to capture.
+    -t, --threads <NUM_THREADS>        the number of threads to use.  Defaults to using as many as makes sense on the
+                                       CPU.
     -o, --output_dir <OUTPUT_DIR>      the directory to put the results in.
     -q <Q>                             the q parameter for the filters.
     -r, --rate <RATE>                  subsampling rate in Hz.
+
 
 ## Output File Structure
 

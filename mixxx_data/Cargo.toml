@@ -20,3 +20,5 @@ rodio = "0.11.0"
 serde-pickle = "0.6"
 # parallelism
 rayon = "1.3"
+# commandline progress bar
+indicatif = "0.14"

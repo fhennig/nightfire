@@ -1,5 +1,6 @@
 use crate::track_info::TrackInfo;
 use crate::ProcessingParams;
+use indicatif;
 use rayon::prelude::*;
 use rodio;
 use rodio::source::Source;
@@ -77,7 +78,6 @@ impl DataProcessor {
         let source =
             rodio::Decoder::new(BufReader::new(file)).expect("Could not parse track file.");
         let sample_rate = source.sample_rate();
-        println!("sample_rate: {}", source.sample_rate());
         let mut processor = self.params.get_processor(sample_rate as f32);
         let channels = source.channels() as usize;
         let ch1 = source.step_by(channels);
@@ -92,7 +92,6 @@ impl DataProcessor {
             .iter()
             .map(|s| s.get_vals_cloned())
             .collect::<Vec<Vec<f32>>>();
-        println!("{}", hist.len());
         // generate targets for the history
         let target = get_targets(
             track_info,
@@ -122,10 +121,14 @@ impl DataProcessor {
     }
 
     pub fn process_tracks(&self, tracks: &Vec<TrackInfo>) {
+        let bar = indicatif::ProgressBar::new(tracks.len() as u64);
         // do processing
         let track_files = tracks
             .par_iter()
-            .map(|t| self.process_track(&t))
+            .map(|t| {
+                bar.tick();
+                self.process_track(&t)
+            })
             .collect::<Vec<String>>();
         // write final info file
         self.write_info_file(&track_files);

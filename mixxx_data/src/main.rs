@@ -138,11 +138,12 @@ fn main() {
     let tracks: Vec<TrackInfo> = tracks
         .into_iter()
         .filter(|t| t.loc().exists())
-        //        .filter(|t| t.bpm == 110.)
+        .filter(|t| t.bpm == 110.)
         .collect();
-    println!("{} total", tracks.len());
 
     // create data processor
     let proc = data_processor::DataProcessor::new(out_dir, params);
+    println!("Processing tracks ...");
     proc.process_tracks(&tracks);
+    println!("Done!");
 }
