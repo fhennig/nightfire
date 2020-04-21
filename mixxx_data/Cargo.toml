@@ -1,6 +1,6 @@
 [package]
 name = "mixxx_data"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Felix hennig"]
 edition = "2018"
 
@@ -17,6 +17,7 @@ prost = "0.6"
 # audio file loading
 rodio = "0.11.0"
 # saving to pickle format
+serde = { version  = "1.0", features = ["derive"] }
 serde-pickle = "0.6"
 # parallelism
 rayon = "1.3"

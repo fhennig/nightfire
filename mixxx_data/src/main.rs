@@ -6,6 +6,7 @@ mod db;
 mod track_info;
 use dirs;
 use nightfire::audio as nfa;
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use track_info::TrackInfo;
 
@@ -54,6 +55,7 @@ fn get_args() -> clap::ArgMatches<'static> {
     .get_matches()
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct ProcessingParams {
     low: f32,
     high: f32,
@@ -137,11 +139,10 @@ fn main() {
     // select only 128 BPM tracks
     let tracks: Vec<TrackInfo> = tracks
         .into_iter()
-//        .filter(|t| t.bpm == 110.)
+        //        .filter(|t| t.bpm == 110.)
         .collect();
-
     // create data processor
-    let proc = data_processor::DataProcessor::new(out_dir, params);
+    let proc = data_processor::DataProcessor::new(out_dir, params).unwrap();
     println!("Processing tracks ...");
     proc.process_tracks(&tracks);
     println!("Done!");

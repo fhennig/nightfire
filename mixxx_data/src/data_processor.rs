@@ -1,17 +1,18 @@
-use crate::track_info::TrackInfo;
+use crate::track_info as ti;
 use crate::ProcessingParams;
 use indicatif;
 use rayon::prelude::*;
 use rodio;
 use rodio::source::Source;
-use std::error::Error;
+use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
+use std::sync::{Arc, RwLock};
 
 /// Generates targets for an offset, bpm and subsample size.
 fn get_targets(
-    track_info: &TrackInfo,
+    track_info: &ti::TrackInfo,
     sample_freq: f64,
     subsample_size: usize,
     len: usize,
@@ -28,21 +29,86 @@ fn get_targets(
         .collect()
 }
 
-pub struct DataProcessor {
-    out_dir: PathBuf,
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct DataSet {
     params: ProcessingParams,
+    to_process: Vec<ti::TrackInfo>,
+    processed: Vec<ti::ProcessingSuccess>,
+    failed: Vec<ti::ProcessingError>,
 }
 
-impl DataProcessor {
-    pub fn new(out_dir: PathBuf, params: ProcessingParams) -> DataProcessor {
-        std::fs::create_dir_all(&out_dir).expect("Could not create output directory");
-        DataProcessor {
-            out_dir: out_dir,
+impl DataSet {
+    pub fn new(params: ProcessingParams) -> DataSet {
+        DataSet {
             params: params,
+            to_process: vec![],
+            processed: vec![],
+            failed: vec![],
         }
     }
 
-    fn get_out_path(&self, track_info: &TrackInfo) -> PathBuf {
+    pub fn get_params(&self) -> ProcessingParams {
+        self.params
+    }
+
+    pub fn add_tracks_to_process(&mut self, mut tracks: Vec<ti::TrackInfo>) {
+        self.to_process.append(&mut tracks);
+    }
+
+    pub fn add_processing_result(
+        &mut self,
+        res: Result<ti::ProcessingSuccess, ti::ProcessingError>,
+    ) {
+        match res {
+            Ok(succ) => {
+                let index = self
+                    .to_process
+                    .iter()
+                    .position(|x| *x == succ.info)
+                    .unwrap();
+                self.to_process.remove(index);
+                self.processed.push(succ);
+            }
+            Err(err) => {
+                let index = self.to_process.iter().position(|x| *x == err.info).unwrap();
+                self.to_process.remove(index);
+                self.failed.push(err);
+            }
+        }
+    }
+}
+
+pub struct DataProcessor {
+    out_dir: PathBuf,
+    data_set: Arc<RwLock<DataSet>>,
+}
+
+impl DataProcessor {
+    pub fn new(out_dir: PathBuf, params: ProcessingParams) -> Result<DataProcessor, ti::Err> {
+        std::fs::create_dir_all(&out_dir)?;
+        let dp = DataProcessor {
+            out_dir: out_dir,
+            data_set: Arc::new(RwLock::new(DataSet::new(params))),
+        };
+        dp.update_info_file();
+        Ok(dp)
+    }
+
+    /// Writes an info file in the directory, which contains info
+    /// about the signal processing parameters as well as the files
+    /// that have been generated.
+    fn update_info_file(&self) {
+        // lock the info struct, then proceed
+        let out = self.data_set.write().unwrap().clone();  // TODO its not ideal that we clone here.
+        let mut path = self.out_dir.to_owned();
+        path.push("info.pickle");
+        // open out file
+        let mut file = File::create(&path).expect("Could not create info file.");
+        // write serialized
+        serde_pickle::to_writer(&mut file, &out, true).expect("Failed writing file.");
+    }
+
+    fn get_out_path(&self, track_info: &ti::TrackInfo) -> PathBuf {
         let loc = track_info.loc();
         let filename = loc.file_stem().unwrap().to_str().unwrap();
         let mut result = self.out_dir.to_owned();
@@ -50,37 +116,23 @@ impl DataProcessor {
         result
     }
 
-    fn write_out(
+    fn process_track_inner(
         &self,
-        track_info: &TrackInfo,
-        hist: &Vec<Vec<f32>>,
-        target: &Vec<bool>,
-    ) -> Result<String, Box<dyn Error + Send + Sync>> {
-        // build file structure
-        let loc = track_info.loc();
-        let orig_file_str = loc.to_str().ok_or("Path is not unicode.")?;
-        let out_struct = (
-            ("title", &track_info.title),
-            ("bpm", track_info.bpm),
-            ("original_file", orig_file_str),
-            ("hist", hist),
-            ("target", target),
-        );
-        let path = self.get_out_path(&track_info);
-        // open out file
-        let mut file = File::create(&path)?;
-        // write serialized
-        serde_pickle::to_writer(&mut file, &out_struct, true)?;
-        Ok(path.file_name().unwrap().to_str().unwrap().to_string())
-    }
-
-    fn process_track(&self, track_info: &TrackInfo) -> Result<String, Box<dyn Error + Send + Sync>> {
+        track_info: &ti::TrackInfo,
+    ) -> Result<ti::ProcessingSuccess, ti::Err> {
+        // open and decode file, select channel 1
         let file = File::open(track_info.loc())?;
         let source = rodio::Decoder::new(BufReader::new(file))?;
         let sample_rate = source.sample_rate();
-        let mut processor = self.params.get_processor(sample_rate as f32);
         let channels = source.channels() as usize;
         let ch1 = source.step_by(channels);
+        // start processing the audio
+        let mut processor = self
+            .data_set
+            .read()
+            .unwrap()
+            .get_params()
+            .get_processor(sample_rate as f32);
         let mut samples = 0;
         for sample in ch1 {
             let sample = (sample as f32) / (i16::max_value() as f32);
@@ -99,50 +151,49 @@ impl DataProcessor {
             processor.get_subsample_frame_size(),
             samples,
         );
-        // write file as pickle
-        self.write_out(&track_info, &hist, &target)
+        // write out file
+        let res = ti::ProcessedTrack::new(&track_info, hist, target);
+        let path = self.get_out_path(&track_info);
+        // open out file
+        let mut file = File::create(&path)?;
+        // write serialized
+        serde_pickle::to_writer(&mut file, &res, true)?;
+        Ok(ti::ProcessingSuccess::new(
+            &track_info,
+            path.file_name().unwrap().to_str().unwrap().to_string(),
+        ))
     }
 
-    /// Writes an info file in the directory, which contains info
-    /// about the signal processing parameters as well as the files
-    /// that have been generated.
-    fn write_info_file(&self, track_files: &Vec<String>) {
-        let dict = (
-            ("f_low", self.params.low),
-            ("f_high", self.params.high),
-            ("q", self.params.q),
-            ("n_filters", self.params.n_filters),
-            ("rate", self.params.rate),
-            ("files", track_files),
-        );
-        let mut path = self.out_dir.to_owned();
-        path.push("info.pickle");
-        // open out file
-        let mut file = File::create(&path).expect("Could not create info file.");
-        // write serialized
-        serde_pickle::to_writer(&mut file, &dict, true).expect("Failed writing file.");
+    fn process_track(&self, track_info: &ti::TrackInfo) {
+        let res = match self.process_track_inner(&track_info) {
+            Ok(succ) => Ok(succ),
+            Err(err) => Err(ti::ProcessingError::new(&track_info, err)),
+        };
+        self.data_set.write().unwrap().add_processing_result(res);
+        self.update_info_file();
     }
 
     /// Takes a list of track infos and processes them one by one,
     /// writes an info file at the end.  The processing happens in
     /// parallel.  The function also draws a progress bar on StdErr to
     /// indicate how far the processing has progressed.
-    pub fn process_tracks(&self, tracks: &Vec<TrackInfo>) {
+    pub fn process_tracks(&self, tracks: &Vec<ti::TrackInfo>) {
+        self.data_set
+            .write()
+            .unwrap()
+            .add_tracks_to_process(tracks.clone());
+        self.update_info_file();
+
         let bar = indicatif::ProgressBar::new(tracks.len() as u64);
         bar.tick(); // draw the bar initially
 
         // do processing
-        let track_files = tracks
-            .par_iter()
-            .map(|t| {
-                match self.process_track(&t) {
-                    Ok(file) => { bar.inc(1); file },
-                    Err(err) => panic!(err.to_string()),
-                }
-            })
-            .collect::<Vec<String>>();
+        tracks.par_iter().for_each(|t| {
+            self.process_track(&t);
+            bar.inc(1);
+        });
 
         // write final info file
-        self.write_info_file(&track_files);
+        self.update_info_file();
     }
 }
