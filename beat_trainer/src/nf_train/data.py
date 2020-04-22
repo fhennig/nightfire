@@ -21,10 +21,11 @@ from typing import List
 
 
 class Sample:
-    def __init__(self, hist, beat_grid, info):
+    def __init__(self, hist, beat_grid, info, label):
         self.hist = hist
         self.beat_grid = beat_grid
         self.info = info
+        self.label = label
 
 
 class Song:
@@ -40,7 +41,7 @@ class Song:
         """Returns the indices at which there is a beat."""
         return [i for i in range(len(self.beat_grid)) if self.beat_grid[i]]
 
-    def get_samples(self, indices, offset=0, length=1) -> List[Sample]:
+    def get_samples(self, indices, label, offset=0, length=1) -> List[Sample]:
         """Returns a list of samples.  For each index, the range if covers is
         calculated by adding the offset to the index and then taking a
         slice of `length`.  If the slice is not fully within the
@@ -48,7 +49,7 @@ class Song:
         """
         slices = [(i + offset, i + offset + length) for i in indices
                   if i + offset >= 0 and i + offset + length <= len(self.hist)]
-        return [Sample(self.hist[a:b], self.beat_grid[a:b], self.info)
+        return [Sample(self.hist[a:b], self.beat_grid[a:b], self.info, label)
                 for a, b in slices]
 
 

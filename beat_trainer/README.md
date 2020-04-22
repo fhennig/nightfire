@@ -10,6 +10,5 @@ train a model.  This training will be done in python.
 
 ## TODO
 
-The data out of the rust code is a long matrix T x D, with T time
-steps and D feature dimensions. The target vector is of length T, with
-a bool value at every step if there is a beat or not.
+make interactive widget to look at data:
+https://stackoverflow.com/questions/44329068/jupyter-notebook-interactive-plot-with-widgets
