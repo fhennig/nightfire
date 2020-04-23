@@ -17,7 +17,8 @@ import os.path
 import pickle
 from dataclasses import dataclass
 from functools import cached_property
-from typing import List
+from typing import List, Optional, Any
+import torch
 
 
 class Sample:
@@ -40,6 +41,13 @@ class Song:
     def beat_indices(self) -> List[int]:
         """Returns the indices at which there is a beat."""
         return [i for i in range(len(self.beat_grid)) if self.beat_grid[i]]
+
+    def get_hist_frame(self, i, pre, post) -> Optional[Any]:
+        if i - pre < 0:
+            return None
+        if i + post + 1 > len(self.hist):
+            return None
+        return torch.tensor(self.hist[i-pre:i+post+1], dtype=torch.float)
 
     def get_samples(self, indices, label, offset=0, length=1) -> List[Sample]:
         """Returns a list of samples.  For each index, the range if covers is
@@ -84,7 +92,7 @@ class DataDir:
     def failed(self):
         return self._info['failed']
 
-    def get_file(self, filename: str) -> DataFile:
+    def get_file(self, filename: str) -> Song:
         path = os.path.join(self.directory, filename)
         with open(path, 'rb') as f:
             return Song(pickle.load(f))
