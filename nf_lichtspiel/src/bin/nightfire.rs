@@ -1,5 +1,5 @@
 use clap::{App, Arg, ArgMatches};
-use nf_lichtspiel::audio::jack;
+use nf_lichtspiel::jack;
 use nf_lichtspiel::conf::Conf;
 use nf_lichtspiel::piblaster::start_piblaster_thread;
 use nf_lichtspiel::sixaxis::read_controller;

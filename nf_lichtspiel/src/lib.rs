@@ -1,5 +1,5 @@
-pub mod audio;
 pub mod conf;
+pub mod jack;
 pub mod lightid;
 pub mod osc;
 pub mod piblaster;

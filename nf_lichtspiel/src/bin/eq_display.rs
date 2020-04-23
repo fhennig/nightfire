@@ -1,5 +1,5 @@
 use clap::{App, Arg};
-use nf_lichtspiel::audio::jack;
+use nf_lichtspiel::jack;
 use nf_lichtspiel::conf;
 use nf_lichtspiel::ui::eq;
 use nightfire::audio::SignalProcessor;

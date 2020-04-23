@@ -1,4 +1,4 @@
-use crate::audio::jack;
+use crate::jack;
 use nightfire::audio::SignalProcessor;
 use piston_window::*;
 use std::sync::{Arc, Mutex};
