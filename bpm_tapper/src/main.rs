@@ -18,8 +18,12 @@ fn read_keyboard(
         stdin.read_line(&mut input).expect("Error reading input!");
         let ms = sp.lock().unwrap().get_current_sample_id() * 10;
         tapper.add_tap(ms);
+        let n_g = tapper.get_beat_grid();
+        if let Some(grid) = n_g {
+            println!("{}", grid.bpm());
+        }
         let mut g = beat_grid.lock().unwrap();
-        *g = *tapper.get_beat_grid();
+        *g = *n_g;
     }
 }
 
