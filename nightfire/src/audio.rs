@@ -42,28 +42,25 @@ fn make_filter(f_s: f32, f_c: f32, q: f32) -> bq::DirectForm2Transposed<f32> {
     )
 }
 
+/// A sample of audio.  Represents a certain amount of time.  Has an
+/// id, which counts up as time passes.  The values represent
+/// amplitudes at different frequencies.
 #[derive(Debug, Clone)]
 pub struct Sample {
+    id: u128,
     vals: Vec<f32>,
 }
 
 impl Sample {
-    pub fn new_null(len: usize) -> Sample {
+    pub fn new_null(len: usize, id: u128) -> Sample {
         Sample {
+            id: id,
             vals: vec![0.; len],
         }
     }
 
-    pub fn new_empty(capacity: usize) -> Sample {
-        Sample {
-            vals: Vec::with_capacity(capacity),
-        }
-    }
-
-    pub fn merge_in(&mut self, other: &Sample) {
-        for i in 0..self.vals.len() {
-            self.vals[i] = self.vals[i].max(other.vals[i]);
-        }
+    pub fn get_id(&self) -> u128 {
+        self.id
     }
 
     pub fn get_vals_cloned(&self) -> Vec<f32> {
@@ -93,8 +90,8 @@ impl SignalFilter {
         }
     }
 
-    pub fn null_sample(&self) -> Sample {
-        Sample::new_null(self.num_filters())
+    pub fn null_sample(&self, id: u128) -> Sample {
+        Sample::new_null(self.num_filters(), id)
     }
 
     pub fn num_filters(&self) -> usize {
@@ -111,10 +108,10 @@ impl SignalFilter {
         }
     }
 
-    pub fn add_audio(&mut self, audio_sample: &f32) -> Sample {
-        let mut res = Sample::new_empty(self.num_filters());
+    pub fn get_filter_vals(&mut self, audio_sample: &f32) -> Vec<f32> {
+        let mut res = Vec::with_capacity(self.num_filters());
         for i in 0..self.num_filters() {
-            res.vals.push(self.filters[i].run(*audio_sample));
+            res.push(self.filters[i].run(*audio_sample));
         }
         res
     }
@@ -168,7 +165,7 @@ impl SignalProcessor {
     ) -> SignalProcessor {
         let subsample_frame_size = (sample_freq / fps) as usize;
         let filter = SignalFilter::new(f_start, f_end, sample_freq, q, n_filters);
-        let empty_sample = filter.null_sample();
+        let empty_sample = filter.null_sample(0);
         SignalProcessor {
             hist: vec![empty_sample].into_iter().collect(),
             hist_len: hist_len.map(|hist_secs| (fps * hist_secs) as usize),
@@ -192,8 +189,11 @@ impl SignalProcessor {
     }
 
     pub fn add_sample(&mut self, sample: &f32) {
-        let new_sample = self.filter.add_audio(sample);
-        self.get_current_sample().merge_in(&new_sample);
+        let vals = self.filter.get_filter_vals(sample);
+        let sample = self.get_current_sample();
+        for i in 0..vals.len() {
+            sample.vals[i] = sample.vals[i].max(vals[i]);
+        }
         self.register_sample_added();
     }
 
@@ -205,7 +205,8 @@ impl SignalProcessor {
         self.missing_audio_samples -= 1;
         if self.missing_audio_samples == 0 {
             // current sample is full.  Push a new empty one.
-            self.hist.push_front(self.filter.null_sample());
+            let n_id = self.get_current_sample().id + 1;
+            self.hist.push_front(self.filter.null_sample(n_id));
             // reset sample counter
             self.missing_audio_samples = self.subsample_frame_size;
             // if we have a max hist len and we have too many items, pop one.
@@ -219,6 +220,10 @@ impl SignalProcessor {
 
     fn get_current_sample(&mut self) -> &mut Sample {
         self.hist.get_mut(0).unwrap()
+    }
+
+    pub fn get_current_sample_id(&self) -> u128 {
+        self.hist[0].get_id()
     }
 
     fn decay(&self, i: usize) -> f32 {

@@ -12,3 +12,5 @@ nightfire = { path = "../nightfire" }
 piston_window = "0.107.0"
 # stoppable thread
 stoppable_thread = "0.2.1"
+# jack
+jack = "0.6"
