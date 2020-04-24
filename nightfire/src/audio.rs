@@ -1,9 +1,11 @@
 //! This module creates 'semantic' values from audio frame buffers.
 //! Currently there is only a simple function that extracts the max
 //! sample from a frame.
+use crate::clock::Clock;
 use biquad as bq;
 use biquad::Biquad;
 use std::collections::VecDeque;
+use std::sync::{Arc, RwLock};
 use std::vec::Vec;
 
 /// This struct represents the values that are extracted from the
@@ -138,6 +140,8 @@ pub struct SignalProcessor {
     /// How many audio samples should go in a subsample
     subsample_frame_size: usize,
     missing_audio_samples: usize,
+    /// clock
+    clock: Arc<RwLock<Clock>>,
 }
 
 /* Parameters:
@@ -172,11 +176,16 @@ impl SignalProcessor {
             filter: filter,
             subsample_frame_size: subsample_frame_size,
             missing_audio_samples: subsample_frame_size,
+            clock: Arc::new(RwLock::new(Clock::new(1000. / fps as f64))),
         }
     }
 
     pub fn get_subsample_frame_size(&self) -> usize {
         self.subsample_frame_size
+    }
+
+    pub fn get_clock(&self) -> &Arc<RwLock<Clock>> {
+        &self.clock
     }
 
     /// The audio_frame parameter is a view of a bufferslice from
@@ -205,7 +214,8 @@ impl SignalProcessor {
         self.missing_audio_samples -= 1;
         if self.missing_audio_samples == 0 {
             // current sample is full.  Push a new empty one.
-            let n_id = self.get_current_sample().id + 1;
+            self.clock.write().unwrap().tick();
+            let n_id = self.clock.read().unwrap().ticks();
             self.hist.push_front(self.filter.null_sample(n_id));
             // reset sample counter
             self.missing_audio_samples = self.subsample_frame_size;
