@@ -46,6 +46,11 @@ impl BeatGrid {
         let remainder = (diff as f32) % self.step_size_rounded();
         remainder / self.step
     }
+
+    pub fn current_beat_fraction(&self) -> f32 {
+        let now = SystemTime::now();
+        self.beat_fraction(now)
+    }
 }
 
 /// A struct that keeps track of manually generated taps and can

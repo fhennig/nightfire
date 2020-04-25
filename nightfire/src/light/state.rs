@@ -100,7 +100,7 @@ impl State {
     // bpm tapping
 
     pub fn beat_tap(&mut self) {
-        
+        self.tapper.tap_now();
     }
 
     // inspection functions for debug UI
@@ -129,6 +129,9 @@ impl State {
         color = self.value_layer.get_color(&pos, color);
         color = self.music_mask.get_masked_color(&pos, color);
         color = self.pulse_mask.get_masked_color(&pos, color);
+        if let Some(beat_grid) = self.tapper.get_beat_grid() {
+            color = color::Color::mask(&color, 1. - beat_grid.current_beat_fraction() as f64);
+        }
         color
     }
 }
