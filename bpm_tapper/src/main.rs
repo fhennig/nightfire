@@ -6,7 +6,6 @@ use std::io;
 use std::sync::{Arc, Mutex};
 
 fn read_keyboard(
-    sp: Arc<Mutex<audio::SignalProcessor>>,
     beat_grid: Arc<Mutex<Option<tapper::BeatGrid>>>,
 ) {
     let mut input = String::new();
@@ -16,8 +15,7 @@ fn read_keyboard(
     let mut tapper = tapper::BpmTapper::new();
     while input != "exit!" {
         stdin.read_line(&mut input).expect("Error reading input!");
-        let ms = sp.lock().unwrap().get_current_sample_id() * 10;
-        tapper.add_tap(ms);
+        tapper.tap_now();
         let n_g = tapper.get_beat_grid();
         if let Some(grid) = n_g {
             println!("{}", grid.bpm());
@@ -55,11 +53,9 @@ fn main() {
         100.,
         Some(100.),
     )));
-    let sp_copy = Arc::clone(&sp);
-    let sp_copy2 = Arc::clone(&sp);
     let client = jack::open_client("bpm_tapper");
-    let async_client =
-        jack::start_processing(client, "system:capture_1", Box::new(Handler::new(sp_copy)));
-    std::thread::spawn(move || read_keyboard(sp, state_copy));
-    ui::create_window(state, sp_copy2);
+    let _async_client =
+        jack::start_processing(client, "system:capture_1", Box::new(Handler::new(sp)));
+    std::thread::spawn(move || read_keyboard(state_copy));
+    ui::create_window(state);
 }

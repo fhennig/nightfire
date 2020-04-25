@@ -4,6 +4,7 @@ use crate::light::cprov::{self, ColorMap};
 use crate::light::layer::{ColorMapLayer, Layers, MaskLayer, SolidLayer};
 use crate::light::mask::{self, Mask};
 use crate::light::ColorsExt;
+use crate::tapper::BpmTapper;
 
 /// The overall mode.  There are a couple of high level modes.  Should
 /// the lights be off?  Should a be a constant setting?  Should a be
@@ -28,6 +29,8 @@ pub struct State {
     /// The music masks gets brightness from the music
     pub music_mask: mask::ActivatableMask<mask::SolidMask>,
     pulse_mask: mask::ActivatableMask<mask::EnvMask>,
+    // beat
+    tapper: BpmTapper,
 }
 
 impl State {
@@ -45,6 +48,8 @@ impl State {
             // masks
             music_mask: mask::ActivatableMask::new(mask::SolidMask::new(), false),
             pulse_mask: mask::ActivatableMask::new(mask::EnvMask::new_random_pulse(), false),
+            // tapper
+            tapper: BpmTapper::new(),
         }
     }
 
@@ -90,6 +95,12 @@ impl State {
 
     pub fn set_intensity(&mut self, intensity: f32) {
         self.music_mask.mask.set_val(intensity.into());
+    }
+
+    // bpm tapping
+
+    pub fn beat_tap(&mut self) {
+        
     }
 
     // inspection functions for debug UI

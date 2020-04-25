@@ -1,15 +1,16 @@
 use std::time;
 use std::vec::Vec;
+use std::time::SystemTime;
 
 /// Represents a beat grid. A sequence of beats with an offset.
 #[derive(Clone, Copy, Debug)]
 pub struct BeatGrid {
-    start: u128,
+    start: SystemTime,
     step: f32,
 }
 
 impl BeatGrid {
-    fn new(diffs: &Vec<u128>, last_tap: u128) -> BeatGrid {
+    fn new(diffs: &Vec<u128>, last_tap: SystemTime) -> BeatGrid {
         let n = diffs.len() as f32;
         let mut sum: f32 = 0.;
         for v in diffs {
@@ -37,12 +38,11 @@ impl BeatGrid {
         60. * 1000. / self.bpm_rounded()
     }
 
-    #[allow(dead_code)]
     /// Takes a time and returns how far through the current beat the
     /// time is.  0 mean beat ist just now, 0.2 means 20% in, 0.9 means almost over.
     /// For this it is assumed that the BPM is a natural number!
-    pub fn beat_fraction(&self, timestamp: u128) -> f32 {
-        let diff = timestamp - self.start;
+    pub fn beat_fraction(&self, timestamp: SystemTime) -> f32 {
+        let diff = timestamp.duration_since(self.start).expect("time went backwards?").as_millis();
         let remainder = (diff as f32) % self.step_size_rounded();
         remainder / self.step
     }
@@ -53,7 +53,7 @@ impl BeatGrid {
 /// if the temporal difference between two consecutive taps is too
 /// long.
 pub struct BpmTapper {
-    last_tap: Option<u128>,  // in millis
+    last_tap: Option<SystemTime>,  // in millis
     diffs: Vec<u128>, // in millis
     beat_grid: Option<BeatGrid>,
 }
@@ -67,9 +67,9 @@ impl BpmTapper {
         }
     }
 
-    pub fn add_tap(&mut self, time_ms: u128) {
+    pub fn add_tap(&mut self, new_tap: SystemTime) {
         if let Some(old_tap) = self.last_tap {
-            let diff = time_ms - old_tap;
+            let diff = new_tap.duration_since(old_tap).expect("time went backwards?").as_millis();
             // if old tap is too long ago, start new list.
             if diff > 2000 {
                 self.diffs = vec![];
@@ -77,13 +77,18 @@ impl BpmTapper {
                 self.diffs.push(diff);
             }
         }
-        self.last_tap = Some(time_ms);
+        self.last_tap = Some(new_tap);
         // update beatgrid
         if self.diffs.len() <= 1 {
             self.beat_grid = None;
         } else {
-            self.beat_grid = Some(BeatGrid::new(&self.diffs, time_ms));
+            self.beat_grid = Some(BeatGrid::new(&self.diffs, new_tap));
         }
+    }
+
+    pub fn tap_now(&mut self) {
+        let now = SystemTime::now();
+        self.add_tap(now);
     }
 
     /// Get the current beat grid
