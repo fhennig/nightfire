@@ -47,20 +47,14 @@ fn make_filter(f_s: f32, f_c: f32, q: f32) -> bq::DirectForm2Transposed<f32> {
 /// amplitudes at different frequencies.
 #[derive(Debug, Clone)]
 pub struct Sample {
-    id: u128,
     vals: Vec<f32>,
 }
 
 impl Sample {
-    pub fn new_null(len: usize, id: u128) -> Sample {
+    pub fn new_null(len: usize) -> Sample {
         Sample {
-            id: id,
             vals: vec![0.; len],
         }
-    }
-
-    pub fn get_id(&self) -> u128 {
-        self.id
     }
 
     pub fn get_vals_cloned(&self) -> Vec<f32> {
@@ -90,8 +84,8 @@ impl SignalFilter {
         }
     }
 
-    pub fn null_sample(&self, id: u128) -> Sample {
-        Sample::new_null(self.num_filters(), id)
+    pub fn null_sample(&self) -> Sample {
+        Sample::new_null(self.num_filters())
     }
 
     pub fn num_filters(&self) -> usize {
@@ -165,7 +159,7 @@ impl SignalProcessor {
     ) -> SignalProcessor {
         let subsample_frame_size = (sample_freq / fps) as usize;
         let filter = SignalFilter::new(f_start, f_end, sample_freq, q, n_filters);
-        let empty_sample = filter.null_sample(0);
+        let empty_sample = filter.null_sample();
         SignalProcessor {
             hist: vec![empty_sample].into_iter().collect(),
             hist_len: hist_len.map(|hist_secs| (fps * hist_secs) as usize),
@@ -191,8 +185,8 @@ impl SignalProcessor {
     pub fn add_sample(&mut self, sample: &f32) {
         let vals = self.filter.get_filter_vals(sample);
         let sample = self.get_current_sample();
-        for i in 0..vals.len() {
-            sample.vals[i] = sample.vals[i].max(vals[i]);
+        for (i, val) in vals.iter().enumerate() {
+            sample.vals[i] = sample.vals[i].max(*val);
         }
         self.register_sample_added();
     }
@@ -205,8 +199,7 @@ impl SignalProcessor {
         self.missing_audio_samples -= 1;
         if self.missing_audio_samples == 0 {
             // current sample is full.  Push a new empty one.
-            let n_id = self.get_current_sample().id + 1;
-            self.hist.push_front(self.filter.null_sample(n_id));
+            self.hist.push_front(self.filter.null_sample());
             // reset sample counter
             self.missing_audio_samples = self.subsample_frame_size;
             // if we have a max hist len and we have too many items, pop one.
@@ -220,10 +213,6 @@ impl SignalProcessor {
 
     fn get_current_sample(&mut self) -> &mut Sample {
         self.hist.get_mut(0).unwrap()
-    }
-
-    pub fn get_current_sample_id(&self) -> u128 {
-        self.hist[0].get_id()
     }
 
     fn decay(&self, i: usize) -> f32 {

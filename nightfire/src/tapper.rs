@@ -58,7 +58,8 @@ impl BeatGrid {
 /// if the temporal difference between two consecutive taps is too
 /// long.
 pub struct BpmTapper {
-    last_tap: Option<SystemTime>,  // in millis
+    first_tap: Option<SystemTime>,
+    last_tap: Option<SystemTime>,
     diffs: Vec<u128>, // in millis
     beat_grid: Option<BeatGrid>,
 }
@@ -66,6 +67,7 @@ pub struct BpmTapper {
 impl BpmTapper {
     pub fn new() -> BpmTapper {
         BpmTapper {
+            first_tap: None,
             last_tap: None,
             diffs: vec![],
             beat_grid: None,
@@ -75,19 +77,24 @@ impl BpmTapper {
     pub fn add_tap(&mut self, new_tap: SystemTime) {
         if let Some(old_tap) = self.last_tap {
             let diff = new_tap.duration_since(old_tap).expect("time went backwards?").as_millis();
-            // if old tap is too long ago, start new list.
             if diff > 2000 {
+                // if old tap is too long ago, start new list.
                 self.diffs = vec![];
+                self.first_tap = Some(new_tap);
             } else {
                 self.diffs.push(diff);
             }
         }
         self.last_tap = Some(new_tap);
+        if let None = self.first_tap {
+            self.first_tap = Some(new_tap);
+        }
         // update beatgrid
         if self.diffs.len() <= 1 {
             self.beat_grid = None;
         } else {
-            self.beat_grid = Some(BeatGrid::new(&self.diffs, new_tap));
+            let t = self.first_tap.unwrap();
+            self.beat_grid = Some(BeatGrid::new(&self.diffs, t));
         }
     }
 
