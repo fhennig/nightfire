@@ -41,13 +41,14 @@ impl BeatGrid {
     /// Takes a time and returns how far through the current beat the
     /// time is.  0 mean beat ist just now, 0.2 means 20% in, 0.9 means almost over.
     /// For this it is assumed that the BPM is a natural number!
-    pub fn beat_fraction(&self, timestamp: SystemTime) -> f32 {
+    pub fn beat_fraction(&self, timestamp: SystemTime) -> (u128, f32) {
         let diff = timestamp.duration_since(self.start).expect("time went backwards?").as_millis();
+        let beat_count = ((diff as f32) / self.step_size_rounded()).floor() as u128;
         let remainder = (diff as f32) % self.step_size_rounded();
-        remainder / self.step
+        (beat_count, remainder / self.step)
     }
 
-    pub fn current_beat_fraction(&self) -> f32 {
+    pub fn current_beat_fraction(&self) -> (u128, f32) {
         let now = SystemTime::now();
         self.beat_fraction(now)
     }
@@ -60,7 +61,7 @@ impl BeatGrid {
 pub struct BpmTapper {
     first_tap: Option<SystemTime>,
     last_tap: Option<SystemTime>,
-    diffs: Vec<u128>, // in millis
+    pub diffs: Vec<u128>, // in millis
     beat_grid: Option<BeatGrid>,
 }
 
@@ -82,6 +83,8 @@ impl BpmTapper {
                 self.diffs = vec![];
                 self.first_tap = Some(new_tap);
             } else {
+                // let pos = self.diffs.binary_search(&diff).unwrap_or_else(|e| e);
+                // self.diffs.insert(pos, diff);
                 self.diffs.push(diff);
             }
         }
@@ -106,5 +109,31 @@ impl BpmTapper {
     /// Get the current beat grid
     pub fn get_beat_grid(&self) -> &Option<BeatGrid> {
         &self.beat_grid
+    }
+
+    pub fn get_median_grid(&self) -> Option<BeatGrid> {
+        // update beatgrid
+        if self.diffs.len() <= 1 {
+            None
+        } else {
+            let t = self.first_tap.unwrap();
+            let i = self.diffs.len() / 2;
+            let median = vec![self.diffs[i]];
+            Some(BeatGrid::new(&median, t))
+        }
+    }
+
+    pub fn get_smart_grid(&self) -> Option<BeatGrid> {
+        // update beatgrid
+        if self.diffs.len() <= 1 {
+            None
+        } else if self.diffs.len() < 8 {
+            *self.get_beat_grid()
+        } else {
+            let t = self.first_tap.unwrap();
+            let i = self.diffs.len() / 2;
+            let v = self.diffs[i..].to_vec();
+            Some(BeatGrid::new(&v, t))
+        }
     }
 }

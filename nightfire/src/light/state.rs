@@ -130,7 +130,7 @@ impl State {
         color = self.music_mask.get_masked_color(&pos, color);
         color = self.pulse_mask.get_masked_color(&pos, color);
         if let Some(beat_grid) = self.tapper.get_beat_grid() {
-            color = color::Color::mask(&color, 1. - beat_grid.current_beat_fraction() as f64);
+            color = color::Color::mask(&color, 1. - beat_grid.current_beat_fraction().1 as f64);
         }
         color
     }
