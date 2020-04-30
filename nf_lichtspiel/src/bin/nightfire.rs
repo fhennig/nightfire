@@ -24,7 +24,7 @@ impl AudioStateUpdater {
                 20.,
                 20_000.,
                 3.,
-                100,
+                30,
                 50.,
                 Some(4.),
             ),
