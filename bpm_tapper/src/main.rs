@@ -5,9 +5,7 @@ use nightfire::tapper;
 use std::io;
 use std::sync::{Arc, Mutex};
 
-fn read_keyboard(
-    beat_grid: Arc<Mutex<Option<tapper::BeatGrid>>>,
-) {
+fn read_keyboard(beat_grid: Arc<Mutex<Option<tapper::BeatGrid>>>) {
     let mut input = String::new();
     let stdin = io::stdin();
     println! {"Hit enter to start and keep hitting in the beat!"}
@@ -17,8 +15,15 @@ fn read_keyboard(
         stdin.read_line(&mut input).expect("Error reading input!");
         tapper.tap_now();
         let n_g = tapper.get_beat_grid();
+        let m_g = tapper.get_median_grid();
+        let s_g = tapper.get_smart_grid();
         if let Some(grid) = n_g {
-            println!("{}", grid.bpm());
+            println!(
+                "{}, median: {}, s: {}",
+                grid.bpm_rounded(),
+                m_g.unwrap().bpm_rounded(),
+                s_g.unwrap().bpm_rounded()
+            );
         }
         let mut g = beat_grid.lock().unwrap();
         *g = *n_g;

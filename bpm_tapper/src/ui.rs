@@ -22,15 +22,25 @@ pub fn create_window(grid: Arc<Mutex<Option<BeatGrid>>>) {
         if g.is_none() {
             continue;
         }
-        let f = g.unwrap().beat_fraction(now) as f64;
+        let (beat_count, f) = g.unwrap().beat_fraction(now);
+        let beat_count = (beat_count % 4) as f64;
+        let f = f as f64;
         window.draw_2d(&event, |context, graphics, _device| {
             clear(bg_color, graphics);
+            // beat bar
             rectangle(
                 fg_color,
                 [0., h * f, w, h * (1. - f)],
                 context.transform,
                 graphics,
             );
+            rectangle(
+                fg_color,
+                [(beat_count / 4.) * w, 0., 0.25 * w, 0.25 * w],
+                context.transform,
+                graphics,
+            );
+            
         });
     }
 }
