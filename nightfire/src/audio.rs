@@ -62,19 +62,61 @@ impl Sample {
     }
 }
 
+/// Holds some information on how to interpret a feature vector.  Also
+/// contains some functions to extract information from features.
+struct FilterFreqs {
+    pub freqs: Vec<f32>,
+}
+
+impl FilterFreqs {
+    pub fn log_space_freqs(f_start: f32, f_end: f32, num_filters: usize) -> Self {
+        let freqs = statrs::generate::log_spaced(
+            num_filters,
+            f_start.log(10.).into(),
+            f_end.log(10.).into(),
+        )
+        .into_iter()
+        .map(|freq| freq as f32)
+        .collect();
+        Self { freqs: freqs }
+    }
+
+    /// Returns the index of the frequency in the frequency list, or
+    /// the next hightest index if the frequency is missing.  If
+    /// f_start is 200 and the list is [50, 100, 200, 400] then 2 is
+    /// returned.  If the list is [30, 60, 120, 240, 480] then 3 is
+    /// returned.
+    fn get_freq_index(&self, f_start: f32) -> usize {
+        match self
+            .freqs
+            .binary_search_by(|v| v.partial_cmp(&f_start).unwrap())
+        {
+            Ok(r) => return r,
+            Err(r) => return r,
+        }
+    }
+
+    /// Returns a max value from the values within the frequency range.
+    pub fn get_slice_value(&self, f_start: f32, f_end: f32, sample: &Sample) -> f32 {
+        let i_start = self.get_freq_index(f_start);
+        let i_end = self.get_freq_index(f_end);
+        let mut v: f32 = 0.;
+        for i in i_start..i_end {
+            v = v.max(sample.vals[i]);
+        }
+        v
+    }
+}
+
 struct SignalFilter {
-    freqs: Vec<f32>,
+    freqs: FilterFreqs,
     filters: Vec<bq::DirectForm2Transposed<f32>>,
 }
 
 impl SignalFilter {
     fn new(f_start: f32, f_end: f32, f_s: f32, q: f32, n_filters: usize) -> SignalFilter {
-        let freqs: Vec<f32> =
-            statrs::generate::log_spaced(n_filters, f_start.log(10.).into(), f_end.log(10.).into())
-                .into_iter()
-                .map(|freq| freq as f32)
-                .collect();
-        let filters = freqs
+        let freqs = FilterFreqs::log_space_freqs(f_start, f_end, n_filters);
+        let filters = freqs.freqs
             .iter()
             .map(|freq| make_filter(f_s, *freq as f32, q))
             .collect();
@@ -92,16 +134,7 @@ impl SignalFilter {
         self.filters.len()
     }
 
-    fn get_freq_index(&self, f_start: f32) -> usize {
-        match self
-            .freqs
-            .binary_search_by(|v| v.partial_cmp(&f_start).unwrap())
-        {
-            Ok(r) => return r,
-            Err(r) => return r,
-        }
-    }
-
+    /// For a given sample of audio, return the filter values
     pub fn get_filter_vals(&mut self, audio_sample: &f32) -> Vec<f32> {
         let mut res = Vec::with_capacity(self.num_filters());
         for i in 0..self.num_filters() {
@@ -111,13 +144,39 @@ impl SignalFilter {
     }
 
     pub fn get_slice_value(&self, f_start: f32, f_end: f32, sample: &Sample) -> f32 {
-        let i_start = self.get_freq_index(f_start);
-        let i_end = self.get_freq_index(f_end);
-        let mut v: f32 = 0.;
-        for i in i_start..i_end {
-            v = v.max(sample.vals[i]);
+        self.freqs.get_slice_value(f_start, f_end, sample)
+    }
+}
+
+trait SampleHandler {
+    fn recv_sample(&mut self, sample: Sample);
+}
+
+struct DefaultSampleHandler {
+    /// The intensity history calculated from the last n buffers.  We
+    /// push to the front (newest element at index 0).
+    hist: VecDeque<Sample>,
+    /// The length of the history in samples.
+    hist_len: usize,
+    /// Filter frequencies of the samples.
+    filter_freqs: FilterFreqs,
+}
+
+impl DefaultSampleHandler {
+    pub fn new(hist_len: usize, filter_freqs: FilterFreqs) -> Self {
+        Self {
+            hist: vec![].into_iter().collect(),
+            hist_len: hist_len,
+            filter_freqs: filter_freqs,
         }
-        v
+    }
+
+    fn decay(&self, i: usize) -> f32 {
+        //1. - (1. / (1. + (-0.8 * (i as f32) + 5.).exp()))
+        // TODO decay should be time dependent, not per sample.
+        // 0.8f32.powi(i as i32)
+        let d = 0.1; // 0.1 -> slow. 0.9 -> fast
+        (1. - d * (i as f32)).max(0.)
     }
 }
 
