@@ -64,6 +64,7 @@ impl Sample {
 
 /// Holds some information on how to interpret a feature vector.  Also
 /// contains some functions to extract information from features.
+#[derive(Clone)]
 struct FilterFreqs {
     pub freqs: Vec<f32>,
 }
@@ -108,7 +109,7 @@ impl FilterFreqs {
     }
 }
 
-struct SignalFilter {
+pub struct SignalFilter {
     freqs: FilterFreqs,
     filters: Vec<bq::DirectForm2Transposed<f32>>,
 }
@@ -116,7 +117,8 @@ struct SignalFilter {
 impl SignalFilter {
     fn new(f_start: f32, f_end: f32, f_s: f32, q: f32, n_filters: usize) -> SignalFilter {
         let freqs = FilterFreqs::log_space_freqs(f_start, f_end, n_filters);
-        let filters = freqs.freqs
+        let filters = freqs
+            .freqs
             .iter()
             .map(|freq| make_filter(f_s, *freq as f32, q))
             .collect();
@@ -148,7 +150,7 @@ impl SignalFilter {
     }
 }
 
-trait SampleHandler {
+pub trait SampleHandler {
     fn recv_sample(&mut self, sample: Sample);
 }
 
@@ -177,6 +179,101 @@ impl DefaultSampleHandler {
         // 0.8f32.powi(i as i32)
         let d = 0.1; // 0.1 -> slow. 0.9 -> fast
         (1. - d * (i as f32)).max(0.)
+    }
+
+    fn get_range_decayed(&self, f_start: f32, f_end: f32) -> f32 {
+        self.hist
+            .iter()
+            .enumerate()
+            .map(|(i, val)| self.filter_freqs.get_slice_value(f_start, f_end, &val) * self.decay(i))
+            .fold(-1. / 0., f32::max)
+    }
+
+    pub fn get_filter_decayed(&self, f_index: usize) -> f32 {
+        self.hist
+            .iter()
+            .enumerate()
+            .map(|(i, val)| val.vals[f_index] * self.decay(i))
+            .fold(-1. / 0., f32::max)
+    }
+}
+
+impl SampleHandler for DefaultSampleHandler {
+    fn recv_sample(&mut self, sample: Sample) {
+        self.hist.push_front(sample);
+        if self.hist.len() > self.hist_len {
+            self.hist.pop_back();
+        }
+    }
+}
+
+pub fn setup(f_start: f32, f_end: f32, f_s: f32, q: f32, n_filters: usize) {
+    let signal_filter = SignalFilter::new(f_start, f_end, f_s, q, n_filters);
+    let sample_handler = DefaultSampleHandler::new(10, signal_filter.freqs.clone());
+    let signal_processor = SignalProcessor2::new(f_s, signal_filter, 50.0, Box::new(sample_handler));
+}
+
+/// The signal processor takes care of handling a raw audio signal.
+/// It uses a SignalFilter to extract features from the signal.  It
+/// then collects feature vectors at a given sampling rate.  Whenever
+/// a new sample is ready it is given to the SampleHandler.
+pub struct SignalProcessor2 {
+    /// SampleHandler, takes care of the samples once they are fully
+    /// collected.
+    sample_handler: Box<dyn SampleHandler>,
+    /// Filter, takes care of extracting features from a single sample
+    /// of audio.
+    filter: SignalFilter,
+    /// How many audio samples should go in a subsample
+    subsample_frame_size: usize,
+    missing_audio_samples: usize,
+    current_sample: Sample,
+}
+
+impl SignalProcessor2 {
+    pub fn new(
+        sample_freq: f32,
+        filter: SignalFilter,
+        fps: f32,
+        handler: Box<dyn SampleHandler>,
+    ) -> Self {
+        let subsample_frame_size = (sample_freq / fps) as usize;
+        let empty_sample = filter.null_sample();
+        Self {
+            sample_handler: handler,
+            filter: filter,
+            subsample_frame_size: subsample_frame_size,
+            missing_audio_samples: subsample_frame_size,
+            current_sample: empty_sample,
+        }
+    }
+
+    /// The audio_frame parameter is a view of a bufferslice from
+    /// jack, which is 1024 or 512 floats big and represents a frame
+    /// of samples.
+    pub fn add_audio_frame(&mut self, audio_frame: &[f32]) {
+        for x in audio_frame {
+            self.add_sample(x);
+        }
+    }
+
+    pub fn add_sample(&mut self, sample: &f32) {
+        let vals = self.filter.get_filter_vals(sample);
+        for (i, val) in vals.iter().enumerate() {
+            self.current_sample.vals[i] = self.current_sample.vals[i].max(*val);
+        }
+        self.register_sample_added();
+    }
+
+    fn register_sample_added(&mut self) {
+        self.missing_audio_samples -= 1;
+        if self.missing_audio_samples == 0 {
+            let finished_sample =
+                std::mem::replace(&mut self.current_sample, self.filter.null_sample());
+            self.sample_handler.recv_sample(finished_sample);
+            // reset sample counter
+            self.missing_audio_samples = self.subsample_frame_size;
+        }
     }
 }
 
