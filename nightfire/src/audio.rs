@@ -65,7 +65,7 @@ impl Sample {
 /// Holds some information on how to interpret a feature vector.  Also
 /// contains some functions to extract information from features.
 #[derive(Clone)]
-struct FilterFreqs {
+pub struct FilterFreqs {
     pub freqs: Vec<f32>,
 }
 
@@ -154,7 +154,28 @@ pub trait SampleHandler {
     fn recv_sample(&mut self, sample: Sample);
 }
 
-struct DefaultSampleHandler {
+/// A simple sample handler that just collects all the samples.
+/// Useful to run with a limited amount of audio, so the history can
+/// be retrieved later.
+pub struct CollectSampleHandler {
+    pub hist: Vec<Sample>,
+}
+
+impl CollectSampleHandler {
+    pub fn new() -> Self {
+        Self {
+            hist: vec![],
+        }
+    }
+}
+
+impl SampleHandler for CollectSampleHandler {
+    fn recv_sample(&mut self, sample: Sample) {
+        self.hist.push(sample);
+    }
+}
+
+pub struct DefaultSampleHandler {
     /// The intensity history calculated from the last n buffers.  We
     /// push to the front (newest element at index 0).
     hist: VecDeque<Sample>,
@@ -210,14 +231,14 @@ impl SampleHandler for DefaultSampleHandler {
 pub fn setup(f_start: f32, f_end: f32, f_s: f32, q: f32, n_filters: usize) {
     let signal_filter = SignalFilter::new(f_start, f_end, f_s, q, n_filters);
     let sample_handler = DefaultSampleHandler::new(10, signal_filter.freqs.clone());
-    let signal_processor = SignalProcessor2::new(f_s, signal_filter, 50.0, Box::new(sample_handler));
+    let signal_processor = SigProc::new(f_s, signal_filter, 50.0, Box::new(sample_handler));
 }
 
 /// The signal processor takes care of handling a raw audio signal.
 /// It uses a SignalFilter to extract features from the signal.  It
 /// then collects feature vectors at a given sampling rate.  Whenever
 /// a new sample is ready it is given to the SampleHandler.
-pub struct SignalProcessor2 {
+pub struct SigProc {
     /// SampleHandler, takes care of the samples once they are fully
     /// collected.
     sample_handler: Box<dyn SampleHandler>,
@@ -230,7 +251,7 @@ pub struct SignalProcessor2 {
     current_sample: Sample,
 }
 
-impl SignalProcessor2 {
+impl SigProc {
     pub fn new(
         sample_freq: f32,
         filter: SignalFilter,
