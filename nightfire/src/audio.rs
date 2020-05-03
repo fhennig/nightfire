@@ -254,7 +254,7 @@ pub struct SigProc<T> {
     pub sample_handler: T,
     /// Filter, takes care of extracting features from a single sample
     /// of audio.
-    filter: SignalFilter,
+    pub filter: SignalFilter,
     /// How many audio samples should go in a subsample
     subsample_frame_size: usize,
     missing_audio_samples: usize,

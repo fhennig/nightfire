@@ -2,7 +2,7 @@ use clap::{App, Arg};
 use nf_lichtspiel::jack;
 use nf_lichtspiel::conf;
 use nf_lichtspiel::ui::eq;
-use nightfire::audio::SignalProcessor;
+use nightfire::audio;
 
 fn main() {
     // argparsing
@@ -22,7 +22,9 @@ fn main() {
     let client = jack::open_client("eq_display");
     let sample_rate = client.sample_rate() as f32;
     // prepare processor
-    let sig_proc = SignalProcessor::new(sample_rate, 20., 20_000., q, n_filters, 50., Some(0.3));
+    let filter = audio::SignalFilter::new(20., 20_000., sample_rate, q, n_filters);
+    let handler = audio::DefaultSampleHandler::new(100, filter.freqs.clone());
+    let sig_proc = audio::SigProc::<audio::DefaultSampleHandler>::new(sample_rate, filter, 50., handler);
     let mut proc = eq::EqViz::new(sig_proc);
     let state = proc.get_shared_vals();
     // get port from config
