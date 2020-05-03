@@ -429,11 +429,4 @@ impl SignalProcessor {
             self.get_range_decayed(10_000., 22_000.), // cripsp
         )
     }
-
-    /// returns the history back to front.  Expensive to call!!
-    pub fn get_hist(&self) -> Vec<Sample> {
-        let mut v = self.hist.iter().cloned().collect::<Vec<Sample>>();
-        v.reverse();
-        v
-    }
 }
