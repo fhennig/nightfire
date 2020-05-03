@@ -1,3 +1,7 @@
+/// Masks.  Most fundamentally, a mask is a function that maps
+/// coordinates to values between 0 and 1.  The mask can then be
+/// applied to a color.  0 means that the result is black, not color.
+/// 1 means only color, no black.
 use crate::light::{Color, ColorsExt, PinValue};
 use crate::light::coord;
 use crate::light::envelope::Envelope;
