@@ -2,3 +2,5 @@ conf.yaml
 site
 /target
 **/*.rs.bk
+
+nf_data
