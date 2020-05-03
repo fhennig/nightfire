@@ -142,6 +142,31 @@ impl EnvMask {
         }
     }
 
+    pub fn new_linear_decay(decay_in_ms: u64) -> EnvMask {
+        EnvMask {
+            top_right: Envelope::new_linear_decay(Duration::from_millis(decay_in_ms)),
+            bot_right: Envelope::new_linear_decay(Duration::from_millis(decay_in_ms)),
+            bot_left: Envelope::new_linear_decay(Duration::from_millis(decay_in_ms)),
+            top_left: Envelope::new_linear_decay(Duration::from_millis(decay_in_ms)),
+        }
+    }
+
+    pub fn reset_tr(&mut self) {
+        self.top_right.reset();
+    }
+
+    pub fn reset_br(&mut self) {
+        self.bot_right.reset();
+    }
+
+    pub fn reset_bl(&mut self) {
+        self.bot_left.reset();
+    }
+
+    pub fn reset_tl(&mut self) {
+        self.top_left.reset();
+    }
+
     fn get_pos_mask(&self) -> DiscretePosMask {
         DiscretePosMask::new(
             self.top_right.get_current_value(),
