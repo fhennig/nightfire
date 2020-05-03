@@ -1,5 +1,5 @@
 pi-blaster: /dev/null
-audio-in: system:capture_1
+audio-in: PulseAudio JACK Sink:front-left
 lights:
   Top:
     r: 14
