@@ -1,6 +1,6 @@
-use nightfire::light::{Color, State, Mode, Coordinate, Quadrant};
 use crate::sixaxis::{Axis, Button, ControllerValsSink, ControllerValues};
 use log::debug;
+use nightfire::light::{Color, Coordinate, Mode, Quadrant, State};
 use palette::Hsv;
 use std::sync::{Arc, Mutex};
 
@@ -181,15 +181,21 @@ impl StateUpdater {
                 s.flash_bot_left();
                 s.flash_bot_right();
             }
-            // color rotations
-            if controller.was_pressed(Button::Left) {
-                s.manual_mode().rotate_ccw();
+            if controller.is_pressed(Button::Left) {
+                s.flash_top_left();
+                s.flash_bot_left();
+            }
+            if controller.is_pressed(Button::Right) {
+                s.flash_top_right();
+                s.flash_bot_right();
             }
             match s.get_active_mode() {
                 Mode::OffMode => (), // no controls need to be set
                 Mode::RainbowMode => (),
                 Mode::ManualMode => {
-                    s.white_layer().mask.set_val(1. - controller.right_trigger());
+                    s.white_layer()
+                        .mask
+                        .set_val(1. - controller.right_trigger());
                     if !controller.is_pressed(Button::Circle) {
                         // decide if a color should be set
                         match get_color_from_controller(controller) {
@@ -206,6 +212,12 @@ impl StateUpdater {
                                 }
                                 if controller.is_pressed(Button::Down) {
                                     s.manual_mode().set_bottom(color);
+                                }
+                                if controller.is_pressed(Button::Left) {
+                                    s.manual_mode().set_left(color);
+                                }
+                                if controller.is_pressed(Button::Right) {
+                                    s.manual_mode().set_right(color);
                                 }
                                 match get_quad_from_controller(controller) {
                                     Some(quad) => s.manual_mode().set_color(quad, color),

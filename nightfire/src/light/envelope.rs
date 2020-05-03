@@ -31,6 +31,7 @@ impl Envelope {
             period: period,
             spline: Spline::from_vec(vec![
                 Key::new(0., 1., Interpolation::Linear),
+                Key::new(0.08, 1., Interpolation::Linear),
                 Key::new(1., 0., Interpolation::Linear),
             ]),
             looping: false,
