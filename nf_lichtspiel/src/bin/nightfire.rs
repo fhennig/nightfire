@@ -11,23 +11,18 @@ use std::sync::{Arc, Mutex};
 use std::{error, thread, time};
 
 struct AudioStateUpdater {
-    signal_processor: audio::SignalProcessor,
+    signal_processor: audio::SigProc<audio::DefaultSampleHandler>,
     state: Arc<Mutex<State>>,
 }
 
 impl AudioStateUpdater {
     pub fn new(state: Arc<Mutex<State>>, sample_rate: f32) -> AudioStateUpdater {
+        let filter = audio::SignalFilter::new(20., 20_000., sample_rate, 3., 30);
+        let handler = audio::DefaultSampleHandler::new(100, filter.freqs.clone());
+        let proc = audio::SigProc::<audio::DefaultSampleHandler>::new(sample_rate, filter, 50., handler);
         AudioStateUpdater {
             state: state,
-            signal_processor: audio::SignalProcessor::new(
-                sample_rate,
-                20.,
-                20_000.,
-                3.,
-                30,
-                50.,
-                Some(4.),
-            ),
+            signal_processor: proc,
         }
     }
 }
@@ -35,7 +30,7 @@ impl AudioStateUpdater {
 impl jack::ValsHandler for AudioStateUpdater {
     fn take_frame(&mut self, frame: &[f32]) {
         self.signal_processor.add_audio_frame(frame);
-        let vals = self.signal_processor.get_current_values();
+        let vals = self.signal_processor.sample_handler.get_current_values();
         self.state.lock().unwrap().set_intensity(vals.low);
         /*
                         let mut state = self.state.lock().unwrap();

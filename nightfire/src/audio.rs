@@ -110,7 +110,7 @@ impl FilterFreqs {
 }
 
 pub struct SignalFilter {
-    freqs: FilterFreqs,
+    pub freqs: FilterFreqs,
     filters: Vec<bq::DirectForm2Transposed<f32>>,
 }
 
@@ -216,6 +216,16 @@ impl DefaultSampleHandler {
             .enumerate()
             .map(|(i, val)| val.vals[f_index] * self.decay(i))
             .fold(-1. / 0., f32::max)
+    }
+
+    pub fn get_current_values(&self) -> MyValues {
+        MyValues::new(
+            self.get_range_decayed(130., 280.),   // bass
+            self.get_range_decayed(350., 3_000.), // mids
+            //self.get_range_decayed(350., 1_800.),
+            //self.get_range_decayed(1_800., 3_500.),
+            self.get_range_decayed(10_000., 22_000.), // cripsp
+        )
     }
 }
 
@@ -404,29 +414,11 @@ impl SignalProcessor {
         (1. - d * (i as f32)).max(0.)
     }
 
-    fn get_range_decayed(&self, f_start: f32, f_end: f32) -> f32 {
-        self.hist
-            .iter()
-            .enumerate()
-            .map(|(i, val)| self.filter.get_slice_value(f_start, f_end, &val) * self.decay(i))
-            .fold(-1. / 0., f32::max)
-    }
-
     pub fn get_filter_decayed(&self, f_index: usize) -> f32 {
         self.hist
             .iter()
             .enumerate()
             .map(|(i, val)| val.vals[f_index] * self.decay(i))
             .fold(-1. / 0., f32::max)
-    }
-
-    pub fn get_current_values(&self) -> MyValues {
-        MyValues::new(
-            self.get_range_decayed(130., 280.),   // bass
-            self.get_range_decayed(350., 3_000.), // mids
-            //self.get_range_decayed(350., 1_800.),
-            //self.get_range_decayed(1_800., 3_500.),
-            self.get_range_decayed(10_000., 22_000.), // cripsp
-        )
     }
 }
