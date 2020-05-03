@@ -173,6 +173,12 @@ impl SampleHandler for CollectSampleHandler {
     }
 }
 
+pub struct AudioFeatures {
+    pub intensity: f32,
+}
+
+/// The default sample handler takes receives samples and extracts
+/// features.
 pub struct DefaultSampleHandler {
     /// The intensity history calculated from the last n buffers.  We
     /// push to the front (newest element at index 0).
@@ -181,14 +187,19 @@ pub struct DefaultSampleHandler {
     hist_len: usize,
     /// Filter frequencies of the samples.
     filter_freqs: FilterFreqs,
+    /// Current Audio Features
+    pub curr_feats: AudioFeatures,
 }
 
 impl DefaultSampleHandler {
     pub fn new(hist_len: usize, filter_freqs: FilterFreqs) -> Self {
+        // TODO the handler should know how long a sample is, so
+        // calculations can be time dependent.
         Self {
             hist: vec![].into_iter().collect(),
             hist_len: hist_len,
             filter_freqs: filter_freqs,
+            curr_feats: AudioFeatures { intensity: 0. },
         }
     }
 
@@ -225,10 +236,18 @@ impl DefaultSampleHandler {
             self.get_range_decayed(10_000., 22_000.), // cripsp
         )
     }
+
+    fn update_feats(&mut self, new_sample: &Sample) {
+        // TODO this way of decaying is not good ...
+        let prev_decayed = self.curr_feats.intensity - 0.1;
+        let curr_val = self.filter_freqs.get_slice_value(130., 280., &new_sample);
+        self.curr_feats = AudioFeatures { intensity: curr_val.max(prev_decayed) };
+    }
 }
 
 impl SampleHandler for DefaultSampleHandler {
     fn recv_sample(&mut self, sample: Sample) {
+        self.update_feats(&sample);
         self.hist.push_front(sample);
         if self.hist.len() > self.hist_len {
             self.hist.pop_back();

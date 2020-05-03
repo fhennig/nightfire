@@ -30,8 +30,8 @@ impl AudioStateUpdater {
 impl jack::ValsHandler for AudioStateUpdater {
     fn take_frame(&mut self, frame: &[f32]) {
         self.signal_processor.add_audio_frame(frame);
-        let vals = self.signal_processor.sample_handler.get_current_values();
-        self.state.lock().unwrap().set_intensity(vals.low);
+        let intensity = self.signal_processor.sample_handler.curr_feats.intensity;
+        self.state.lock().unwrap().set_intensity(intensity);
         /*
                         let mut state = self.state.lock().unwrap();
                         let c1 = nf_lichtspiel::models::Color::new(
