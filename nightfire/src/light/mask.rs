@@ -1,13 +1,13 @@
+use crate::light::coord;
+use crate::light::envelope::Envelope;
 /// Masks.  Most fundamentally, a mask is a function that maps
 /// coordinates to values between 0 and 1.  The mask can then be
 /// applied to a color.  0 means that the result is black, not color.
 /// 1 means only color, no black.
 use crate::light::{Color, ColorsExt, PinValue};
-use crate::light::coord;
-use crate::light::envelope::Envelope;
+use palette::Mix;
 use splines::{Interpolation, Key, Spline};
 use std::time::Duration;
-use palette::Mix;
 
 /// A mask.  It needs to be able to receive a position and color and
 /// return a masked color.
@@ -126,6 +126,7 @@ impl Mask for DiscretePosMask {
 }
 
 pub struct EnvMask {
+    invert: bool,
     top_right: Envelope,
     bot_right: Envelope,
     bot_left: Envelope,
@@ -135,6 +136,7 @@ pub struct EnvMask {
 impl EnvMask {
     pub fn new_random_pulse() -> EnvMask {
         EnvMask {
+            invert: false,
             top_right: Envelope::new_pulse(Duration::from_millis(2100)),
             bot_right: Envelope::new_pulse(Duration::from_millis(3300)),
             bot_left: Envelope::new_pulse(Duration::from_millis(3900)),
@@ -142,13 +144,18 @@ impl EnvMask {
         }
     }
 
-    pub fn new_linear_decay(decay_in_ms: u64) -> EnvMask {
+    pub fn new_linear_decay(decay_in_ms: u64, invert: bool) -> EnvMask {
         EnvMask {
+            invert: invert,
             top_right: Envelope::new_linear_decay(Duration::from_millis(decay_in_ms)),
             bot_right: Envelope::new_linear_decay(Duration::from_millis(decay_in_ms)),
             bot_left: Envelope::new_linear_decay(Duration::from_millis(decay_in_ms)),
             top_left: Envelope::new_linear_decay(Duration::from_millis(decay_in_ms)),
         }
+    }
+
+    pub fn invert(&mut self) {
+        self.invert = !self.invert;
     }
 
     pub fn reset_tr(&mut self) {
@@ -167,6 +174,13 @@ impl EnvMask {
         self.top_left.reset();
     }
 
+    pub fn reset(&mut self) {
+        self.top_right.reset();
+        self.bot_right.reset();
+        self.bot_left.reset();
+        self.top_left.reset();
+    }
+
     fn get_pos_mask(&self) -> DiscretePosMask {
         DiscretePosMask::new(
             self.top_right.get_current_value(),
@@ -179,7 +193,12 @@ impl EnvMask {
 
 impl Mask for EnvMask {
     fn get_value(&self, pos: &coord::Coordinate) -> PinValue {
-        self.get_pos_mask().get_value(pos)
+        let val = self.get_pos_mask().get_value(pos);
+        if self.invert {
+            1. - val
+        } else {
+            val
+        }
     }
 }
 

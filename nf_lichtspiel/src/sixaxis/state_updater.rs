@@ -161,8 +161,8 @@ impl StateUpdater {
             if controller.was_pressed(Button::Square) {
                 s.switch_flash_mode();
             }
-            if controller.was_pressed(Button::Cross) {
-                s.beat_tap();
+            if controller.is_pressed(Button::Cross) {
+                s.white_flash();
             }
             // flashing
             if controller.is_pressed(Button::L1) {
@@ -193,9 +193,6 @@ impl StateUpdater {
                 Mode::OffMode => (), // no controls need to be set
                 Mode::RainbowMode => (),
                 Mode::ManualMode => {
-                    s.white_layer()
-                        .mask
-                        .set_val(1. - controller.right_trigger());
                     if !controller.is_pressed(Button::Circle) {
                         // decide if a color should be set
                         match get_color_from_controller(controller) {

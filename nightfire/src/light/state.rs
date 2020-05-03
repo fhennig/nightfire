@@ -21,13 +21,13 @@ pub struct State {
     manual_color: cprov::ManualMode,
     rainbow: color::Rainbow,
     active_mode: Mode,
-    // white layer
-    white_layer: SolidLayer<mask::SolidMask>,
     // masks
     /// The value mask is a full mask, overall brightness
     value_layer: MaskLayer<mask::AddMask<mask::SolidMask, mask::PosMask>>,
     /// The flash mask is for manually flashing lights
     flash_layer: MaskLayer<mask::EnvMask>,
+    /// white flash layer
+    white_layer: SolidLayer<mask::EnvMask>,
     /// The music masks gets brightness from the music
     pub music_mask: mask::ActivatableMask<mask::SolidMask>,
     pulse_mask: mask::ActivatableMask<mask::EnvMask>,
@@ -42,12 +42,12 @@ impl State {
             rainbow: color::Rainbow::new(),
             active_mode: Mode::ManualMode,
             // ...
-            white_layer: Layers::new_solid(color::Color::white(), mask::SolidMask::new()),
+            white_layer: Layers::new_solid(color::Color::white(), mask::EnvMask::new_linear_decay(250, true)),
             value_layer: Layers::new_mask(mask::AddMask::new(
                 mask::SolidMask::new(),
                 mask::PosMask::new(),
             )),
-            flash_layer: Layers::new_mask(mask::EnvMask::new_linear_decay(250)),
+            flash_layer: Layers::new_mask(mask::EnvMask::new_linear_decay(250, false)),
             // masks
             music_mask: mask::ActivatableMask::new(mask::SolidMask::new(), false),
             pulse_mask: mask::ActivatableMask::new(mask::EnvMask::new_random_pulse(), false),
@@ -58,10 +58,6 @@ impl State {
 
     pub fn manual_mode(&mut self) -> &mut cprov::ManualMode {
         &mut self.manual_color
-    }
-
-    pub fn white_layer(&mut self) -> &mut SolidLayer<mask::SolidMask> {
-        &mut self.white_layer
     }
 
     // active mode
@@ -116,6 +112,11 @@ impl State {
 
     pub fn flash_bot_right(&mut self) {
         self.flash_layer.mask.mask.reset_br();
+    }
+
+    pub fn white_flash(&mut self) {
+        self.white_layer.mask.reset();
+        self.flash_layer.mask.mask.reset();
     }
 
     // music control
