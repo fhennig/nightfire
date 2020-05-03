@@ -26,6 +26,8 @@ pub struct State {
     // masks
     /// The value mask is a full mask, overall brightness
     value_layer: MaskLayer<mask::AddMask<mask::SolidMask, mask::PosMask>>,
+    /// The flash mask is for manually flashing lights
+    flash_layer: MaskLayer<mask::EnvMask>,
     /// The music masks gets brightness from the music
     pub music_mask: mask::ActivatableMask<mask::SolidMask>,
     pulse_mask: mask::ActivatableMask<mask::EnvMask>,
@@ -45,6 +47,7 @@ impl State {
                 mask::SolidMask::new(),
                 mask::PosMask::new(),
             )),
+            flash_layer: Layers::new_mask(mask::EnvMask::new_linear_decay(250)),
             // masks
             music_mask: mask::ActivatableMask::new(mask::SolidMask::new(), false),
             pulse_mask: mask::ActivatableMask::new(mask::EnvMask::new_random_pulse(), false),
@@ -93,6 +96,30 @@ impl State {
         self.pulse_mask.switch_active();
     }
 
+    // flashing
+
+    pub fn switch_flash_mode(&mut self) {
+        self.flash_layer.mask.switch_active();
+    }
+
+    pub fn flash_top_left(&mut self) {
+        self.flash_layer.mask.mask.reset_tl();
+    }
+
+    pub fn flash_top_right(&mut self) {
+        self.flash_layer.mask.mask.reset_tr();
+    }
+
+    pub fn flash_bot_left(&mut self) {
+        self.flash_layer.mask.mask.reset_bl();
+    }
+
+    pub fn flash_bot_right(&mut self) {
+        self.flash_layer.mask.mask.reset_br();
+    }
+
+    // music control
+
     pub fn set_intensity(&mut self, intensity: f32) {
         self.music_mask.mask.set_val(intensity.into());
     }
@@ -127,6 +154,7 @@ impl State {
         let mut color = self.get_basecolor(&pos);
         color = self.white_layer.get_color(&pos, color);
         color = self.value_layer.get_color(&pos, color);
+        color = self.flash_layer.get_color(&pos, color);
         color = self.music_mask.get_masked_color(&pos, color);
         color = self.pulse_mask.get_masked_color(&pos, color);
         if let Some(beat_grid) = self.tapper.get_beat_grid() {

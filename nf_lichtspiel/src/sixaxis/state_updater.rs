@@ -159,20 +159,31 @@ impl StateUpdater {
                 s.switch_pulse_mode();
             }
             if controller.was_pressed(Button::Square) {
+                s.switch_flash_mode();
+            }
+            if controller.was_pressed(Button::Cross) {
                 s.beat_tap();
             }
+            // flashing
+            if controller.is_pressed(Button::L1) {
+                s.flash_top_left();
+                s.flash_bot_right();
+            }
+            if controller.is_pressed(Button::R1) {
+                s.flash_top_right();
+                s.flash_bot_left();
+            }
+            if controller.is_pressed(Button::Up) {
+                s.flash_top_left();
+                s.flash_top_right();
+            }
+            if controller.is_pressed(Button::Down) {
+                s.flash_bot_left();
+                s.flash_bot_right();
+            }
             // color rotations
-            if controller.was_pressed(Button::Right) {
-                s.manual_mode().flip_h();
-            }
-            if controller.was_pressed(Button::Up) {
-                s.manual_mode().flip_v();
-            }
             if controller.was_pressed(Button::Left) {
                 s.manual_mode().rotate_ccw();
-            }
-            if controller.was_pressed(Button::Down) {
-                s.manual_mode().rotate_cw();
             }
             match s.get_active_mode() {
                 Mode::OffMode => (), // no controls need to be set
@@ -189,6 +200,12 @@ impl StateUpdater {
                                 }
                                 if controller.is_pressed(Button::R1) {
                                     s.manual_mode().set_minor_diag(color);
+                                }
+                                if controller.is_pressed(Button::Up) {
+                                    s.manual_mode().set_top(color);
+                                }
+                                if controller.is_pressed(Button::Down) {
+                                    s.manual_mode().set_bottom(color);
                                 }
                                 match get_quad_from_controller(controller) {
                                     Some(quad) => s.manual_mode().set_color(quad, color),
