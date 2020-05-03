@@ -31,11 +31,11 @@ fn read_keyboard(beat_grid: Arc<Mutex<Option<tapper::BeatGrid>>>) {
 }
 
 struct Handler {
-    sp: Arc<Mutex<audio::SignalProcessor>>,
+    sp: Arc<Mutex<audio::SigProc<audio::DefaultSampleHandler>>>,
 }
 
 impl Handler {
-    pub fn new(sp: Arc<Mutex<audio::SignalProcessor>>) -> Handler {
+    pub fn new(sp: Arc<Mutex<audio::SigProc<audio::DefaultSampleHandler>>>) -> Handler {
         Handler { sp: sp }
     }
 }
@@ -49,16 +49,12 @@ impl jack::ValsHandler for Handler {
 fn main() {
     let state = Arc::new(Mutex::new(None));
     let state_copy = Arc::clone(&state);
-    let sp = Arc::new(Mutex::new(audio::SignalProcessor::new(
-        48000.,
-        20.,
-        20_000.,
-        3.,
-        30,
-        100.,
-        Some(100.),
-    )));
     let client = jack::open_client("bpm_tapper");
+    let sample_rate = client.sample_rate() as f32;
+    let filter = audio::SignalFilter::new(20., 20_000., sample_rate, 3., 30);
+    let handler = audio::DefaultSampleHandler::new(100, filter.freqs.clone());
+    let sig_proc = audio::SigProc::<audio::DefaultSampleHandler>::new(sample_rate, filter, 50., handler);
+    let sp = Arc::new(Mutex::new(sig_proc));
     let _async_client =
         jack::start_processing(client, "system:capture_1", Box::new(Handler::new(sp)));
     std::thread::spawn(move || read_keyboard(state_copy));
