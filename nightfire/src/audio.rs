@@ -241,7 +241,10 @@ impl DefaultSampleHandler {
         // TODO this way of decaying is not good ...
         let prev_decayed = self.curr_feats.intensity - 0.1;
         let curr_val = self.filter_freqs.get_slice_value(130., 280., &new_sample);
-        self.curr_feats = AudioFeatures { intensity: curr_val.max(prev_decayed) };
+        let intensity = curr_val.max(prev_decayed);
+        self.curr_feats = AudioFeatures {
+            intensity: intensity,
+        };
     }
 }
 
