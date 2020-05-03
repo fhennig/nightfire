@@ -163,9 +163,7 @@ pub struct CollectSampleHandler {
 
 impl CollectSampleHandler {
     pub fn new() -> Self {
-        Self {
-            hist: vec![],
-        }
+        Self { hist: vec![] }
     }
 }
 
@@ -262,12 +260,7 @@ pub struct SigProc<T> {
 }
 
 impl<T: SampleHandler> SigProc<T> {
-    pub fn new(
-        sample_freq: f32,
-        filter: SignalFilter,
-        fps: f32,
-        handler: T,
-    ) -> Self {
+    pub fn new(sample_freq: f32, filter: SignalFilter, fps: f32, handler: T) -> Self {
         let subsample_frame_size = (sample_freq / fps) as usize;
         let empty_sample = filter.null_sample();
         Self {
@@ -360,10 +353,6 @@ impl SignalProcessor {
         }
     }
 
-    pub fn get_subsample_frame_size(&self) -> usize {
-        self.subsample_frame_size
-    }
-
     /// The audio_frame parameter is a view of a bufferslice from
     /// jack, which is 1024 or 512 floats big and represents a frame
     /// of samples.
@@ -404,21 +393,5 @@ impl SignalProcessor {
 
     fn get_current_sample(&mut self) -> &mut Sample {
         self.hist.get_mut(0).unwrap()
-    }
-
-    fn decay(&self, i: usize) -> f32 {
-        //1. - (1. / (1. + (-0.8 * (i as f32) + 5.).exp()))
-        // TODO decay should be time dependent, not per sample.
-        // 0.8f32.powi(i as i32)
-        let d = 0.1; // 0.1 -> slow. 0.9 -> fast
-        (1. - d * (i as f32)).max(0.)
-    }
-
-    pub fn get_filter_decayed(&self, f_index: usize) -> f32 {
-        self.hist
-            .iter()
-            .enumerate()
-            .map(|(i, val)| val.vals[f_index] * self.decay(i))
-            .fold(-1. / 0., f32::max)
     }
 }
