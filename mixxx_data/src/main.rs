@@ -95,16 +95,11 @@ impl ProcessingParams {
         }
     }
 
-    pub fn get_processor(&self, sample_rate: f32) -> nfa::SignalProcessor {
-        nfa::SignalProcessor::new(
-            sample_rate,
-            self.low,
-            self.high,
-            self.q,
-            self.n_filters,
-            self.rate,
-            None,
-        )
+    pub fn get_processor(&self, sample_rate: f32) -> nfa::SigProc<nfa::CollectSampleHandler> {
+        let handler = nfa::CollectSampleHandler::new();
+        let filter = nfa::SignalFilter::new(self.low, self.high, sample_rate, self.q, self.n_filters);
+        let proc = nfa::SigProc::<nfa::CollectSampleHandler>::new(sample_rate, filter, self.rate, handler);
+        proc
     }
 }
 

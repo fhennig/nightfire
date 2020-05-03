@@ -140,7 +140,8 @@ impl DataProcessor {
             samples += 1;
         }
         let hist = processor
-            .get_hist()
+            .sample_handler
+            .hist
             .iter()
             .map(|s| s.get_vals_cloned())
             .collect::<Vec<Vec<f32>>>();

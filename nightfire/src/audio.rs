@@ -115,7 +115,7 @@ pub struct SignalFilter {
 }
 
 impl SignalFilter {
-    fn new(f_start: f32, f_end: f32, f_s: f32, q: f32, n_filters: usize) -> SignalFilter {
+    pub fn new(f_start: f32, f_end: f32, f_s: f32, q: f32, n_filters: usize) -> SignalFilter {
         let freqs = FilterFreqs::log_space_freqs(f_start, f_end, n_filters);
         let filters = freqs
             .freqs
@@ -231,17 +231,17 @@ impl SampleHandler for DefaultSampleHandler {
 pub fn setup(f_start: f32, f_end: f32, f_s: f32, q: f32, n_filters: usize) {
     let signal_filter = SignalFilter::new(f_start, f_end, f_s, q, n_filters);
     let sample_handler = DefaultSampleHandler::new(10, signal_filter.freqs.clone());
-    let signal_processor = SigProc::new(f_s, signal_filter, 50.0, Box::new(sample_handler));
+    let signal_processor = SigProc::new(f_s, signal_filter, 50.0, sample_handler);
 }
 
 /// The signal processor takes care of handling a raw audio signal.
 /// It uses a SignalFilter to extract features from the signal.  It
 /// then collects feature vectors at a given sampling rate.  Whenever
 /// a new sample is ready it is given to the SampleHandler.
-pub struct SigProc {
+pub struct SigProc<T> {
     /// SampleHandler, takes care of the samples once they are fully
     /// collected.
-    sample_handler: Box<dyn SampleHandler>,
+    pub sample_handler: T,
     /// Filter, takes care of extracting features from a single sample
     /// of audio.
     filter: SignalFilter,
@@ -251,12 +251,12 @@ pub struct SigProc {
     current_sample: Sample,
 }
 
-impl SigProc {
+impl<T: SampleHandler> SigProc<T> {
     pub fn new(
         sample_freq: f32,
         filter: SignalFilter,
         fps: f32,
-        handler: Box<dyn SampleHandler>,
+        handler: T,
     ) -> Self {
         let subsample_frame_size = (sample_freq / fps) as usize;
         let empty_sample = filter.null_sample();
@@ -267,6 +267,10 @@ impl SigProc {
             missing_audio_samples: subsample_frame_size,
             current_sample: empty_sample,
         }
+    }
+
+    pub fn get_subsample_frame_size(&self) -> usize {
+        self.subsample_frame_size
     }
 
     /// The audio_frame parameter is a view of a bufferslice from
