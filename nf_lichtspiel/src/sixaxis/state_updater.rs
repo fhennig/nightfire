@@ -153,6 +153,7 @@ impl StateUpdater {
             // overall brightness mask
             s.set_value_mask_base(controller.left_trigger());
             s.set_value_mask_pos(controller.left_pos());
+            s.set_invert_factor(controller.right_trigger());
             // pulse mode
             if controller.was_pressed(Button::Triangle) {
                 s.switch_pulse_mode();

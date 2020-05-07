@@ -5,6 +5,7 @@ use crate::light::layer::{ColorMapLayer, Layers, MaskLayer, SolidLayer};
 use crate::light::mask::{self, Mask};
 use crate::light::ColorsExt;
 use crate::tapper::BpmTapper;
+use palette::Mix;
 
 /// The overall mode.  There are a couple of high level modes.  Should
 /// the lights be off?  Should a be a constant setting?  Should a be
@@ -33,6 +34,8 @@ pub struct State {
     /// The music masks gets brightness from the music
     pub music_mask: mask::ActivatableMask<mask::SolidMask>,
     pulse_mask: mask::ActivatableMask<mask::EnvMask>,
+    /// Mask inverting
+    invert: f64,
     // beat
     tapper: BpmTapper,
 }
@@ -44,13 +47,15 @@ impl State {
             rainbow: color::Rainbow::new(),
             active_mode: Mode::ManualMode,
             // ...
-            white_layer: Layers::new_solid(color::Color::white(), mask::EnvMask::new_linear_decay(250, true)),
+            white_layer: Layers::new_solid(color::Color::white(), mask::EnvMask::new_linear_decay(100, true)),
             // masks
             solid_mask: mask::ActivatableMask::new(mask::SolidMask::new(), false),
             pos_mask: mask::ActivatableMask::new(mask::PosMask::new(), false),
-            flash_mask: mask::ActivatableMask::new(mask::EnvMask::new_linear_decay(250, false), false),
+            flash_mask: mask::ActivatableMask::new(mask::EnvMask::new_linear_decay(100, false), false),
             music_mask: mask::ActivatableMask::new(mask::SolidMask::new(), false),
             pulse_mask: mask::ActivatableMask::new(mask::EnvMask::new_random_pulse(), false),
+            // invert
+            invert: 0.,
             // tapper
             tapper: BpmTapper::new(),
         }
@@ -86,6 +91,10 @@ impl State {
 
     pub fn switch_pulse_mode(&mut self) {
         self.pulse_mask.switch_active();
+    }
+
+    pub fn set_invert_factor(&mut self, invert: f64) {
+        self.invert = invert;
     }
 
     // flashing
@@ -160,7 +169,8 @@ impl State {
         v = v.min(1.);
         v *= self.music_mask.get_value(&pos);
         v *= self.pulse_mask.get_value(&pos);
-        color = color.mask(v);
+        v = v.min(1.);
+        color = color.mask(v).mix(&color.mask(1. - v), self.invert);
         // multiplicative masks
         if let Some(beat_grid) = self.tapper.get_beat_grid() {
             color = color::Color::mask(&color, 1. - beat_grid.current_beat_fraction().1 as f64);
