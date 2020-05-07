@@ -157,9 +157,9 @@ impl State {
         v += self.solid_mask.get_value(&pos);
         v += self.pos_mask.get_value(&pos);
         v += self.flash_mask.get_value(&pos);
+        v = v.min(1.);
         v *= self.music_mask.get_value(&pos);
         v *= self.pulse_mask.get_value(&pos);
-        v = v.min(1.);
         color = color.mask(v);
         // multiplicative masks
         if let Some(beat_grid) = self.tapper.get_beat_grid() {

@@ -32,8 +32,8 @@ impl PosMask {
             spline: Spline::from_vec(vec![
                 Key::new(0., 1., Interpolation::Linear),
                 Key::new(0.1, 1., Interpolation::Linear),
-                Key::new(1.6, 0.1, Interpolation::Linear),
-                Key::new(1.9, 0., Interpolation::Linear),
+                Key::new(0.9, 0.1, Interpolation::Linear),
+                Key::new(1., 0., Interpolation::Linear),
             ]),
             center_off: true,
         }
