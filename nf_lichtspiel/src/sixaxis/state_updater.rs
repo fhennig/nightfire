@@ -108,8 +108,8 @@ pub struct StateUpdater {
 fn get_color_from_controller(controller: &Controller) -> Option<Color> {
     if controller.right_pos().length() > 0.75 {
         let hue = controller.right_pos().hue_from_angle().unwrap();
-        let value = 1. - controller.left_trigger();
-        Some(Color::from(Hsv::new(hue, 1., value)))
+        // let value = 1. - controller.left_trigger();
+        Some(Color::from(Hsv::new(hue, 1., 1.)))
     } else {
         None
     }
@@ -151,7 +151,6 @@ impl StateUpdater {
                 s.switch_music_mode();
             }
             // overall brightness mask
-            s.set_value_mask_active(controller.is_pressed(Button::Circle));
             s.set_value_mask_base(controller.left_trigger());
             s.set_value_mask_pos(controller.left_pos());
             // pulse mode
@@ -193,36 +192,34 @@ impl StateUpdater {
                 Mode::OffMode => (), // no controls need to be set
                 Mode::RainbowMode => (),
                 Mode::ManualMode => {
-                    if !controller.is_pressed(Button::Circle) {
-                        // decide if a color should be set
-                        match get_color_from_controller(controller) {
-                            Some(color) => {
-                                // decide where to set
-                                if controller.is_pressed(Button::L1) {
-                                    s.manual_mode().set_major_diag(color);
-                                }
-                                if controller.is_pressed(Button::R1) {
-                                    s.manual_mode().set_minor_diag(color);
-                                }
-                                if controller.is_pressed(Button::Up) {
-                                    s.manual_mode().set_top(color);
-                                }
-                                if controller.is_pressed(Button::Down) {
-                                    s.manual_mode().set_bottom(color);
-                                }
-                                if controller.is_pressed(Button::Left) {
-                                    s.manual_mode().set_left(color);
-                                }
-                                if controller.is_pressed(Button::Right) {
-                                    s.manual_mode().set_right(color);
-                                }
-                                match get_quad_from_controller(controller) {
-                                    Some(quad) => s.manual_mode().set_color(quad, color),
-                                    None => (),
-                                }
+                    // decide if a color should be set
+                    match get_color_from_controller(controller) {
+                        Some(color) => {
+                            // decide where to set
+                            if controller.is_pressed(Button::L1) {
+                                s.manual_mode().set_major_diag(color);
                             }
-                            None => (),
+                            if controller.is_pressed(Button::R1) {
+                                s.manual_mode().set_minor_diag(color);
+                            }
+                            if controller.is_pressed(Button::Up) {
+                                s.manual_mode().set_top(color);
+                            }
+                            if controller.is_pressed(Button::Down) {
+                                s.manual_mode().set_bottom(color);
+                            }
+                            if controller.is_pressed(Button::Left) {
+                                s.manual_mode().set_left(color);
+                            }
+                            if controller.is_pressed(Button::Right) {
+                                s.manual_mode().set_right(color);
+                            }
+                            match get_quad_from_controller(controller) {
+                                Some(quad) => s.manual_mode().set_color(quad, color),
+                                None => (),
+                            }
                         }
+                        None => (),
                     }
                 }
             }

@@ -49,7 +49,10 @@ pub trait ColorsExt {
         Color::new(1.0, 0.0, 1.0)
     }
 
-    fn mask(&self, value: f64) -> Color {
+    fn mask(&self, mut value: f64) -> Color {
+        if value > 1. {
+            value = 1.;
+        }
         if value == 1. {
             *self._self()
         } else {

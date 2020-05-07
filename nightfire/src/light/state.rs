@@ -21,13 +21,15 @@ pub struct State {
     manual_color: cprov::ManualMode,
     rainbow: color::Rainbow,
     active_mode: Mode,
-    // masks
-    /// The value mask is a full mask, overall brightness
-    value_layer: MaskLayer<mask::AddMask<mask::SolidMask, mask::PosMask>>,
-    /// The flash mask is for manually flashing lights
-    flash_layer: MaskLayer<mask::EnvMask>,
     /// white flash layer
     white_layer: SolidLayer<mask::EnvMask>,
+    // masks
+    /// overall mask
+    solid_mask: mask::ActivatableMask<mask::SolidMask>,
+    /// pos mask
+    pos_mask: mask::ActivatableMask<mask::PosMask>,
+    /// flash mask
+    flash_mask: mask::ActivatableMask<mask::EnvMask>,
     /// The music masks gets brightness from the music
     pub music_mask: mask::ActivatableMask<mask::SolidMask>,
     pulse_mask: mask::ActivatableMask<mask::EnvMask>,
@@ -43,12 +45,10 @@ impl State {
             active_mode: Mode::ManualMode,
             // ...
             white_layer: Layers::new_solid(color::Color::white(), mask::EnvMask::new_linear_decay(250, true)),
-            value_layer: Layers::new_mask(mask::AddMask::new(
-                mask::SolidMask::new(),
-                mask::PosMask::new(),
-            )),
-            flash_layer: Layers::new_mask(mask::EnvMask::new_linear_decay(250, false)),
             // masks
+            solid_mask: mask::ActivatableMask::new(mask::SolidMask::new(), false),
+            pos_mask: mask::ActivatableMask::new(mask::PosMask::new(), false),
+            flash_mask: mask::ActivatableMask::new(mask::EnvMask::new_linear_decay(250, false), false),
             music_mask: mask::ActivatableMask::new(mask::SolidMask::new(), false),
             pulse_mask: mask::ActivatableMask::new(mask::EnvMask::new_random_pulse(), false),
             // tapper
@@ -72,16 +72,12 @@ impl State {
 
     // overall value masking
 
-    pub fn set_value_mask_active(&mut self, active: bool) {
-        self.value_layer.mask.set_active(active);
-    }
-
     pub fn set_value_mask_base(&mut self, value: color::PinValue) {
-        self.value_layer.mask.mask.mask1.set_val(value);
+        self.solid_mask.mask.set_val(value);
     }
 
     pub fn set_value_mask_pos(&mut self, pos: coord::Coordinate) {
-        self.value_layer.mask.mask.mask2.set_pos(pos);
+        self.pos_mask.mask.set_pos(pos);
     }
 
     pub fn switch_music_mode(&mut self) {
@@ -95,28 +91,30 @@ impl State {
     // flashing
 
     pub fn switch_flash_mode(&mut self) {
-        self.flash_layer.mask.switch_active();
+        self.flash_mask.switch_active();
+        self.solid_mask.switch_active();
+        self.pos_mask.switch_active();
     }
 
     pub fn flash_top_left(&mut self) {
-        self.flash_layer.mask.mask.reset_tl();
+        self.flash_mask.mask.reset_tl();
     }
 
     pub fn flash_top_right(&mut self) {
-        self.flash_layer.mask.mask.reset_tr();
+        self.flash_mask.mask.reset_tr();
     }
 
     pub fn flash_bot_left(&mut self) {
-        self.flash_layer.mask.mask.reset_bl();
+        self.flash_mask.mask.reset_bl();
     }
 
     pub fn flash_bot_right(&mut self) {
-        self.flash_layer.mask.mask.reset_br();
+        self.flash_mask.mask.reset_br();
     }
 
     pub fn white_flash(&mut self) {
         self.white_layer.mask.reset();
-        self.flash_layer.mask.mask.reset();
+        self.flash_mask.mask.reset();
     }
 
     // music control
@@ -134,7 +132,7 @@ impl State {
     // inspection functions for debug UI
 
     pub fn get_value_mask_pos(&self) -> coord::Coordinate {
-        self.value_layer.mask.mask.mask2.position
+        self.pos_mask.mask.position
     }
 
     pub fn is_off(&self) -> bool {
@@ -154,10 +152,16 @@ impl State {
     pub fn get_color(&self, pos: &coord::Coordinate) -> color::Color {
         let mut color = self.get_basecolor(&pos);
         color = self.white_layer.get_color(&pos, color);
-        color = self.value_layer.get_color(&pos, color);
-        color = self.flash_layer.get_color(&pos, color);
-        color = self.music_mask.get_masked_color(&pos, color);
-        color = self.pulse_mask.get_masked_color(&pos, color);
+        // masks
+        let mut v = 0.;
+        v += self.solid_mask.get_value(&pos);
+        v += self.pos_mask.get_value(&pos);
+        v += self.flash_mask.get_value(&pos);
+        v *= self.music_mask.get_value(&pos);
+        v *= self.pulse_mask.get_value(&pos);
+        v = v.min(1.);
+        color = color.mask(v);
+        // multiplicative masks
         if let Some(beat_grid) = self.tapper.get_beat_grid() {
             color = color::Color::mask(&color, 1. - beat_grid.current_beat_fraction().1 as f64);
         }
