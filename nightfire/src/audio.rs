@@ -173,7 +173,12 @@ impl SampleHandler for CollectSampleHandler {
     }
 }
 
+/// A structure to contain features of the sample at a given time.
 pub struct AudioFeatures {
+    /// The raw maximum intensity.  This is subsequently used to scale
+    /// other frequency amplitudes between 0 and 1.
+    pub raw_max_intensity: f32,
+    /// The overall perceived intensity of the signal. In [0, 1].
     pub intensity: f32,
 }
 
@@ -190,6 +195,8 @@ pub struct DefaultSampleHandler {
     hist_len: usize,
     /// Current Audio Features
     pub curr_feats: AudioFeatures,
+    /// processing params
+    decay_for_max_val: f32,
 }
 
 impl DefaultSampleHandler {
@@ -197,12 +204,16 @@ impl DefaultSampleHandler {
     /// the filter frequencies corresponding to the values in the
     /// samples, to actually interpret the samples.
     pub fn new(sample_freq: f32, filter_freqs: FilterFreqs) -> Self {
+        // calc stuff for the decay of the max_intensity:
+        let total_decay_duration = 10.; // in seconds
+        let decay_per_sample = 1. / (sample_freq * total_decay_duration);
         Self {
             filter_freqs: filter_freqs,
             sample_freq: sample_freq,
             hist: vec![].into_iter().collect(),
             hist_len: 30,
-            curr_feats: AudioFeatures { intensity: 0. },
+            curr_feats: AudioFeatures { intensity: 0., raw_max_intensity: 1., },
+            decay_for_max_val: decay_per_sample,
         }
     }
 
@@ -241,12 +252,16 @@ impl DefaultSampleHandler {
     }
 
     fn update_feats(&mut self, new_sample: &Sample) {
-        // TODO this way of decaying is not good ...
-        let prev_decayed = self.curr_feats.intensity - 0.1;
-        let curr_val = self.filter_freqs.get_slice_value(130., 280., &new_sample);
-        let intensity = curr_val.max(prev_decayed);
+        let new_intensity = self.filter_freqs.get_slice_value(130., 280., &new_sample);
+        let prev_max = self.curr_feats.raw_max_intensity - self.decay_for_max_val;
+        let new_raw_max = prev_max.max(new_intensity);
+        // TODO this way of decaying is not good ... It should be time dependent.
+        let prev_scaled_intensity = self.curr_feats.intensity - 0.1;
+        let curr_scaled_intensity = new_intensity / new_raw_max;
+        let new_scaled_intensity = prev_scaled_intensity.max(curr_scaled_intensity);
         self.curr_feats = AudioFeatures {
-            intensity: intensity,
+            intensity: new_scaled_intensity,
+            raw_max_intensity: new_raw_max,
         };
     }
 }
