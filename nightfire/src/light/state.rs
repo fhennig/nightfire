@@ -129,6 +129,7 @@ impl State {
     // music control
 
     pub fn set_intensity(&mut self, intensity: f32) {
+        println!("{}", intensity);
         self.music_mask.mask.set_val(intensity.into());
     }
 
@@ -170,6 +171,7 @@ impl State {
         v *= self.music_mask.get_value(&pos);
         v *= self.pulse_mask.get_value(&pos);
         v = v.min(1.);
+        // inverting
         color = color.mask(v).mix(&color.mask(1. - v), self.invert);
         // multiplicative masks
         if let Some(beat_grid) = self.tapper.get_beat_grid() {

@@ -23,8 +23,9 @@ fn main() {
     let sample_rate = client.sample_rate() as f32;
     // prepare processor
     let filter = audio::SignalFilter::new(20., 20_000., sample_rate, q, n_filters);
-    let handler = audio::DefaultSampleHandler::new(100, filter.freqs.clone());
-    let sig_proc = audio::SigProc::<audio::DefaultSampleHandler>::new(sample_rate, filter, 50., handler);
+    let sample_freq = 50.;
+    let handler = audio::DefaultSampleHandler::new(sample_freq, filter.freqs.clone());
+    let sig_proc = audio::SigProc::<audio::DefaultSampleHandler>::new(sample_rate, filter, sample_freq, handler);
     let mut proc = eq::EqViz::new(sig_proc);
     let state = proc.get_shared_vals();
     // get port from config

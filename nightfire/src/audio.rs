@@ -180,25 +180,28 @@ pub struct AudioFeatures {
 /// The default sample handler takes receives samples and extracts
 /// features.
 pub struct DefaultSampleHandler {
+    /// Information about the samples that are arriving
+    filter_freqs: FilterFreqs,
+    sample_freq: f32,
     /// The intensity history calculated from the last n buffers.  We
     /// push to the front (newest element at index 0).
     hist: VecDeque<Sample>,
     /// The length of the history in samples.
     hist_len: usize,
-    /// Filter frequencies of the samples.
-    filter_freqs: FilterFreqs,
     /// Current Audio Features
     pub curr_feats: AudioFeatures,
 }
 
 impl DefaultSampleHandler {
-    pub fn new(hist_len: usize, filter_freqs: FilterFreqs) -> Self {
-        // TODO the handler should know how long a sample is, so
-        // calculations can be time dependent.
+    /// Receives the sample frequency at which samples arrive.  Also
+    /// the filter frequencies corresponding to the values in the
+    /// samples, to actually interpret the samples.
+    pub fn new(sample_freq: f32, filter_freqs: FilterFreqs) -> Self {
         Self {
-            hist: vec![].into_iter().collect(),
-            hist_len: hist_len,
             filter_freqs: filter_freqs,
+            sample_freq: sample_freq,
+            hist: vec![].into_iter().collect(),
+            hist_len: 30,
             curr_feats: AudioFeatures { intensity: 0. },
         }
     }
@@ -260,8 +263,9 @@ impl SampleHandler for DefaultSampleHandler {
 
 pub fn setup(f_start: f32, f_end: f32, f_s: f32, q: f32, n_filters: usize) {
     let signal_filter = SignalFilter::new(f_start, f_end, f_s, q, n_filters);
-    let sample_handler = DefaultSampleHandler::new(10, signal_filter.freqs.clone());
-    let signal_processor = SigProc::new(f_s, signal_filter, 50.0, sample_handler);
+    let sample_freq = 50.0;
+    let sample_handler = DefaultSampleHandler::new(sample_freq, signal_filter.freqs.clone());
+    let signal_processor = SigProc::new(f_s, signal_filter, sample_freq, sample_handler);
 }
 
 /// The signal processor takes care of handling a raw audio signal.

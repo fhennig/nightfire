@@ -52,8 +52,14 @@ fn main() {
     let client = jack::open_client("bpm_tapper");
     let sample_rate = client.sample_rate() as f32;
     let filter = audio::SignalFilter::new(20., 20_000., sample_rate, 3., 30);
-    let handler = audio::DefaultSampleHandler::new(100, filter.freqs.clone());
-    let sig_proc = audio::SigProc::<audio::DefaultSampleHandler>::new(sample_rate, filter, 50., handler);
+    let sample_freq = 50.;
+    let handler = audio::DefaultSampleHandler::new(sample_freq, filter.freqs.clone());
+    let sig_proc = audio::SigProc::<audio::DefaultSampleHandler>::new(
+        sample_rate,
+        filter,
+        sample_freq,
+        handler,
+    );
     let sp = Arc::new(Mutex::new(sig_proc));
     let _async_client =
         jack::start_processing(client, "system:capture_1", Box::new(Handler::new(sp)));

@@ -18,8 +18,9 @@ struct AudioStateUpdater {
 impl AudioStateUpdater {
     pub fn new(state: Arc<Mutex<State>>, sample_rate: f32) -> AudioStateUpdater {
         let filter = audio::SignalFilter::new(20., 20_000., sample_rate, 3., 30);
-        let handler = audio::DefaultSampleHandler::new(100, filter.freqs.clone());
-        let proc = audio::SigProc::<audio::DefaultSampleHandler>::new(sample_rate, filter, 50., handler);
+        let sample_freq = 50.;
+        let handler = audio::DefaultSampleHandler::new(sample_freq, filter.freqs.clone());
+        let proc = audio::SigProc::<audio::DefaultSampleHandler>::new(sample_rate, filter, sample_freq, handler);
         AudioStateUpdater {
             state: state,
             signal_processor: proc,
