@@ -212,7 +212,7 @@ impl DefaultSampleHandler {
             sample_freq: sample_freq,
             hist: vec![].into_iter().collect(),
             hist_len: 30,
-            curr_feats: AudioFeatures { intensity: 0., raw_max_intensity: 1., },
+            curr_feats: AudioFeatures { intensity: 0., raw_max_intensity: 0., },
             decay_for_max_val: decay_per_sample,
         }
     }

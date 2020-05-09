@@ -52,7 +52,7 @@ impl State {
             solid_mask: mask::ActivatableMask::new(mask::SolidMask::new(), false),
             pos_mask: mask::ActivatableMask::new(mask::PosMask::new(), false),
             flash_mask: mask::ActivatableMask::new(mask::EnvMask::new_linear_decay(100, false), false),
-            music_mask: mask::ActivatableMask::new(mask::SolidMask::new(), false),
+            music_mask: mask::ActivatableMask::new(mask::SolidMask::new(), true),
             pulse_mask: mask::ActivatableMask::new(mask::EnvMask::new_random_pulse(), false),
             // invert
             invert: 0.,
