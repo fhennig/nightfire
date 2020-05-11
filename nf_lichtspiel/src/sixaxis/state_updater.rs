@@ -155,14 +155,21 @@ impl StateUpdater {
             s.set_value_mask_pos(controller.left_pos());
             s.set_invert_factor(controller.right_trigger());
             // pulse mode
-            if controller.was_pressed(Button::Triangle) {
+            if controller.was_pressed(Button::Select) {
                 s.switch_pulse_mode();
             }
             if controller.was_pressed(Button::Square) {
                 s.switch_flash_mode();
             }
-            if controller.is_pressed(Button::Cross) {
+            if controller.is_pressed(Button::Triangle) {
                 s.white_flash();
+            }
+            // rotation
+            if controller.was_pressed(Button::Cross) {
+                s.manual_mode().rotate_cw();
+            }
+            if controller.was_pressed(Button::Circle) {
+                s.manual_mode().rotate_ccw();
             }
             // flashing
             if controller.is_pressed(Button::L1) {
