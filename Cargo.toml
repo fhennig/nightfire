@@ -3,6 +3,7 @@
 members = [
     "nightfire",
     "nf_lichtspiel",
+    "nf_eq",
     "mixxx_data",
     "bpm_tapper",
 ]

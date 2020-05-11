@@ -1,7 +1,7 @@
+mod conf;
+mod jack;
+mod ui;
 use clap::{App, Arg};
-use nf_lichtspiel::jack;
-use nf_lichtspiel::conf;
-use nf_lichtspiel::ui::eq;
 use nightfire::audio;
 
 fn main() {
@@ -25,8 +25,13 @@ fn main() {
     let filter = audio::SignalFilter::new(20., 20_000., sample_rate, q, n_filters);
     let sample_freq = 50.;
     let handler = audio::DefaultSampleHandler::new(sample_freq, filter.freqs.clone());
-    let sig_proc = audio::SigProc::<audio::DefaultSampleHandler>::new(sample_rate, filter, sample_freq, handler);
-    let mut proc = eq::EqViz::new(sig_proc);
+    let sig_proc = audio::SigProc::<audio::DefaultSampleHandler>::new(
+        sample_rate,
+        filter,
+        sample_freq,
+        handler,
+    );
+    let mut proc = ui::EqViz::new(sig_proc);
     let state = proc.get_shared_vals();
     // get port from config
     let port = conf::Conf::new()
@@ -35,7 +40,7 @@ fn main() {
     // open jack
     let client = jack::start_processing(client, &port, Box::new(proc));
     // open window
-    eq::create_window(state);
+    ui::create_window(state);
     // we get here if the window closes. close client.
     client.deactivate().expect("Error deactivating client.");
 }
