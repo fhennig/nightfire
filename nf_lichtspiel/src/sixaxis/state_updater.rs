@@ -71,6 +71,43 @@ impl Controller {
         return prev && !curr;
     }
 
+    /// Indicates whether there is currently any kind of user input.
+    /// A pressed button, or a moved joystick.
+    fn has_any_input(&self) -> bool {
+        if self.left_pos().length() > 0.1 || self.right_pos().length() > 0.1 {
+            return true;
+        }
+        if self.left_trigger() > 0.1 || self.right_trigger() > 0.1 {
+            return true;
+        }
+        for btn in [
+            Button::PS,
+            Button::Start,
+            Button::Select,
+            Button::Up,
+            Button::Down,
+            Button::Left,
+            Button::Right,
+            Button::L1,
+            Button::L2,
+            Button::L3,
+            Button::R1,
+            Button::R2,
+            Button::R3,
+            Button::Triangle,
+            Button::Circle,
+            Button::Cross,
+            Button::Square,
+        ]
+        .iter()
+        {
+            if self.is_pressed(*btn) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     fn debug_print(&self) {
         for btn in [
             Button::PS,
@@ -100,11 +137,8 @@ impl Controller {
     }
 }
 
-pub struct StateUpdater {
-    state: Arc<Mutex<State>>,
-    controller: Controller,
-}
-
+/// Helper function that returns a hue, based on the position of the
+/// right controller stick.
 fn get_color_from_controller(controller: &Controller) -> Option<Color> {
     if controller.right_pos().length() > 0.75 {
         let hue = controller.right_pos().hue_from_angle().unwrap();
@@ -115,12 +149,19 @@ fn get_color_from_controller(controller: &Controller) -> Option<Color> {
     }
 }
 
+/// Helper function that returns a quadrant (top left, bottom right,
+/// ...) based on the position of the left joystick.
 fn get_quad_from_controller(controller: &Controller) -> Option<Quadrant> {
     if controller.left_pos().length() > 0.75 {
         Some(Quadrant::from(&controller.left_pos()))
     } else {
         None
     }
+}
+
+pub struct StateUpdater {
+    state: Arc<Mutex<State>>,
+    controller: Controller,
 }
 
 impl StateUpdater {
@@ -136,6 +177,9 @@ impl StateUpdater {
     /// This function is called repeatedly each second, at every controller update.
     fn update_state(&self, controller: &Controller) {
         let mut s = self.state.lock().unwrap();
+        // register activity
+        // TODO register activity on state
+        // with controller.has_any_input()
         // select mode
         if controller.is_pressed(Button::PS) {
             if controller.is_pressed(Button::Up) {

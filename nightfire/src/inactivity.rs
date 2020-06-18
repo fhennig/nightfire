@@ -20,7 +20,7 @@ impl InactivityTracker {
         self.t_last_active = SystemTime::now();
     }
 
-    pub fn is_inactive(self) -> bool {
+    pub fn is_inactive(&self) -> bool {
         return SystemTime::now().duration_since(self.t_last_active) > self.wait_duration;
     }
 }
