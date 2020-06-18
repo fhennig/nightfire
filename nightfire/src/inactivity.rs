@@ -4,7 +4,7 @@ use std::time::{Duration, SystemTime};
 /// interaction was.  If it was longer ago than period X, the state
 /// switches from active to inactive.
 pub struct InactivityTracker {
-    t_last_active: SytemTime,
+    t_last_active: SystemTime,
     wait_duration: Duration,
 }
 
@@ -16,11 +16,12 @@ impl InactivityTracker {
         }
     }
 
+    /// Register activity.  Resets the inactivity timer.
     pub fn register_activity(&mut self) {
         self.t_last_active = SystemTime::now();
     }
 
     pub fn is_inactive(&self) -> bool {
-        return SystemTime::now().duration_since(self.t_last_active) > self.wait_duration;
+        return SystemTime::now().duration_since(self.t_last_active).unwrap() > self.wait_duration;
     }
 }

@@ -5,6 +5,7 @@ use crate::light::layer::{ColorMapLayer, Layers, MaskLayer, SolidLayer};
 use crate::light::mask::{self, Mask};
 use crate::light::ColorsExt;
 use crate::tapper::BpmTapper;
+use crate::inactivity::InactivityTracker;
 use palette::Mix;
 
 /// The overall mode.  There are a couple of high level modes.  Should
@@ -36,8 +37,9 @@ pub struct State {
     pulse_mask: mask::ActivatableMask<mask::EnvMask>,
     /// Mask inverting
     invert: f64,
-    // beat
+    // beat and other feature stuff
     tapper: BpmTapper,
+    inactivity: InactivityTracker,
 }
 
 impl State {
@@ -58,6 +60,7 @@ impl State {
             invert: 0.,
             // tapper
             tapper: BpmTapper::new(),
+            inactivity: InactivityTracker::new(),
         }
     }
 
@@ -139,6 +142,11 @@ impl State {
         self.tapper.tap_now();
     }
 
+    // general controller activity
+    pub fn register_activity(&mut self) {
+        self.inactivity.register_activity();
+    }
+
     // inspection functions for debug UI
 
     pub fn get_value_mask_pos(&self) -> coord::Coordinate {
@@ -160,6 +168,11 @@ impl State {
     }
 
     pub fn get_color(&self, pos: &coord::Coordinate) -> color::Color {
+        // time based update
+        if self.inactivity.is_inactive() {
+            self.pulse_mask.set_active(true);
+        }
+        // actual get color stuff
         let mut color = self.get_basecolor(&pos);
         color = self.white_layer.get_color(&pos, color);
         // masks

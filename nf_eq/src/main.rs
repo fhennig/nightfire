@@ -13,11 +13,11 @@ fn main() {
     let q = matches
         .value_of("q")
         .map(|v| v.parse().unwrap())
-        .unwrap_or(1.);
+        .unwrap_or(3.);
     let n_filters = matches
         .value_of("n")
         .map(|v| v.parse().unwrap())
-        .unwrap_or(100);
+        .unwrap_or(30);
     // open jack client
     let client = jack::open_client("eq_display");
     let sample_rate = client.sample_rate() as f32;
