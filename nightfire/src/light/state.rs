@@ -39,6 +39,7 @@ pub struct State {
     invert: f64,
     // beat and other feature stuff
     tapper: BpmTapper,
+    last_inactive_state: bool,
     inactivity: InactivityTracker,
 }
 
@@ -60,6 +61,7 @@ impl State {
             invert: 0.,
             // tapper
             tapper: BpmTapper::new(),
+            last_inactive_state: true,
             inactivity: InactivityTracker::new(),
         }
     }
@@ -167,12 +169,21 @@ impl State {
         }
     }
 
-    pub fn get_color(&self, pos: &coord::Coordinate) -> color::Color {
-        // time based update
-        if self.inactivity.is_inactive() {
+    /// A function that executes time based updates.  This function
+    /// should be called regularly.
+    pub fn periodic_update(&mut self) {
+        if self.inactivity.is_inactive() && !self.last_inactive_state {
+            self.white_flash();
             self.pulse_mask.set_active(true);
+            self.last_inactive_state = true;
         }
-        // actual get color stuff
+        if !self.inactivity.is_inactive() && self.last_inactive_state {
+            self.pulse_mask.set_active(false);
+            self.last_inactive_state = false;
+        }
+    }
+
+    pub fn get_color(&self, pos: &coord::Coordinate) -> color::Color {
         let mut color = self.get_basecolor(&pos);
         color = self.white_layer.get_color(&pos, color);
         // masks
