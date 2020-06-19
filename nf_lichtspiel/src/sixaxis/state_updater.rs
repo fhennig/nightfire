@@ -178,8 +178,9 @@ impl StateUpdater {
     fn update_state(&self, controller: &Controller) {
         let mut s = self.state.lock().unwrap();
         // register activity
-        // TODO register activity on state
-        s.register_activity();
+        if controller.has_any_input() {
+            s.register_activity();
+        }
         // select mode
         if controller.is_pressed(Button::PS) {
             if controller.is_pressed(Button::Up) {
