@@ -5,6 +5,7 @@ use nf_lichtspiel::piblaster::start_piblaster_thread;
 use nf_lichtspiel::sixaxis::read_controller;
 use nf_lichtspiel::sixaxis::state_updater::StateUpdater;
 use nf_lichtspiel::ui::piston::run_piston_thread;
+use nf_lichtspiel::periodic_updater::start_periodic_update_thread;
 use nightfire::audio;
 use nightfire::light::State;
 use std::sync::{Arc, Mutex};
@@ -70,6 +71,8 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let conf = Conf::new();
     // setup state
     let state = Arc::new(Mutex::new(State::new()));
+    // start periodic updater
+    start_periodic_update_thread(Arc::clone(&state), 50);
     // read audio
     let audio_client = match conf.audio_in {
         Some(port) => {
