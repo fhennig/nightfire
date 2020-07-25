@@ -3,25 +3,26 @@
 `nightfire` is an audio to light project. The goal is to create a tool
 that allows for expressive visualization of sound, combining user
 input and automatic audio processing. This is the repository
-containing the code, for an overview of features and demos, go to
+containing the code, an overview of features and demos can be found at
 [nightfire.io](https://nightfire.io).
 
-In here a more detailed description of the source code is given.
+## Structure
 
-This project is developed in rust, and is split into multiple crates:
+This project is developed in rust, and contains 5 crates (organized in
+[workspaces](https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html)).
 
-*nighfire*: The `nightfire` crate contains the core code for audio
+**nighfire**: The `nightfire` crate contains the core code for audio
 processing and light modeling.
 
-*nf_lichtspiel*: Uses the `nightfire` crate and contains code to
+**nf_lichtspiel**: Uses the `nightfire` crate and contains code to
 handle `pi-blaster` (interfacing with the LEDs) and HID handling (PS
 controller).  It also contains the code to interact with `jackd`, to
 read out microphone inputs.
 
-rest: *mixxx_data* contains a tool to extract features from songs from
+rest: **mixxx_data** contains a tool to extract features from songs from
 the Mixxx DJ software. *beat_trainer* contains some python code to
 inspect said data and some experimental neural networks trained on
-them. *bpm_tapper* contains a small tool to tap BPM along to a song
+them. **bpm_tapper** contains a small tool to tap BPM along to a song
 and visualize them.
 
 *confs*: contains some sample configuration files to use for running

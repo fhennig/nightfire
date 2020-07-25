@@ -1,6 +1,15 @@
 //! This module creates 'semantic' values from audio frame buffers.
-//! Currently there is only a simple function that extracts the max
-//! sample from a frame.
+//! 
+//! The main trait is the SigProc signal processor.  It uses
+//! SignalFilter to turn sequences of samples into sequences of
+//! frequency based features, which it aggregates into Sample
+//! structures (usually at frequencies of around 100Hz instead of
+//! 44.1kHz).  This step is like a fourier transform.
+//! 
+//! The Samples are then given to the SampleHandler, which usually
+//! contains a short history of the most recent Samples.  It creates
+//! even higher level features, such as decayed intensities, or beat
+//! detection.
 use biquad as bq;
 use biquad::Biquad;
 use std::collections::VecDeque;
@@ -136,7 +145,10 @@ impl SignalFilter {
         self.filters.len()
     }
 
-    /// For a given sample of audio, return the filter values
+    /// For a given sample of audio, return the filter values.  The
+    /// audio samples are expected to be ordered in the order in which
+    /// they were generated!  The filters contain an internal state
+    /// that is updated with every new sample.
     pub fn get_filter_vals(&mut self, audio_sample: &f32) -> Vec<f32> {
         let mut res = Vec::with_capacity(self.num_filters());
         for i in 0..self.num_filters() {
