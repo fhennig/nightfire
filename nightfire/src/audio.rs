@@ -8,8 +8,12 @@
 //! 
 //! The Samples are then given to the SampleHandler, which usually
 //! contains a short history of the most recent Samples.  It creates
-//! even higher level features, such as decayed intensities, or beat
-//! detection.
+//! even higher level features (AudioFeatures), such as normalized and
+//! decayed intensities, or how long ago the last beat was.
+//!
+//! The SampleHandler is usually embedded in another object (UI
+//! display, LED lights, ...) which reads the audio features
+//! periodically and updates its own state based on that.
 use biquad as bq;
 use biquad::Biquad;
 use std::collections::VecDeque;
@@ -51,9 +55,9 @@ fn make_filter(f_s: f32, f_c: f32, q: f32) -> bq::DirectForm2Transposed<f32> {
     )
 }
 
-/// A sample of audio.  Represents a certain amount of time.  Has an
-/// id, which counts up as time passes.  The values represent
-/// amplitudes at different frequencies.
+/// A sample of audio.  Represents a certain amount of time. The
+/// values represent amplitudes at different frequencies.
+/// The object is immutable.
 #[derive(Debug, Clone)]
 pub struct Sample {
     vals: Vec<f32>,
@@ -72,7 +76,8 @@ impl Sample {
 }
 
 /// Holds some information on how to interpret a feature vector.  Also
-/// contains some functions to extract information from features.
+/// contains some functions to extract information from Sample objects.
+/// The object is immutable.
 #[derive(Clone)]
 pub struct FilterFreqs {
     pub freqs: Vec<f32>,
@@ -118,6 +123,10 @@ impl FilterFreqs {
     }
 }
 
+/// A SignalFilter is a stateful object that receives a stream of
+/// floating point samples, from which it generates frequency
+/// amplitudes.  For each sample, a frequency amplitude vector is
+/// generated.
 pub struct SignalFilter {
     pub freqs: FilterFreqs,
     filters: Vec<bq::DirectForm2Transposed<f32>>,
@@ -160,6 +169,15 @@ impl SignalFilter {
     pub fn get_slice_value(&self, f_start: f32, f_end: f32, sample: &Sample) -> f32 {
         self.freqs.get_slice_value(f_start, f_end, sample)
     }
+}
+
+fn onset_score(s1: &Sample, s2: &Sample) -> f32 {
+    let n = s1.vals.len();
+    let mut score = 0f32;
+    for i in 0..n {
+        score += (s2.vals[i] - s1.vals[i]).abs();
+    }
+    score
 }
 
 pub trait SampleHandler {
@@ -263,7 +281,16 @@ impl DefaultSampleHandler {
         )
     }
 
+    /// This function updates the current audio features, based on the
+    /// new Sample.
     fn update_feats(&mut self, new_sample: &Sample) {
+        // TODO in this function I also have to do the beat detection.
+        // I need:
+        // - A function that takes two samples and returns the "loudness" score
+        //   -> CHECK: onset_score
+        // - An internal record of the last n scores
+        // - A few lines to decide whether the current sample is a beat or not,
+        //   based on the past history
         let new_intensity = self.filter_freqs.get_slice_value(130., 280., &new_sample);
         let prev_max = self.curr_feats.raw_max_intensity - self.decay_for_max_val;
         let new_raw_max = prev_max.max(new_intensity);
@@ -295,10 +322,13 @@ pub fn setup(f_start: f32, f_end: f32, f_s: f32, q: f32, n_filters: usize) {
     let signal_processor = SigProc::new(f_s, signal_filter, sample_freq, sample_handler);
 }
 
-/// The signal processor takes care of handling a raw audio signal.
-/// It uses a SignalFilter to extract features from the signal.  It
-/// then collects feature vectors at a given sampling rate.  Whenever
-/// a new sample is ready it is given to the SampleHandler.
+/// The SigProc signal processor receives a stream of floating point
+/// samples, which it aggregates into Sample objects, creating a fixed
+/// amount of samples per second.  It uses a SignalFilter using biquad
+/// filters internally.
+///
+/// The given SampleHandler is called periodically, whenever a new
+/// Sample finished capturing.
 pub struct SigProc<T> {
     /// SampleHandler, takes care of the samples once they are fully
     /// collected.
