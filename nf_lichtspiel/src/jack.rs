@@ -1,6 +1,9 @@
 //! This module takes care of audio processing.
+use alsa::pcm::{Access, Format, HwParams, State, PCM};
+use alsa::{Direction, ValueOr};
 use jack::{AsyncClient, AudioIn, Client, Control, Port, ProcessHandler, ProcessScope};
 use log::info;
+use stoppable_thread::{spawn, StoppableHandle};
 
 pub trait ValsHandler: Send + Sync {
     fn take_frame(&mut self, frame: &[f32]);
@@ -66,4 +69,34 @@ pub fn start_processing(
         .expect("Failed to connect client to audio in port");
 
     active_client
+}
+
+pub fn start_processing_alsa(
+    device_name: &str,
+    vals_handler: Box<dyn ValsHandler>,
+) -> StoppableHandle<()> {
+    spawn(move |stopped| {
+        let pcm = PCM::new("USB Audio Device", Direction::Capture, false).unwrap();
+        // Set hardware parameters: 44100 Hz / Mono / 16 bit
+        let hwp = HwParams::any(&pcm).unwrap();
+        hwp.set_channels(1).unwrap();
+        hwp.set_rate(44100, ValueOr::Nearest).unwrap();
+        hwp.set_format(Format::s16()).unwrap();
+        hwp.set_access(Access::RWInterleaved).unwrap();
+        pcm.hw_params(&hwp).unwrap();
+        let io = pcm.io_i16().unwrap();
+
+        // Make sure we don't start the stream too early
+        let hwp = pcm.hw_params_current().unwrap();
+        let swp = pcm.sw_params_current().unwrap();
+        swp.set_start_threshold(hwp.get_buffer_size().unwrap() - hwp.get_period_size().unwrap())
+            .unwrap();
+        pcm.sw_params(&swp).unwrap();
+
+        let mut buf = [0i16; 1024];
+        while !stopped.get() {
+            let frames_read = io.readi(&mut buf).unwrap();
+            info!("frames read: {}", frames_read);
+        }
+    })
 }
