@@ -1,8 +1,13 @@
 mod conf;
 mod jack;
 mod ui;
+use crate::jack::ValsHandler;
 use clap::{App, Arg};
+use cpal::traits::{DeviceTrait, EventLoopTrait, HostTrait};
+use cpal::{StreamData, UnknownTypeInputBuffer};
 use nightfire::audio;
+use std::ffi::CString;
+use stoppable_thread::{spawn, StoppableHandle};
 
 fn main() {
     // argparsing
@@ -19,8 +24,7 @@ fn main() {
         .map(|v| v.parse().unwrap())
         .unwrap_or(30);
     // open jack client
-    let client = jack::open_client("eq_display");
-    let sample_rate = client.sample_rate() as f32;
+    let sample_rate = 44100f32;
     // prepare processor
     let filter = audio::SignalFilter::new(20., 20_000., sample_rate, q, n_filters);
     let sample_freq = 50.;
@@ -33,14 +37,10 @@ fn main() {
     );
     let mut proc = ui::EqViz::new(sig_proc);
     let state = proc.get_shared_vals();
-    // get port from config
-    let port = conf::Conf::new()
-        .audio_in
-        .expect("Jack ports needs to be given in config file.");
-    // open jack
-    let client = jack::start_processing(client, &port, Box::new(proc));
+
+    jack::start_processing_cpal(Box::new(proc));
+
     // open window
     ui::create_window(state);
-    // we get here if the window closes. close client.
-    client.deactivate().expect("Error deactivating client.");
+    // TODO close client
 }

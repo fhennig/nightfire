@@ -26,3 +26,4 @@ palette = "0.5.0"
 piston_window = "0.107.0"
 # audio
 jack = "0.6"
+cpal = "0.11"
