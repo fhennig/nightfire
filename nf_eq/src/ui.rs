@@ -25,6 +25,7 @@ impl EqViz {
 
 impl jack::ValsHandler for EqViz {
     fn take_frame(&mut self, frame: &[f32]) {
+        // println!("{}", frame.len());
         self.sig_proc.add_audio_frame(frame);
         let n = self.sig_proc.filter.num_filters();
         let mut vals = Vec::with_capacity(n);
