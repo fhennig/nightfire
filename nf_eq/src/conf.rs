@@ -1,8 +1,14 @@
 use log;
 use std::path::Path;
 
+/// Which audio backend to use, and specific backend parameters
+pub enum AudioParameters {
+    Jack(String),
+    Cpal,
+}
+
 pub struct Conf {
-    pub audio_in: Option<String>,
+    pub audio_in: Option<AudioParameters>,
 }
 
 impl Conf {
@@ -14,11 +20,16 @@ impl Conf {
             yaml_rust::YamlLoader::load_from_str(&yaml_str).expect("Error parsing config file.");
         let conf = &docs[0];
         // audio in
-        let mut audio_in = conf["audio-in"].as_str();
+        let audio_in = conf["audio-in"].as_str();
+        let mut audio_params = None;
         match audio_in {
             Some(s) => {
                 if s == "off" {
-                    audio_in = None;
+                    audio_params = None;
+                } else if s == "default" {
+                    audio_params = Some(AudioParameters::Cpal);
+                } else {
+                    audio_params = Some(AudioParameters::Jack(s.to_string()));
                 }
             }
             None => {
@@ -26,7 +37,7 @@ impl Conf {
             }
         }
         Conf {
-            audio_in: audio_in.map(|s| s.to_string()),
+            audio_in: audio_params
         }
     }
 

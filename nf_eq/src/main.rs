@@ -1,7 +1,6 @@
 mod conf;
-mod jack;
 mod ui;
-use crate::jack::AudioGetter;
+use nf_audio::AudioGetter;
 use clap::{App, Arg};
 use nightfire::audio;
 
@@ -19,9 +18,16 @@ fn main() {
         .value_of("n")
         .map(|v| v.parse().unwrap())
         .unwrap_or(30);
+    // read config
+    let conf = conf::Conf::new();
     // open audio client
-    let mut audio_getter = jack::AudioGetter::new_cpal();
-    // let mut audio_getter = jack::AudioGetter::new_jack("nf_eq", &"PulseAudio JACK Sink:front-left".to_string());
+    let mut audio_getter = match conf.audio_in {
+        Some(params) => match params {
+            conf::AudioParameters::Jack(port) => AudioGetter::new_jack("nf_eq", &port),
+            conf::AudioParameters::Cpal => AudioGetter::new_cpal(),
+        },
+        None => panic!(),
+    };
     let sample_rate = audio_getter.get_sample_rate();
     // prepare processor
     let filter = audio::SignalFilter::new(20., 20_000., sample_rate, q, n_filters);
@@ -37,7 +43,7 @@ fn main() {
     let state = proc.get_shared_vals();
 
     audio_getter.start_processing(Box::new(proc));
-    
+
     // open window
     ui::create_window(state);
     // TODO close client

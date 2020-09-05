@@ -1,4 +1,4 @@
-use crate::jack;
+use nf_audio;
 use nightfire::audio;
 use piston_window::*;
 use std::sync::{Arc, Mutex};
@@ -23,7 +23,7 @@ impl EqViz {
     }
 }
 
-impl jack::ValsHandler for EqViz {
+impl nf_audio::ValsHandler for EqViz {
     fn take_frame(&mut self, frame: &[f32]) {
         // println!("{}", frame.len());
         self.sig_proc.add_audio_frame(frame);
