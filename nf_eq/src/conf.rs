@@ -1,11 +1,6 @@
 use log;
+use nf_audio::AudioParameters;
 use std::path::Path;
-
-/// Which audio backend to use, and specific backend parameters
-pub enum AudioParameters {
-    Jack(String),
-    Cpal,
-}
 
 pub struct Conf {
     pub audio_in: Option<AudioParameters>,

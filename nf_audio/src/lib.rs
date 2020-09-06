@@ -8,6 +8,12 @@ use jack::{AsyncClient, AudioIn, Client, Control, Port, ProcessHandler, ProcessS
 use log::info;
 use stoppable_thread::{spawn, StoppableHandle};
 
+/// Which audio backend to use, and specific backend parameters
+pub enum AudioParameters {
+    Jack(String),
+    Cpal,
+}
+
 /// A handler that periodically receives audio frames.
 pub trait ValsHandler: Send + Sync {
     fn take_frame(&mut self, frame: &[f32]);
@@ -20,11 +26,18 @@ pub trait AudioGetter {
 }
 
 impl AudioGetter {
-    pub fn new_jack(client_name: &str, port_name: &String) -> Box::<dyn AudioGetter> {
+    pub fn new(params: &AudioParameters) -> Box<dyn AudioGetter> {
+        match params {
+            AudioParameters::Jack(port) => AudioGetter::new_jack("nf_eq", &port),
+            AudioParameters::Cpal => AudioGetter::new_cpal(),
+        }
+    }
+
+    fn new_jack(client_name: &str, port_name: &String) -> Box<dyn AudioGetter> {
         Box::new(JackAudioGetter::new(client_name, port_name))
     }
 
-    pub fn new_cpal() -> Box<dyn AudioGetter> {
+    fn new_cpal() -> Box<dyn AudioGetter> {
         Box::new(CpalAudioGetter::new())
     }
 }
@@ -109,7 +122,9 @@ impl AudioGetter for JackAudioGetter {
         let name = self.client.as_ref().unwrap().name();
         let spec = jack::AudioIn::default();
         let audio_in_port = self
-            .client.as_ref().unwrap()
+            .client
+            .as_ref()
+            .unwrap()
             .register_port("in", spec)
             .expect("Failed to register port.");
 
@@ -117,7 +132,12 @@ impl AudioGetter for JackAudioGetter {
 
         let p_handler = JackHandler::new(audio_in_port, vals_handler);
 
-        let active_client = self.client.take().unwrap().activate_async((), p_handler).unwrap();
+        let active_client = self
+            .client
+            .take()
+            .unwrap()
+            .activate_async((), p_handler)
+            .unwrap();
         info!("Async processhandling started.");
 
         active_client

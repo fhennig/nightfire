@@ -1,7 +1,7 @@
 mod conf;
 mod ui;
-use nf_audio::AudioGetter;
 use clap::{App, Arg};
+use nf_audio::AudioGetter;
 use nightfire::audio;
 
 fn main() {
@@ -22,11 +22,8 @@ fn main() {
     let conf = conf::Conf::new();
     // open audio client
     let mut audio_getter = match conf.audio_in {
-        Some(params) => match params {
-            conf::AudioParameters::Jack(port) => AudioGetter::new_jack("nf_eq", &port),
-            conf::AudioParameters::Cpal => AudioGetter::new_cpal(),
-        },
-        None => panic!(),
+        Some(params) => AudioGetter::new(&params),
+        None => panic!("No audio-in option given!"),
     };
     let sample_rate = audio_getter.get_sample_rate();
     // prepare processor
