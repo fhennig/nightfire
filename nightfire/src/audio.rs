@@ -19,29 +19,6 @@ use biquad::Biquad;
 use std::collections::VecDeque;
 use std::vec::Vec;
 
-/// This struct represents the values that are extracted from the
-/// audio signal at every iteration.  These values are used downstream
-/// to visualize the current audio signal.
-#[derive(Debug, Clone)]
-pub struct MyValues {
-    pub low: f32,
-    pub mid: f32,
-    pub high: f32,
-}
-
-impl MyValues {
-    pub fn new(low: f32, mid: f32, high: f32) -> MyValues {
-        MyValues {
-            low: low.max(0.0).min(1.0),
-            mid: mid.max(0.0).min(1.0),
-            high: high.max(0.0).min(1.0),
-        }
-    }
-
-    pub fn new_null() -> MyValues {
-        MyValues::new(0.0, 0.0, 0.0)
-    }
-}
 
 fn make_filter(f_s: f32, f_c: f32, q: f32) -> bq::DirectForm2Transposed<f32> {
     bq::DirectForm2Transposed::<f32>::new(
@@ -279,16 +256,6 @@ impl DefaultSampleHandler {
             .enumerate()
             .map(|(i, val)| val.vals[f_index] * self.decay(i))
             .fold(-1. / 0., f32::max)
-    }
-
-    pub fn get_current_values(&self) -> MyValues {
-        MyValues::new(
-            self.get_range_decayed(130., 280.),   // bass
-            self.get_range_decayed(350., 3_000.), // mids
-            //self.get_range_decayed(350., 1_800.),
-            //self.get_range_decayed(1_800., 3_500.),
-            self.get_range_decayed(10_000., 22_000.), // cripsp
-        )
     }
 
     /// This function updates the current audio features, based on the
