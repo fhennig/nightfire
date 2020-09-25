@@ -1,5 +1,4 @@
 pub mod conf;
-pub mod jack;
 pub mod lightid;
 pub mod osc;
 pub mod periodic_updater;

@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 # internal
 nightfire = { path = "../nightfire" }
+nf_audio = { path = "../nf_audio" }
 # commandline parsing
 clap = "2.33.0"
 # config file
@@ -26,8 +27,5 @@ palette = "0.5.0"
 piston_window = "0.107.0"
 # controller
 hidapi = { version = "1.2.1", features = ["linux-static-hidraw"], default-features = false }
-# audio
-jack = "0.6"
 # network
 rosc = "0.3"
-alsa = "0.4.2"

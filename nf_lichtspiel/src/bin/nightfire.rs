@@ -1,5 +1,5 @@
 use clap::{App, Arg, ArgMatches};
-use nf_lichtspiel::jack;
+use nf_audio::AudioGetter;
 use nf_lichtspiel::conf::Conf;
 use nf_lichtspiel::piblaster::start_piblaster_thread;
 use nf_lichtspiel::sixaxis::read_controller;
@@ -29,7 +29,7 @@ impl AudioStateUpdater {
     }
 }
 
-impl jack::ValsHandler for AudioStateUpdater {
+impl nf_audio::ValsHandler for AudioStateUpdater {
     fn take_frame(&mut self, frame: &[f32]) {
         self.signal_processor.add_audio_frame(frame);
         let intensity = self.signal_processor.sample_handler.curr_feats.intensity;
@@ -69,20 +69,19 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let matches = get_args();
     // read config
     let conf = Conf::new();
+    // open audio client
+    let mut audio_getter = match conf.audio_in {
+        Some(params) => AudioGetter::new(&params),
+        None => panic!("No audio-in option given!"),
+    };
+    let sample_rate = audio_getter.get_sample_rate();
     // setup state
     let state = Arc::new(Mutex::new(State::new()));
+    // start processing
+    let proc = Box::new(AudioStateUpdater::new(Arc::clone(&state), sample_rate));
+    audio_getter.start_processing(proc);
     // start periodic updater
     start_periodic_update_thread(Arc::clone(&state), 50);
-    // read audio
-    let audio_client = match conf.audio_in {
-        Some(port) => {
-            let client = jack::open_client("lumi");
-            let sample_rate = client.sample_rate() as f32;
-            let proc = Box::new(AudioStateUpdater::new(Arc::clone(&state), sample_rate));
-            Some(jack::start_processing(client, &port, proc))
-        }
-        None => None,
-    };
     // run controller
     let updater = Box::new(StateUpdater::new(Arc::clone(&state)));
     let controller = read_controller(updater);
