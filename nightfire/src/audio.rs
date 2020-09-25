@@ -216,6 +216,7 @@ impl DecayingValue {
     }
 
     pub fn current_value(&self) -> f32 {
+        // TODO make decay a spline, not a hardcoded function
         self.base_value * self.decay_factor.powf(self.decayed_time)
     }
 
