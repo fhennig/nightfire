@@ -26,6 +26,7 @@ pub trait AudioGetter {
 }
 
 impl AudioGetter {
+    /// Creates a new audio input with the given parameters
     pub fn new(params: &AudioParameters) -> Box<dyn AudioGetter> {
         match params {
             AudioParameters::Jack(port) => AudioGetter::new_jack("nf_eq", &port),
