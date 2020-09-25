@@ -32,7 +32,7 @@ impl AudioStateUpdater {
 impl nf_audio::ValsHandler for AudioStateUpdater {
     fn take_frame(&mut self, frame: &[f32]) {
         self.signal_processor.add_audio_frame(frame);
-        let intensity = self.signal_processor.sample_handler.curr_feats.intensity;
+        let intensity = self.signal_processor.sample_handler.curr_feats.bass_intensity.current_value();
         self.state.lock().unwrap().set_intensity(intensity);
         /*
                         let mut state = self.state.lock().unwrap();

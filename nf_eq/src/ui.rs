@@ -66,6 +66,7 @@ pub fn create_window(display_data: Arc<Mutex<DisplayData>>) {
     let bg_color = [itof(237), itof(235), itof(223), 1.0];
     let fg_color = [itof(64), itof(216), itof(133), 1.0];
     let alt_fg_color = [itof(216), itof(64), itof(133), 1.0];
+    let blue = [itof(64), itof(133), itof(216), 1.0];
     let mut window: PistonWindow = WindowSettings::new("Hello Piston!", [500, 300])
         .exit_on_esc(true)
         .build()
@@ -79,6 +80,20 @@ pub fn create_window(display_data: Arc<Mutex<DisplayData>>) {
         let n_f64 = n as f64;
         window.draw_2d(&event, |context, graphics, _device| {
             clear(bg_color, graphics);
+            let int = dd.audio_features.bass_intensity.current_value() as f64;
+            rectangle(
+                alt_fg_color,
+                [(1. - int) * w / 2., h * 0.25, int * w, h * 0.5],
+                context.transform,
+                graphics,
+            );
+            let int = dd.audio_features.highs_intensity.current_value() as f64;
+            rectangle(
+                blue,
+                [(1. - int) * w / 2., 0., int * w, h * 0.25],
+                context.transform,
+                graphics,
+            );
             for i in 0..n {
                 let v = dd.frequency_bins[i] as f64;
                 let i = i as f64;
@@ -89,13 +104,6 @@ pub fn create_window(display_data: Arc<Mutex<DisplayData>>) {
                     graphics,
                 );
             }
-            let int = dd.audio_features.intensity as f64;
-            rectangle(
-                alt_fg_color,
-                [(1. - int) * w / 2., 0., int * w, 40.],
-                context.transform,
-                graphics,
-            );
         });
     }
 }

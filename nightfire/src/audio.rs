@@ -19,7 +19,6 @@ use biquad::Biquad;
 use std::collections::VecDeque;
 use std::vec::Vec;
 
-
 fn make_filter(f_s: f32, f_c: f32, q: f32) -> bq::DirectForm2Transposed<f32> {
     bq::DirectForm2Transposed::<f32>::new(
         bq::Coefficients::<f32>::from_params(
@@ -186,15 +185,53 @@ pub struct AudioFeatures {
     /// The raw maximum intensity.  This is subsequently used to scale
     /// other frequency amplitudes between 0 and 1.
     pub raw_max_intensity: f32,
-    /// The overall perceived intensity of the signal. In [0, 1].
-    pub intensity: f32,
+    pub bass_intensity: DecayingValue,
+    pub highs_intensity: DecayingValue,
 }
 
 impl AudioFeatures {
     pub fn new() -> AudioFeatures {
         AudioFeatures {
-            intensity: 0.,
             raw_max_intensity: 0.,
+            bass_intensity: DecayingValue::new(0.05),
+            highs_intensity: DecayingValue::new(0.02),
+        }
+    }
+}
+
+#[derive(Copy, Clone)]
+pub struct DecayingValue {
+    base_value: f32,
+    decay_factor: f32,
+    decayed_time: f32, // in seconds
+}
+
+impl DecayingValue {
+    pub fn new(decay_factor: f32) -> DecayingValue {
+        DecayingValue {
+            base_value: 0.,
+            decay_factor: decay_factor,
+            decayed_time: 0.,
+        }
+    }
+
+    pub fn current_value(&self) -> f32 {
+        self.base_value * self.decay_factor.powf(self.decayed_time)
+    }
+
+    pub fn update(&self, new_value: f32, time_delta: f32) -> DecayingValue {
+        if new_value > self.current_value() {
+            DecayingValue {
+                base_value: new_value,
+                decay_factor: self.decay_factor,
+                decayed_time: 0.,
+            }
+        } else {
+            DecayingValue {
+                base_value: self.base_value,
+                decay_factor: self.decay_factor,
+                decayed_time: self.decayed_time + time_delta,
+            }
         }
     }
 }
@@ -217,7 +254,7 @@ pub struct DefaultSampleHandler {
 }
 
 impl DefaultSampleHandler {
-    /// Receives the sample frequency at which samples arrive.  Also
+    /// Receives the sample frequency (Hz) at which samples arrive.  Also
     /// the filter frequencies corresponding to the values in the
     /// samples, to actually interpret the samples.
     pub fn new(sample_freq: f32, filter_freqs: FilterFreqs) -> Self {
@@ -269,15 +306,21 @@ impl DefaultSampleHandler {
         // - A few lines to decide whether the current sample is a beat or not,
         //   based on the past history
         let new_intensity = self.filter_freqs.get_slice_value(130., 280., &new_sample);
+        let new_highs_intensity = self
+            .filter_freqs
+            .get_slice_value(6000., 22000., &new_sample);
         let prev_max = self.curr_feats.raw_max_intensity - self.decay_for_max_val;
         let new_raw_max = prev_max.max(new_intensity);
-        // TODO this way of decaying is not good ... It should be time dependent.
-        let prev_scaled_intensity = self.curr_feats.intensity - 0.1;
-        let curr_scaled_intensity = new_intensity / new_raw_max;
-        let new_scaled_intensity = prev_scaled_intensity.max(curr_scaled_intensity);
         self.curr_feats = AudioFeatures {
-            intensity: new_scaled_intensity,
             raw_max_intensity: new_raw_max,
+            bass_intensity: self
+                .curr_feats
+                .bass_intensity
+                .update(new_intensity / new_raw_max, 1. / self.sample_freq),
+            highs_intensity: self
+                .curr_feats
+                .highs_intensity
+                .update(new_highs_intensity / new_raw_max, 1. / self.sample_freq),
         };
     }
 }
