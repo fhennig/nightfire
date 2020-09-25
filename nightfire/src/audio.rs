@@ -1,11 +1,11 @@
 //! This module creates 'semantic' values from audio frame buffers.
-//! 
+//!
 //! The main trait is the SigProc signal processor.  It uses
 //! SignalFilter to turn sequences of samples into sequences of
 //! frequency based features, which it aggregates into Sample
 //! structures (usually at frequencies of around 100Hz instead of
 //! 44.1kHz).  This step is like a fourier transform.
-//! 
+//!
 //! The Samples are then given to the SampleHandler, which usually
 //! contains a short history of the most recent Samples.  It creates
 //! even higher level features (AudioFeatures), such as normalized and
@@ -204,12 +204,22 @@ impl SampleHandler for CollectSampleHandler {
 }
 
 /// A structure to contain features of the sample at a given time.
+#[derive(Copy, Clone)]
 pub struct AudioFeatures {
     /// The raw maximum intensity.  This is subsequently used to scale
     /// other frequency amplitudes between 0 and 1.
     pub raw_max_intensity: f32,
     /// The overall perceived intensity of the signal. In [0, 1].
     pub intensity: f32,
+}
+
+impl AudioFeatures {
+    pub fn new() -> AudioFeatures {
+        AudioFeatures {
+            intensity: 0.,
+            raw_max_intensity: 0.,
+        }
+    }
 }
 
 /// The default sample handler takes receives samples and extracts
@@ -242,7 +252,7 @@ impl DefaultSampleHandler {
             sample_freq: sample_freq,
             hist: vec![].into_iter().collect(),
             hist_len: 30,
-            curr_feats: AudioFeatures { intensity: 0., raw_max_intensity: 0., },
+            curr_feats: AudioFeatures::new(),
             decay_for_max_val: decay_per_sample,
         }
     }
