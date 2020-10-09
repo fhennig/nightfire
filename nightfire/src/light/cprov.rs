@@ -20,7 +20,7 @@ impl StaticSolidMap {
 }
 
 impl ColorMap for StaticSolidMap {
-    fn get_color(&self, pos: &li::Coordinate) -> li::Color {
+    fn get_color(&self, _pos: &li::Coordinate) -> li::Color {
         self.color
     }
 }

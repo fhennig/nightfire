@@ -217,7 +217,7 @@ impl SolidMask {
 }
 
 impl Mask for SolidMask {
-    fn get_value(&self, pos: &coord::Coordinate) -> PinValue {
+    fn get_value(&self, _pos: &coord::Coordinate) -> PinValue {
         self.val
     }
 }

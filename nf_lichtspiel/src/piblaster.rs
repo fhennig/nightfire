@@ -8,6 +8,7 @@ use std::thread;
 use std::time::Duration;
 use std::vec::Vec;
 use stoppable_thread::{spawn, StoppableHandle};
+use nightfire::light::cprov::ColorMap;
 
 pub type Pin = i64;
 
@@ -108,7 +109,7 @@ impl Lights {
 /// The fps parameter decides how many updates per second are executed.
 pub fn start_piblaster_thread(
     mut lights: Lights,
-    state: Arc<Mutex<State>>,
+    color_map: Box<dyn ColorMap + Send + Sync>,
     fps: u64,
 ) -> StoppableHandle<Lights> {
     let dur = Duration::from_millis(1000 / fps);
@@ -116,7 +117,7 @@ pub fn start_piblaster_thread(
         while !stopped.get() {
             thread::sleep(dur);
             for id in LightId::all() {
-                let color = state.lock().unwrap().get_color(&id.pos());
+                let color = color_map.get_color(&id.pos());
                 lights.set_light(&id, &color);
             }
         }

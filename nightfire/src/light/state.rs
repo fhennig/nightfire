@@ -1,7 +1,7 @@
 use crate::light::color;
 use crate::light::coord;
 use crate::light::cprov::{self, ColorMap};
-use crate::light::layer::{ColorMapLayer, Layers, MaskLayer, SolidLayer};
+use crate::light::layer::{ColorMapLayer, Layers, SolidLayer};
 use crate::light::mask::{self, Mask};
 use crate::light::ColorsExt;
 use crate::tapper::BpmTapper;
