@@ -8,33 +8,41 @@ use palette::Mix;
 /// calculated, the layer receives the color for the position from the
 /// layer below it.  This way the layer can transparently merge its
 /// color value with the one below.
-pub trait ColorMapLayer {
-    fn get_color(&self, pos: &Coordinate, color: Color) -> Color;
-}
+
+//pub trait ColorMapLayer {
+//    fn get_color(&self, pos: &Coordinate, color: Color) -> Color;
+//}
 
 /// A Masked color map layer includes a color map and a mask.  The
 /// mask defines how much of the color map is shown.  The mask defines
 /// the transparency. If the mask is 0, the layer is not transparent
 /// and ignores the given color value.  If the mask is 1 the layer is
 /// fully transparent.
-pub struct MaskedColorMapLayer<C, M> {
+pub struct Layer<C, M> {
     map: C,
     pub mask: M,
 }
 
-impl<C, M> ColorMapLayer for MaskedColorMapLayer<C, M>
+impl<C, M> Layer<C, M>
 where
     C: ColorMap,
     M: Mask,
 {
-    fn get_color(&self, pos: &Coordinate, color: Color) -> Color {
+    pub fn new(color_map: C, mask: M) -> Layer<C, M> {
+        Layer {
+            map: color_map,
+            mask: mask,
+        }
+    }
+
+    pub fn get_color(&self, pos: &Coordinate, color: Color) -> Color {
         self.map.get_color(&pos).mix(&color, self.mask.get_value(&pos))
     }
 }
 
 /// A solid layer is a convenience type for a static solid layer with
 /// a mask.
-pub type SolidLayer<M> = MaskedColorMapLayer<StaticSolidMap, M>;
+pub type SolidLayer<M> = Layer<StaticSolidMap, M>;
 
 pub type MaskLayer<M> = SolidLayer<ActivatableMask<M>>;
 
@@ -43,7 +51,7 @@ pub struct Layers;
 impl Layers {
     /// Creates a layer with a solid color and a given mask.
     pub fn new_solid<M: Mask>(color: Color, mask: M) -> SolidLayer<M> {
-        MaskedColorMapLayer::<StaticSolidMap, M> {
+        Layer::<StaticSolidMap, M> {
             map: StaticSolidMap::new(color),
             mask: mask,
         }
@@ -52,7 +60,7 @@ impl Layers {
     /// Creates a black layer with an activatable mask.  The mask is
     /// off by default.
     pub fn new_mask<M: Mask>(mask: M) -> MaskLayer<M> {
-        MaskedColorMapLayer::<StaticSolidMap, ActivatableMask<M>> {
+        Layer::<StaticSolidMap, ActivatableMask<M>> {
             map: StaticSolidMap::new(Color::black()),
             mask: ActivatableMask::<M>::new(mask, false),
         }

@@ -1,8 +1,10 @@
+pub mod auto;
 pub mod manual;
-use manual::DefaultMode;
 use crate::periodic_updater::PeriodicUpdateHandler;
 use crate::sixaxis::controller::Controller;
 use crate::sixaxis::ControllerHandler;
+use auto::AutoMode;
+use manual::DefaultMode;
 use nf_audio::ValsHandler;
 use nightfire::light::color::Color;
 use nightfire::light::coord::Coordinate;
@@ -34,10 +36,10 @@ pub struct Main {
 
 impl Main {
     pub fn new(sample_rate: f32) -> Main {
+        let auto = AutoMode::new();
+        let manual = DefaultMode::new(sample_rate);
         Main {
-            mode_switcher: Arc::new(Mutex::new(ModeSwitcher::new(Box::new(DefaultMode::new(
-                sample_rate,
-            ))))),
+            mode_switcher: Arc::new(Mutex::new(ModeSwitcher::new(Box::new(auto)))),
         }
     }
 
