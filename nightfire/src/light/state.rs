@@ -172,6 +172,7 @@ impl State {
     /// A function that executes time based updates.  This function
     /// should be called regularly.
     pub fn periodic_update(&mut self) {
+        /*
         if self.inactivity.is_inactive() && !self.last_inactive_state {
             self.white_flash();
             self.pulse_mask.set_active(true);
@@ -181,6 +182,7 @@ impl State {
             self.pulse_mask.set_active(false);
             self.last_inactive_state = false;
         }
+         */
     }
 
     pub fn get_color(&self, pos: &coord::Coordinate) -> color::Color {

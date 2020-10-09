@@ -1,9 +1,8 @@
-use nightfire::light::{Color, PinValue, State};
+use nightfire::light::{Color, PinValue};
 use crate::lightid::LightId;
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
-use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 use std::vec::Vec;

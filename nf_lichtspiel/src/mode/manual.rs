@@ -138,12 +138,15 @@ impl Mode for DefaultMode {
 
     fn audio_update(&mut self, frame: &[f32]) {
         self.signal_processor.add_audio_frame(frame);
-        let intensity = self
+        let mut intensity = self
             .signal_processor
             .sample_handler
             .curr_feats
             .bass_intensity
             .current_value();
+        if self.signal_processor.sample_handler.curr_feats.silence {
+            intensity = 1.0;
+        }
         self.state.set_intensity(intensity);
                 /*
                         let mut state = self.state.lock().unwrap();

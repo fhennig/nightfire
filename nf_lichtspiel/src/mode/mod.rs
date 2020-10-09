@@ -1,4 +1,5 @@
-use crate::default_mode::DefaultMode;
+pub mod manual;
+use manual::DefaultMode;
 use crate::periodic_updater::PeriodicUpdateHandler;
 use crate::sixaxis::controller::Controller;
 use crate::sixaxis::ControllerHandler;

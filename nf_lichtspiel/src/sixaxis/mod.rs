@@ -4,7 +4,6 @@ use hidapi::HidApi;
 use log::{debug, info};
 use std::{thread, time};
 use stoppable_thread::{spawn, StoppableHandle};
-use std::sync::{Arc, Mutex};
 
 /// A trait that takes controller values and updates a state, sends
 /// them over a network or does whatever with them.

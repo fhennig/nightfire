@@ -185,6 +185,7 @@ pub struct AudioFeatures {
     /// The raw maximum intensity.  This is subsequently used to scale
     /// other frequency amplitudes between 0 and 1.
     pub raw_max_intensity: f32,
+    pub silence: bool,
     pub bass_intensity: DecayingValue,
     pub highs_intensity: DecayingValue,
 }
@@ -193,6 +194,7 @@ impl AudioFeatures {
     pub fn new() -> AudioFeatures {
         AudioFeatures {
             raw_max_intensity: 0.,
+            silence: true,
             bass_intensity: DecayingValue::new(0.05),
             highs_intensity: DecayingValue::new(0.02),
         }
@@ -260,7 +262,7 @@ impl DefaultSampleHandler {
     /// samples, to actually interpret the samples.
     pub fn new(sample_freq: f32, filter_freqs: FilterFreqs) -> Self {
         // calc stuff for the decay of the max_intensity:
-        let total_decay_duration = 10.; // in seconds
+        let total_decay_duration = 60.; // in seconds
         let decay_per_sample = 1. / (sample_freq * total_decay_duration);
         Self {
             filter_freqs: filter_freqs,
@@ -314,6 +316,7 @@ impl DefaultSampleHandler {
         let new_raw_max = prev_max.max(new_intensity);
         self.curr_feats = AudioFeatures {
             raw_max_intensity: new_raw_max,
+            silence: new_raw_max < 0.05,
             bass_intensity: self
                 .curr_feats
                 .bass_intensity
