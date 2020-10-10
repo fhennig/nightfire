@@ -14,13 +14,31 @@
 //! The SampleHandler is usually embedded in another object (UI
 //! display, LED lights, ...) which reads the audio features
 //! periodically and updates its own state based on that.
-pub mod filter;
-use biquad as bq;
-use biquad::Biquad;
+mod filter;
+use filter::FilterFreqs;
 pub use filter::SignalFilter;
-use filter::{FilterFreqs, Sample};
 use std::collections::VecDeque;
 use std::vec::Vec;
+
+/// A sample of audio.  Represents a certain amount of time. The
+/// values represent amplitudes at different frequencies.
+/// The object is immutable.
+#[derive(Debug, Clone)]
+pub struct Sample {
+    pub vals: Vec<f32>,
+}
+
+impl Sample {
+    pub fn new_null(len: usize) -> Sample {
+        Sample {
+            vals: vec![0.; len],
+        }
+    }
+
+    pub fn get_vals_cloned(&self) -> Vec<f32> {
+        self.vals.to_vec()
+    }
+}
 
 fn onset_score(s1: &Sample, s2: &Sample) -> f32 {
     let n = s1.vals.len();
