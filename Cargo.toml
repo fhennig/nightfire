@@ -3,7 +3,6 @@
 members = [
     "nightfire",
     "nf_audio",
-    "nf_ir",
     "nf_lichtspiel",
     "nf_eq",
     "mixxx_data",
