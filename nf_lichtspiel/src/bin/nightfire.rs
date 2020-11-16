@@ -5,6 +5,7 @@ use nf_lichtspiel::mode::Main;
 use nf_lichtspiel::periodic_updater::start_periodic_update_thread;
 use nf_lichtspiel::piblaster::start_piblaster_thread;
 use nf_lichtspiel::sixaxis::read_controller;
+use pi_ir_remote::read_ir_remote;
 use std::{error, thread, time};
 
 fn get_args() -> ArgMatches<'static> {
@@ -33,6 +34,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     audio_getter.start_processing(main.new_audio_handler());
     let piblaster = start_piblaster_thread(conf.lights, main.new_color_map(), 50);
     start_periodic_update_thread(main.new_periodic_update_handler(), 50);
+    read_ir_remote(4, main.new_ir_remote_handler());
     loop {
         let dur = time::Duration::from_millis(10000);
         thread::sleep(dur);

@@ -9,8 +9,9 @@ use nf_audio::ValsHandler;
 use nightfire::light::color::Color;
 use nightfire::light::coord::Coordinate;
 use nightfire::light::cprov::ColorMap;
-use std::sync::{Arc, Mutex};
+use pi_ir_remote::Signal as IRSignal;
 use pi_ir_remote::SignalHandler as IRSignalHandler;
+use std::sync::{Arc, Mutex};
 
 pub trait Mode: Send + Sync {
     fn get_color(&self, coordinate: &Coordinate) -> Color;
@@ -46,6 +47,10 @@ impl ModeSwitcher {
             ModeName::Manual => &mut self.manual_mode,
         }
     }
+
+    pub fn activate_mode(&mut self, mode: ModeName) {
+        self.c_mode = mode;
+    }
 }
 
 pub struct Main {
@@ -54,7 +59,6 @@ pub struct Main {
 
 impl Main {
     pub fn new(sample_rate: f32) -> Main {
-        
         Main {
             mode_switcher: Arc::new(Mutex::new(ModeSwitcher::new(ModeName::Auto, sample_rate))),
         }
@@ -79,6 +83,12 @@ impl Main {
     }
 
     pub fn new_periodic_update_handler(&mut self) -> Box<dyn PeriodicUpdateHandler + Send + Sync> {
+        Box::new(Main {
+            mode_switcher: Arc::clone(&self.mode_switcher),
+        })
+    }
+
+    pub fn new_ir_remote_handler(&mut self) -> Box<dyn IRSignalHandler + Send + Sync> {
         Box::new(Main {
             mode_switcher: Arc::clone(&self.mode_switcher),
         })
@@ -110,5 +120,21 @@ impl PeriodicUpdateHandler for Main {
     fn periodic_update(&mut self) {
         let mut ms = self.mode_switcher.lock().unwrap();
         ms.current_mode().periodic_update();
+    }
+}
+
+impl IRSignalHandler for Main {
+    fn handle_signal(&mut self, signal: &IRSignal) {
+        match signal {
+            IRSignal::Diy5 => {
+                let mut ms = self.mode_switcher.lock().unwrap();
+                ms.activate_mode(ModeName::Auto);
+            }
+            IRSignal::Diy4 => {
+                let mut ms = self.mode_switcher.lock().unwrap();
+                ms.activate_mode(ModeName::Manual);
+            }
+            _ => (),
+        }
     }
 }
