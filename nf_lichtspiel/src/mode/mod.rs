@@ -6,7 +6,7 @@ use crate::sixaxis::ControllerHandler;
 use auto::AutoMode;
 use manual::DefaultMode;
 use nf_audio::ValsHandler;
-use nightfire::light::color::Color;
+use nightfire::light::color::{Color, ColorsExt};
 use nightfire::light::coord::Coordinate;
 use nightfire::light::cprov::ColorMap;
 use pi_ir_remote::Signal as IRSignal;
@@ -30,6 +30,7 @@ pub struct ModeSwitcher {
     auto_mode: Box<dyn Mode>,
     manual_mode: Box<dyn Mode>,
     c_mode: ModeName,
+    off: bool,
 }
 
 impl ModeSwitcher {
@@ -38,6 +39,7 @@ impl ModeSwitcher {
             auto_mode: Box::new(AutoMode::new()),
             manual_mode: Box::new(DefaultMode::new(sample_rate)),
             c_mode: initial_mode,
+            off: false,
         }
     }
 
@@ -48,8 +50,24 @@ impl ModeSwitcher {
         }
     }
 
+    pub fn get_color(&self, coordinate: &Coordinate) -> Color {
+        if self.off {
+            Color::black()
+        } else {
+            match self.c_mode {
+                ModeName::Auto => self.auto_mode.get_color(coordinate),
+                ModeName::Manual => self.manual_mode.get_color(coordinate),
+            }
+        }
+    }
+
     pub fn activate_mode(&mut self, mode: ModeName) {
         self.c_mode = mode;
+    }
+
+    pub fn switch_on_off(&mut self) {
+        println!("onoff");
+        self.off = !self.off;
     }
 }
 
@@ -111,8 +129,8 @@ impl ValsHandler for Main {
 
 impl ColorMap for Main {
     fn get_color(&self, coordinate: &Coordinate) -> Color {
-        let mut ms = self.mode_switcher.lock().unwrap();
-        ms.current_mode().get_color(&coordinate)
+        let ms = self.mode_switcher.lock().unwrap();
+        ms.get_color(&coordinate)
     }
 }
 
@@ -133,6 +151,11 @@ impl IRSignalHandler for Main {
             IRSignal::Diy4 => {
                 let mut ms = self.mode_switcher.lock().unwrap();
                 ms.activate_mode(ModeName::Manual);
+            }
+            IRSignal::Power => {
+                println!("Power received");
+                let mut ms = self.mode_switcher.lock().unwrap();
+                ms.switch_on_off();
             }
             _ => (),
         }
