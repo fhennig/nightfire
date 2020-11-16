@@ -10,6 +10,7 @@ use nightfire::light::color::Color;
 use nightfire::light::coord::Coordinate;
 use nightfire::light::cprov::ColorMap;
 use std::sync::{Arc, Mutex};
+use pi_ir_remote::SignalHandler as IRSignalHandler;
 
 pub trait Mode: Send + Sync {
     fn get_color(&self, coordinate: &Coordinate) -> Color;
@@ -18,14 +19,31 @@ pub trait Mode: Send + Sync {
     fn periodic_update(&mut self);
 }
 
+#[derive(Debug, Copy, Clone)]
+pub enum ModeName {
+    Auto,
+    Manual,
+}
+
 pub struct ModeSwitcher {
-    current_mode: Box<dyn Mode>,
+    auto_mode: Box<dyn Mode>,
+    manual_mode: Box<dyn Mode>,
+    c_mode: ModeName,
 }
 
 impl ModeSwitcher {
-    pub fn new(initial_mode: Box<dyn Mode>) -> ModeSwitcher {
+    pub fn new(initial_mode: ModeName, sample_rate: f32) -> ModeSwitcher {
         ModeSwitcher {
-            current_mode: initial_mode,
+            auto_mode: Box::new(AutoMode::new()),
+            manual_mode: Box::new(DefaultMode::new(sample_rate)),
+            c_mode: initial_mode,
+        }
+    }
+
+    pub fn current_mode(&mut self) -> &mut Box<dyn Mode> {
+        match self.c_mode {
+            ModeName::Auto => &mut self.auto_mode,
+            ModeName::Manual => &mut self.manual_mode,
         }
     }
 }
@@ -36,10 +54,9 @@ pub struct Main {
 
 impl Main {
     pub fn new(sample_rate: f32) -> Main {
-        let auto = AutoMode::new();
-        let manual = DefaultMode::new(sample_rate);
+        
         Main {
-            mode_switcher: Arc::new(Mutex::new(ModeSwitcher::new(Box::new(auto)))),
+            mode_switcher: Arc::new(Mutex::new(ModeSwitcher::new(ModeName::Auto, sample_rate))),
         }
     }
 
@@ -71,27 +88,27 @@ impl Main {
 impl ControllerHandler for Main {
     fn controller_update(&mut self, controller: &Controller) {
         let mut ms = self.mode_switcher.lock().unwrap();
-        ms.current_mode.controller_update(controller);
+        ms.current_mode().controller_update(controller);
     }
 }
 
 impl ValsHandler for Main {
     fn take_frame(&mut self, frame: &[f32]) {
         let mut ms = self.mode_switcher.lock().unwrap();
-        ms.current_mode.audio_update(&frame);
+        ms.current_mode().audio_update(&frame);
     }
 }
 
 impl ColorMap for Main {
     fn get_color(&self, coordinate: &Coordinate) -> Color {
-        let ms = self.mode_switcher.lock().unwrap();
-        ms.current_mode.get_color(&coordinate)
+        let mut ms = self.mode_switcher.lock().unwrap();
+        ms.current_mode().get_color(&coordinate)
     }
 }
 
 impl PeriodicUpdateHandler for Main {
     fn periodic_update(&mut self) {
         let mut ms = self.mode_switcher.lock().unwrap();
-        ms.current_mode.periodic_update();
+        ms.current_mode().periodic_update();
     }
 }
