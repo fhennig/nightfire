@@ -134,7 +134,6 @@ impl State {
     // music control
 
     pub fn set_intensity(&mut self, intensity: f32) {
-        println!("{}", intensity);
         self.music_mask.mask.set_val(intensity.into());
     }
 
