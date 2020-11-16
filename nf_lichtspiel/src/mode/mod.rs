@@ -23,12 +23,16 @@ pub trait Mode: Send + Sync {
 #[derive(Debug, Copy, Clone)]
 pub enum ModeName {
     Auto,
-    Manual,
+    Manual1,
+    Manual2,
+    Manual3,
 }
 
 pub struct ModeSwitcher {
     auto_mode: Box<dyn Mode>,
-    manual_mode: Box<dyn Mode>,
+    manual1_mode: Box<dyn Mode>,
+    manual2_mode: Box<dyn Mode>,
+    manual3_mode: Box<dyn Mode>,
     c_mode: ModeName,
     off: bool,
 }
@@ -37,7 +41,9 @@ impl ModeSwitcher {
     pub fn new(initial_mode: ModeName, sample_rate: f32) -> ModeSwitcher {
         ModeSwitcher {
             auto_mode: Box::new(AutoMode::new()),
-            manual_mode: Box::new(DefaultMode::new(sample_rate)),
+            manual1_mode: Box::new(DefaultMode::new(sample_rate)),
+            manual2_mode: Box::new(DefaultMode::new(sample_rate)),
+            manual3_mode: Box::new(DefaultMode::new(sample_rate)),
             c_mode: initial_mode,
             off: false,
         }
@@ -46,7 +52,9 @@ impl ModeSwitcher {
     pub fn current_mode(&mut self) -> &mut Box<dyn Mode> {
         match self.c_mode {
             ModeName::Auto => &mut self.auto_mode,
-            ModeName::Manual => &mut self.manual_mode,
+            ModeName::Manual1 => &mut self.manual1_mode,
+            ModeName::Manual2 => &mut self.manual2_mode,
+            ModeName::Manual3 => &mut self.manual3_mode,
         }
     }
 
@@ -56,7 +64,9 @@ impl ModeSwitcher {
         } else {
             match self.c_mode {
                 ModeName::Auto => self.auto_mode.get_color(coordinate),
-                ModeName::Manual => self.manual_mode.get_color(coordinate),
+                ModeName::Manual1 => self.manual1_mode.get_color(coordinate),
+                ModeName::Manual2 => self.manual2_mode.get_color(coordinate),
+                ModeName::Manual3 => self.manual3_mode.get_color(coordinate),
             }
         }
     }
@@ -78,7 +88,7 @@ pub struct Main {
 impl Main {
     pub fn new(sample_rate: f32) -> Main {
         Main {
-            mode_switcher: Arc::new(Mutex::new(ModeSwitcher::new(ModeName::Auto, sample_rate))),
+            mode_switcher: Arc::new(Mutex::new(ModeSwitcher::new(ModeName::Manual1, sample_rate))),
         }
     }
 
@@ -144,13 +154,21 @@ impl PeriodicUpdateHandler for Main {
 impl IRSignalHandler for Main {
     fn handle_signal(&mut self, signal: &IRSignal) {
         match signal {
-            IRSignal::Diy5 => {
+            IRSignal::Diy1 => {
                 let mut ms = self.mode_switcher.lock().unwrap();
-                ms.activate_mode(ModeName::Auto);
+                ms.activate_mode(ModeName::Manual1);
+            }
+            IRSignal::Diy2 => {
+                let mut ms = self.mode_switcher.lock().unwrap();
+                ms.activate_mode(ModeName::Manual2);
+            }
+            IRSignal::Diy3 => {
+                let mut ms = self.mode_switcher.lock().unwrap();
+                ms.activate_mode(ModeName::Manual3);
             }
             IRSignal::Diy4 => {
                 let mut ms = self.mode_switcher.lock().unwrap();
-                ms.activate_mode(ModeName::Manual);
+                ms.activate_mode(ModeName::Auto);
             }
             IRSignal::Power => {
                 println!("Power received");
