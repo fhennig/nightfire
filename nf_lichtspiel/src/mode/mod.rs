@@ -1,10 +1,12 @@
 pub mod auto;
 pub mod manual;
+pub mod double_blob;
 use crate::periodic_updater::PeriodicUpdateHandler;
 use crate::sixaxis::controller::Controller;
 use crate::sixaxis::ControllerHandler;
 use auto::AutoMode;
 use manual::DefaultMode;
+use double_blob::DoubleBlob;
 use nf_audio::ValsHandler;
 use nightfire::light::color::{Color, ColorsExt};
 use nightfire::light::coord::Coordinate;
@@ -27,6 +29,7 @@ pub enum ModeName {
     Manual1,
     Manual2,
     Manual3,
+    DoubleBlob,
 }
 
 pub struct ModeSwitcher {
@@ -34,6 +37,7 @@ pub struct ModeSwitcher {
     manual1_mode: Box<dyn Mode>,
     manual2_mode: Box<dyn Mode>,
     manual3_mode: Box<dyn Mode>,
+    double_blob: Box<dyn Mode>,
     c_mode: ModeName,
     off: bool,
 }
@@ -45,6 +49,7 @@ impl ModeSwitcher {
             manual1_mode: Box::new(DefaultMode::new(sample_rate)),
             manual2_mode: Box::new(DefaultMode::new(sample_rate)),
             manual3_mode: Box::new(DefaultMode::new(sample_rate)),
+            double_blob: Box::new(DoubleBlob::new()),
             c_mode: initial_mode,
             off: false,
         }
@@ -56,6 +61,7 @@ impl ModeSwitcher {
             ModeName::Manual1 => &mut self.manual1_mode,
             ModeName::Manual2 => &mut self.manual2_mode,
             ModeName::Manual3 => &mut self.manual3_mode,
+            ModeName::DoubleBlob => &mut self.double_blob,
         }
     }
 
@@ -68,6 +74,7 @@ impl ModeSwitcher {
                 ModeName::Manual1 => self.manual1_mode.get_color(coordinate),
                 ModeName::Manual2 => self.manual2_mode.get_color(coordinate),
                 ModeName::Manual3 => self.manual3_mode.get_color(coordinate),
+                ModeName::DoubleBlob => self.double_blob.get_color(coordinate),
             }
         }
     }
@@ -168,6 +175,10 @@ impl IRSignalHandler for Main {
                 ms.activate_mode(ModeName::Manual3);
             }
             IRSignal::Diy4 => {
+                let mut ms = self.mode_switcher.lock().unwrap();
+                ms.activate_mode(ModeName::DoubleBlob);
+            }
+            IRSignal::Diy5 => {
                 let mut ms = self.mode_switcher.lock().unwrap();
                 ms.activate_mode(ModeName::Auto);
             }

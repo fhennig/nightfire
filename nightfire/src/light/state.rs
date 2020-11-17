@@ -50,7 +50,7 @@ impl State {
             rainbow: color::Rainbow::new(),
             active_mode: Mode::ManualMode,
             // ...
-            white_layer: Layers::new_solid(color::Color::white(), mask::EnvMask::new_linear_decay(100, true)),
+            white_layer: Layers::new_solid(color::Color::white(), mask::EnvMask::new_linear_decay(100, false)),
             // masks
             solid_mask: mask::ActivatableMask::new(mask::SolidMask::new(), false),
             pos_mask: mask::ActivatableMask::new(mask::PosMask::new(), false),

@@ -36,7 +36,9 @@ where
     }
 
     pub fn get_color(&self, pos: &Coordinate, color: Color) -> Color {
-        self.map.get_color(&pos).mix(&color, self.mask.get_value(&pos))
+        // mask 0 -> other color ("transparent")
+        // mask 1 - >this layer's color ("solid")
+        self.map.get_color(&pos).mix(&color, 1. - self.mask.get_value(&pos))
     }
 }
 
