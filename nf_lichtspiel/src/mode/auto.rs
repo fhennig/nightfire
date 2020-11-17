@@ -6,12 +6,7 @@ use nightfire::light::layer::Layer;
 use nightfire::light::mask::EnvMask;
 use rand::Rng;
 use std::time::SystemTime;
-
-fn toss(l: f32) -> bool {
-    rand::thread_rng().gen_range(0., 1.0) < l
-}
-
-// TODO implement a random hit flash generator
+use pi_ir_remote::Signal;
 
 // t_prev: time of last hit
 // r: uniformly random float in [0, 1)
@@ -85,9 +80,18 @@ impl Mode for AutoMode {
         color
     }
 
-    fn controller_update(&mut self, controller: &Controller) {}
+    fn controller_update(&mut self, _controller: &Controller) {}
 
-    fn audio_update(&mut self, frame: &[f32]) {}
+    fn ir_remote_signal(&mut self, signal: &Signal) {
+        match signal {
+            Signal::Red => self.base_color.set_color(Color::red()),
+            Signal::Green => self.base_color.set_color(Color::green()),
+            Signal::Blue => self.base_color.set_color(Color::blue()),
+            _ => (),
+        }
+    }
+
+    fn audio_update(&mut self, _frame: &[f32]) {}
 
     fn periodic_update(&mut self) {
         if self.hit_gen_tl.draw_hit() {

@@ -16,6 +16,7 @@ use std::sync::{Arc, Mutex};
 pub trait Mode: Send + Sync {
     fn get_color(&self, coordinate: &Coordinate) -> Color;
     fn controller_update(&mut self, controller: &Controller);
+    fn ir_remote_signal(&mut self, signal: &IRSignal);
     fn audio_update(&mut self, frame: &[f32]);
     fn periodic_update(&mut self);
 }
@@ -175,7 +176,10 @@ impl IRSignalHandler for Main {
                 let mut ms = self.mode_switcher.lock().unwrap();
                 ms.switch_on_off();
             }
-            _ => (),
+            _ => {
+                let mut ms = self.mode_switcher.lock().unwrap();
+                ms.current_mode().ir_remote_signal(signal);
+            }
         }
     }
 }

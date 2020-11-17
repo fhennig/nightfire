@@ -1,9 +1,9 @@
 use crate::mode::Mode;
 use crate::sixaxis::controller::{Button, Controller};
-use log::debug;
 use nightfire::audio;
 use nightfire::light::{Color, Coordinate, Mode as LMode, Quadrant, State};
 use palette::Hsv;
+use pi_ir_remote::Signal;
 
 pub struct DefaultMode {
     state: State,
@@ -33,7 +33,7 @@ impl Mode for DefaultMode {
         self.state.get_color(coordinate)
     }
     fn controller_update(&mut self, controller: &Controller) {
-        let mut s = &mut self.state;
+        let s = &mut self.state;
         // register activity
         if controller.has_any_input() {
             s.register_activity();
@@ -148,7 +148,7 @@ impl Mode for DefaultMode {
             intensity = 1.0;
         }
         self.state.set_intensity(intensity);
-                /*
+        /*
                         let mut state = self.state.lock().unwrap();
                         let c1 = nf_lichtspiel::models::Color::new(
                             vals.low as f64,
@@ -167,9 +167,15 @@ impl Mode for DefaultMode {
                         state.manual_mode.set_top(c2);
                 */
     }
-    
     fn periodic_update(&mut self) {
         self.state.periodic_update();
+    }
+
+    fn ir_remote_signal(&mut self, signal: &Signal) {
+        match signal {
+            Signal::PlayPause => self.state.switch_pulse_mode(),
+            _ => (),
+        }
     }
 }
 

@@ -17,6 +17,10 @@ impl StaticSolidMap {
     pub fn new(color: li::Color) -> StaticSolidMap {
         StaticSolidMap { color: color }
     }
+
+    pub fn set_color(&mut self, color: li::Color) {
+        self.color = color;
+    }
 }
 
 impl ColorMap for StaticSolidMap {
