@@ -8,6 +8,7 @@ use pi_ir_remote::Signal;
 pub struct DefaultMode {
     state: State,
     signal_processor: audio::SigProc<audio::DefaultSampleHandler>,
+    speed_no: f32,
 }
 
 impl DefaultMode {
@@ -24,7 +25,18 @@ impl DefaultMode {
         DefaultMode {
             state: State::new(),
             signal_processor: proc,
+            speed_no: 3f32,
         }
+    }
+
+    pub fn audio_decay_faster(&mut self) {
+        self.speed_no = 0f32.max(10f32.min(self.speed_no +1f32));
+        self.signal_processor.sample_handler.curr_feats.bass_intensity.decay_factor = (- self.speed_no).exp();
+    }
+
+    pub fn audio_decay_slower(&mut self) {
+        self.speed_no = 0f32.max(10f32.min(self.speed_no -1f32));
+        self.signal_processor.sample_handler.curr_feats.bass_intensity.decay_factor = (- self.speed_no).exp();
     }
 }
 
@@ -174,6 +186,8 @@ impl Mode for DefaultMode {
     fn ir_remote_signal(&mut self, signal: &Signal) {
         match signal {
             Signal::PlayPause => self.state.switch_pulse_mode(),
+            Signal::Quick => self.audio_decay_faster(),
+            Signal::Slow => self.audio_decay_slower(),
             _ => (),
         }
     }

@@ -41,7 +41,7 @@ impl AudioFeatures {
 #[derive(Copy, Clone)]
 pub struct DecayingValue {
     base_value: f32,
-    decay_factor: f32,
+    pub decay_factor: f32,
     decayed_time: f32, // in seconds
 }
 
