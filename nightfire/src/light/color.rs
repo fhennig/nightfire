@@ -29,6 +29,10 @@ pub trait ColorsExt {
         Color::new(1.0, 0.0, 0.0)
     }
 
+    fn orange() -> Color {
+        Color::new(1.0, 0.5, 0.0)
+    }
+
     fn yellow() -> Color {
         Color::new(1.0, 1.0, 0.0)
     }

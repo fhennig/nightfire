@@ -72,7 +72,7 @@ pub struct DiscretePosMask {
 }
 
 impl DiscretePosMask {
-    fn new(
+    pub fn new(
         top_right: PinValue,
         bot_right: PinValue,
         bot_left: PinValue,
@@ -111,6 +111,16 @@ impl DiscretePosMask {
                 self.top_left = 1.;
             }
         }
+    }
+
+    pub fn set_top(&mut self, value: PinValue) {
+        self.top_left = value;
+        self.top_right = value;
+    }
+
+    pub fn set_bottom(&mut self, value: PinValue) {
+        self.bot_left = value;
+        self.bot_right = value;
     }
 }
 

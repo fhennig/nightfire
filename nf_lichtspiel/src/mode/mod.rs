@@ -1,12 +1,14 @@
 pub mod auto;
 pub mod manual;
 pub mod double_blob;
+pub mod high_low;
 use crate::periodic_updater::PeriodicUpdateHandler;
 use crate::sixaxis::controller::Controller;
 use crate::sixaxis::ControllerHandler;
 use auto::AutoMode;
 use manual::DefaultMode;
 use double_blob::DoubleBlob;
+use high_low::HighLow;
 use nf_audio::ValsHandler;
 use nightfire::light::color::{Color, ColorsExt};
 use nightfire::light::coord::Coordinate;
@@ -30,6 +32,7 @@ pub enum ModeName {
     Manual2,
     Manual3,
     DoubleBlob,
+    HighLow,
 }
 
 pub struct ModeSwitcher {
@@ -38,6 +41,7 @@ pub struct ModeSwitcher {
     manual2_mode: Box<dyn Mode>,
     manual3_mode: Box<dyn Mode>,
     double_blob: Box<dyn Mode>,
+    high_low: Box<dyn Mode>,
     c_mode: ModeName,
     off: bool,
 }
@@ -50,6 +54,7 @@ impl ModeSwitcher {
             manual2_mode: Box::new(DefaultMode::new(sample_rate)),
             manual3_mode: Box::new(DefaultMode::new(sample_rate)),
             double_blob: Box::new(DoubleBlob::new()),
+            high_low: Box::new(HighLow::new(sample_rate)),
             c_mode: initial_mode,
             off: false,
         }
@@ -62,6 +67,7 @@ impl ModeSwitcher {
             ModeName::Manual2 => &mut self.manual2_mode,
             ModeName::Manual3 => &mut self.manual3_mode,
             ModeName::DoubleBlob => &mut self.double_blob,
+            ModeName::HighLow => &mut self.high_low,
         }
     }
 
@@ -75,6 +81,7 @@ impl ModeSwitcher {
                 ModeName::Manual2 => self.manual2_mode.get_color(coordinate),
                 ModeName::Manual3 => self.manual3_mode.get_color(coordinate),
                 ModeName::DoubleBlob => self.double_blob.get_color(coordinate),
+                ModeName::HighLow => self.high_low.get_color(coordinate),
             }
         }
     }
@@ -181,6 +188,10 @@ impl IRSignalHandler for Main {
             IRSignal::Diy5 => {
                 let mut ms = self.mode_switcher.lock().unwrap();
                 ms.activate_mode(ModeName::Auto);
+            }
+            IRSignal::Diy6 => {
+                let mut ms = self.mode_switcher.lock().unwrap();
+                ms.activate_mode(ModeName::HighLow);
             }
             IRSignal::Power => {
                 println!("Power received");
