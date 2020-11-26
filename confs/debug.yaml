@@ -1,5 +1,6 @@
 pi-blaster: /dev/null
-audio-in: PulseAudio JACK Sink:front-left
+audio-in: default
+audio-in-backup: PulseAudio JACK Sink:front-left
 lights:
   Top:
     r: 14
