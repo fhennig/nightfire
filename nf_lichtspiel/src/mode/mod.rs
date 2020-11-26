@@ -1,99 +1,29 @@
 pub mod auto;
-pub mod manual;
 pub mod double_blob;
 pub mod high_low;
+pub mod manual;
+pub mod mode_switcher;
 use crate::periodic_updater::PeriodicUpdateHandler;
 use crate::sixaxis::controller::Controller;
 use crate::sixaxis::ControllerHandler;
-use auto::AutoMode;
-use manual::DefaultMode;
-use double_blob::DoubleBlob;
-use high_low::HighLow;
+use mode_switcher::{ModeName, ModeSwitcher};
 use nf_audio::ValsHandler;
-use nightfire::light::color::{Color, ColorsExt};
+use nightfire::light::color::Color;
 use nightfire::light::coord::Coordinate;
 use nightfire::light::cprov::ColorMap;
 use pi_ir_remote::Signal as IRSignal;
 use pi_ir_remote::SignalHandler as IRSignalHandler;
 use std::sync::{Arc, Mutex};
 
+/// A Mode is a struct that handles input such as controller input, IR remote input
+/// or audio input and creates a color map.  Various modes can handle input differently,
+/// or be only audio reactive or only controlled by the IR remote for example.
 pub trait Mode: Send + Sync {
     fn get_color(&self, coordinate: &Coordinate) -> Color;
     fn controller_update(&mut self, controller: &Controller);
     fn ir_remote_signal(&mut self, signal: &IRSignal);
     fn audio_update(&mut self, frame: &[f32]);
     fn periodic_update(&mut self);
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum ModeName {
-    Auto,
-    Manual1,
-    Manual2,
-    Manual3,
-    DoubleBlob,
-    HighLow,
-}
-
-pub struct ModeSwitcher {
-    auto_mode: Box<dyn Mode>,
-    manual1_mode: Box<dyn Mode>,
-    manual2_mode: Box<dyn Mode>,
-    manual3_mode: Box<dyn Mode>,
-    double_blob: Box<dyn Mode>,
-    high_low: Box<dyn Mode>,
-    c_mode: ModeName,
-    off: bool,
-}
-
-impl ModeSwitcher {
-    pub fn new(initial_mode: ModeName, sample_rate: f32) -> ModeSwitcher {
-        ModeSwitcher {
-            auto_mode: Box::new(AutoMode::new()),
-            manual1_mode: Box::new(DefaultMode::new(sample_rate)),
-            manual2_mode: Box::new(DefaultMode::new(sample_rate)),
-            manual3_mode: Box::new(DefaultMode::new(sample_rate)),
-            double_blob: Box::new(DoubleBlob::new()),
-            high_low: Box::new(HighLow::new(sample_rate)),
-            c_mode: initial_mode,
-            off: false,
-        }
-    }
-
-    pub fn current_mode(&mut self) -> &mut Box<dyn Mode> {
-        match self.c_mode {
-            ModeName::Auto => &mut self.auto_mode,
-            ModeName::Manual1 => &mut self.manual1_mode,
-            ModeName::Manual2 => &mut self.manual2_mode,
-            ModeName::Manual3 => &mut self.manual3_mode,
-            ModeName::DoubleBlob => &mut self.double_blob,
-            ModeName::HighLow => &mut self.high_low,
-        }
-    }
-
-    pub fn get_color(&self, coordinate: &Coordinate) -> Color {
-        if self.off {
-            Color::black()
-        } else {
-            match self.c_mode {
-                ModeName::Auto => self.auto_mode.get_color(coordinate),
-                ModeName::Manual1 => self.manual1_mode.get_color(coordinate),
-                ModeName::Manual2 => self.manual2_mode.get_color(coordinate),
-                ModeName::Manual3 => self.manual3_mode.get_color(coordinate),
-                ModeName::DoubleBlob => self.double_blob.get_color(coordinate),
-                ModeName::HighLow => self.high_low.get_color(coordinate),
-            }
-        }
-    }
-
-    pub fn activate_mode(&mut self, mode: ModeName) {
-        self.c_mode = mode;
-    }
-
-    pub fn switch_on_off(&mut self) {
-        println!("onoff");
-        self.off = !self.off;
-    }
 }
 
 pub struct Main {
@@ -103,7 +33,10 @@ pub struct Main {
 impl Main {
     pub fn new(sample_rate: f32) -> Main {
         Main {
-            mode_switcher: Arc::new(Mutex::new(ModeSwitcher::new(ModeName::Manual1, sample_rate))),
+            mode_switcher: Arc::new(Mutex::new(ModeSwitcher::new(
+                ModeName::Manual1,
+                sample_rate,
+            ))),
         }
     }
 
