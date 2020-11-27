@@ -32,4 +32,4 @@ rosc = "0.3"
 #
 rand = "0.7.3"
 
-pi_ir_remote = { git = "https://github.com/fhennig/pi_ir_remote" }
+pi_ir_remote = "0.1.0"
