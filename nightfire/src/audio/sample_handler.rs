@@ -1,7 +1,5 @@
-use crate::audio::{FilterFreqs, Sample};
+use crate::audio::{AudioFeatures, FilterFreqs, Sample};
 use std::collections::VecDeque;
-use std::vec::Vec;
-use std::iter;
 
 fn onset_score(s1: &Sample, s2: &Sample) -> f32 {
     let n = s1.vals.len();
@@ -14,68 +12,6 @@ fn onset_score(s1: &Sample, s2: &Sample) -> f32 {
 
 pub trait SampleHandler {
     fn recv_sample(&mut self, sample: Sample);
-}
-
-/// A structure to contain features of the sample at a given time.
-#[derive(Copy, Clone)]
-pub struct AudioFeatures {
-    /// The raw maximum intensity.  This is subsequently used to scale
-    /// other frequency amplitudes between 0 and 1.
-    pub raw_max_intensity: f32,
-    pub silence: bool,
-    pub bass_intensity: DecayingValue,
-    pub highs_intensity: DecayingValue,
-    pub onset_score: f32,
-}
-
-impl AudioFeatures {
-    pub fn new() -> AudioFeatures {
-        AudioFeatures {
-            raw_max_intensity: 0.,
-            silence: true,
-            bass_intensity: DecayingValue::new(0.05),
-            highs_intensity: DecayingValue::new(0.02),
-            onset_score: 0.,
-        }
-    }
-}
-
-#[derive(Copy, Clone)]
-pub struct DecayingValue {
-    base_value: f32,
-    pub decay_factor: f32,
-    decayed_time: f32, // in seconds
-}
-
-impl DecayingValue {
-    pub fn new(decay_factor: f32) -> DecayingValue {
-        DecayingValue {
-            base_value: 0.,
-            decay_factor: decay_factor,
-            decayed_time: 0.,
-        }
-    }
-
-    pub fn current_value(&self) -> f32 {
-        // TODO make decay a spline, not a hardcoded function
-        self.base_value * self.decay_factor.powf(self.decayed_time)
-    }
-
-    pub fn update(&self, new_value: f32, time_delta: f32) -> DecayingValue {
-        if new_value > self.current_value() {
-            DecayingValue {
-                base_value: new_value,
-                decay_factor: self.decay_factor,
-                decayed_time: 0.,
-            }
-        } else {
-            DecayingValue {
-                base_value: self.base_value,
-                decay_factor: self.decay_factor,
-                decayed_time: self.decayed_time + time_delta,
-            }
-        }
-    }
 }
 
 /// The default sample handler takes receives samples and extracts
@@ -172,48 +108,6 @@ impl SampleHandler for DefaultSampleHandler {
         if self.hist.len() > self.hist_len {
             self.hist.pop_back();
         }
-    }
-}
-
-/// A struct to track a running mean and running mean deviation approximation.
-/// A queue of n values is kept, whenever a new value is added, an old one is 
-/// discarded and the mean updated on the fly.
-/// For every new value, the deviation to the current mean is calculated, the 
-/// deviations kept in a queue too, to get the mean deviation.
-/// If the mean is actually fairly stable, this is a robust method, and light
-/// on computation.
-pub struct RunningStats {
-    hist: VecDeque<f32>,
-    dev_hist: VecDeque<f32>,
-    hist_capacity: usize,
-    pub mean: f32,
-    pub mean_dev: f32,
-}
-
-impl RunningStats {
-    pub fn new() -> RunningStats {
-        let h_cap = 30 * 50;
-        RunningStats {
-            hist: iter::repeat(0f32).take(h_cap).collect(),
-            dev_hist: iter::repeat(0f32).take(h_cap).collect(),
-            hist_capacity: h_cap,
-            mean: 0.,
-            mean_dev: 0.,
-        }
-    }
-
-    pub fn push_val(&mut self, new_val: f32) {
-        // update mean
-        self.hist.push_front(new_val);
-        let old_val = self.hist.pop_back().unwrap();
-        self.mean += new_val / (self.hist_capacity as f32);
-        self.mean -= old_val / (self.hist_capacity as f32);
-        // update dev
-        let dev = (new_val - self.mean).abs();
-        self.dev_hist.push_front(dev);
-        let old_dev = self.dev_hist.pop_back().unwrap();
-        self.mean_dev += dev / (self.hist_capacity as f32);
-        self.mean_dev -= old_dev / (self.hist_capacity as f32);
     }
 }
 

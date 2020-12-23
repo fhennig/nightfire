@@ -14,14 +14,17 @@
 //! The SampleHandler is usually embedded in another object (UI
 //! display, LED lights, ...) which reads the audio features
 //! periodically and updates its own state based on that.
+mod audio_features;
 mod filter;
 mod sample_handler;
+mod running_stats;
+pub use audio_features::{DecayingValue, AudioFeatures};
 pub use filter::FilterFreqs;
 pub use filter::SignalFilter;
 pub use sample_handler::{
-    AudioFeatures, CollectSampleHandler, DecayingValue, DefaultSampleHandler, SampleHandler,
-    RunningStats
+    CollectSampleHandler, DefaultSampleHandler, SampleHandler,
 };
+pub use running_stats::RunningStats;
 use std::vec::Vec;
 
 /// A sample of audio.  Represents a certain amount of time. The
