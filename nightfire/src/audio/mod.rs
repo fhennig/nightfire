@@ -56,7 +56,7 @@ pub fn setup(f_start: f32, f_end: f32, f_s: f32, q: f32, n_filters: usize) {
 }
 
 /// The SigProc signal processor receives a stream of floating point
-/// samples, which it aggregates into Sample objects, creating a fixed
+/// samples, which it aggregates into [Sample](Sample) objects, creating a fixed
 /// amount of samples per second.  It uses a SignalFilter using biquad
 /// filters internally.
 ///
