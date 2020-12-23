@@ -173,18 +173,24 @@ impl SampleHandler for DefaultSampleHandler {
 }
 
 /// A struct to track a running mean and running mean deviation approximation.
-struct RunningMax {
+/// A queue of n values is kept, whenever a new value is added, an old one is 
+/// discarded and the mean updated on the fly.
+/// For every new value, the deviation to the current mean is calculated, the 
+/// deviations kept in a queue too, to get the mean deviation.
+/// If the mean is actually fairly stable, this is a robust method, and light
+/// on computation.
+struct RunningStats {
     hist: VecDeque<f32>,
     dev_hist: VecDeque<f32>,
     hist_capacity: usize,
-    mean: f32,
-    mean_dev: f32,
+    pub mean: f32,
+    pub mean_dev: f32,
 }
 
-impl RunningMax {
-    pub fn new() -> RunningMax {
+impl RunningStats {
+    pub fn new() -> RunningStats {
         let h_cap = 30 * 50;
-        RunningMax {
+        RunningStats {
             hist: iter::repeat(0f32).take(h_cap).collect(),
             dev_hist: iter::repeat(0f32).take(h_cap).collect(),
             hist_capacity: h_cap,
