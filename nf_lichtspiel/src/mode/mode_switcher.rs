@@ -30,7 +30,7 @@ pub struct ModeSwitcher {
 impl ModeSwitcher {
     pub fn new(initial_mode: ModeName, sample_rate: f32) -> ModeSwitcher {
         ModeSwitcher {
-            auto_mode: Box::new(AutoMode::new()),
+            auto_mode: Box::new(AutoMode::new(sample_rate)),
             manual1_mode: Box::new(DefaultMode::new(sample_rate)),
             manual2_mode: Box::new(DefaultMode::new(sample_rate)),
             manual3_mode: Box::new(DefaultMode::new(sample_rate)),

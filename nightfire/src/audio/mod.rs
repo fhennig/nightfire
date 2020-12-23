@@ -20,6 +20,7 @@ pub use filter::FilterFreqs;
 pub use filter::SignalFilter;
 pub use sample_handler::{
     AudioFeatures, CollectSampleHandler, DecayingValue, DefaultSampleHandler, SampleHandler,
+    RunningStats
 };
 use std::vec::Vec;
 

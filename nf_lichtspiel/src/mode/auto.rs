@@ -1,12 +1,13 @@
 use crate::mode::Mode;
 use crate::sixaxis::controller::Controller;
-use nightfire::light::{Color, ColorsExt, Coordinate};
+use nightfire::audio::{DefaultSampleHandler, RunningStats, SigProc, SignalFilter};
 use nightfire::light::cprov::{ColorMap, StaticSolidMap};
 use nightfire::light::layer::Layer;
 use nightfire::light::mask::EnvMask;
+use nightfire::light::{Color, ColorsExt, Coordinate};
+use pi_ir_remote::Signal;
 use rand::Rng;
 use std::time::SystemTime;
-use pi_ir_remote::Signal;
 
 // t_prev: time of last hit
 // r: uniformly random float in [0, 1)
@@ -51,6 +52,8 @@ pub struct AutoMode {
     // create a MaskedColorLayer
     base_color: StaticSolidMap,
     flash_layer: Layer<StaticSolidMap, EnvMask>,
+    signal_processor: SigProc<DefaultSampleHandler>,
+    audio_stats: RunningStats,
     hit_gen_tl: RandomHitGenerator,
     hit_gen_tr: RandomHitGenerator,
     hit_gen_bl: RandomHitGenerator,
@@ -58,13 +61,24 @@ pub struct AutoMode {
 }
 
 impl AutoMode {
-    pub fn new() -> AutoMode {
+    pub fn new(sample_rate: f32) -> AutoMode {
         let base_color = StaticSolidMap::new(Color::red());
         let flash_color = StaticSolidMap::new(Color::white());
         let layer = Layer::new(flash_color, EnvMask::new_linear_decay(300, true));
+        let filter = SignalFilter::new(20., 20_000., sample_rate, 3., 30);
+        let sample_freq = 50.;
+        let handler = DefaultSampleHandler::new(sample_freq, filter.freqs.clone());
+        let proc = SigProc::<DefaultSampleHandler>::new(
+            sample_rate,
+            filter,
+            sample_freq,
+            handler,
+        );
         AutoMode {
             base_color: base_color,
             flash_layer: layer,
+            signal_processor: proc,
+            audio_stats: RunningStats::new(),
             hit_gen_tl: RandomHitGenerator::new(),
             hit_gen_tr: RandomHitGenerator::new(),
             hit_gen_bl: RandomHitGenerator::new(),
@@ -91,9 +105,18 @@ impl Mode for AutoMode {
         }
     }
 
-    fn audio_update(&mut self, _frame: &[f32]) {}
+    fn audio_update(&mut self, frame: &[f32]) {
+        self.signal_processor.add_audio_frame(frame);
+        let oscore = self.signal_processor.sample_handler.curr_feats.onset_score;
+        self.audio_stats.push_val(oscore);
+        // if we get a significant onset score, we flash
+        if oscore > self.audio_stats.mean + 4. * self.audio_stats.mean_dev {
+            self.flash_layer.mask.reset();
+        }
+    }
 
     fn periodic_update(&mut self) {
+        return;
         if self.hit_gen_tl.draw_hit() {
             self.flash_layer.mask.reset_tl();
         }

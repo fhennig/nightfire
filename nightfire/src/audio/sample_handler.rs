@@ -25,6 +25,7 @@ pub struct AudioFeatures {
     pub silence: bool,
     pub bass_intensity: DecayingValue,
     pub highs_intensity: DecayingValue,
+    pub onset_score: f32,
 }
 
 impl AudioFeatures {
@@ -34,6 +35,7 @@ impl AudioFeatures {
             silence: true,
             bass_intensity: DecayingValue::new(0.05),
             highs_intensity: DecayingValue::new(0.02),
+            onset_score: 0.,
         }
     }
 }
@@ -150,6 +152,7 @@ impl DefaultSampleHandler {
         self.curr_feats = AudioFeatures {
             raw_max_intensity: new_raw_max,
             silence: new_raw_max < 0.05,
+            onset_score: curr_onset_score,
             bass_intensity: self
                 .curr_feats
                 .bass_intensity
@@ -179,7 +182,7 @@ impl SampleHandler for DefaultSampleHandler {
 /// deviations kept in a queue too, to get the mean deviation.
 /// If the mean is actually fairly stable, this is a robust method, and light
 /// on computation.
-struct RunningStats {
+pub struct RunningStats {
     hist: VecDeque<f32>,
     dev_hist: VecDeque<f32>,
     hist_capacity: usize,
