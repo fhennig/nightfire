@@ -214,6 +214,7 @@ impl Controller {
         return false;
     }
 
+    #[allow(dead_code)]
     fn debug_print(&self) {
         for btn in [
             Button::PS,

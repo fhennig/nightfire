@@ -20,7 +20,7 @@ impl JackHandler {
 }
 
 impl ProcessHandler for JackHandler {
-    fn process(&mut self, client: &Client, process_scope: &ProcessScope) -> Control {
+    fn process(&mut self, _client: &Client, process_scope: &ProcessScope) -> Control {
         // read frame from the port
         let audio = self.audio_in_port.as_slice(process_scope);
         // give it to the handler

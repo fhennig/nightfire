@@ -6,7 +6,7 @@ use cpal::traits::{DeviceTrait, EventLoopTrait, HostTrait};
 use cpal::{StreamData, UnknownTypeInputBuffer};
 use jack::{AsyncClient, AudioIn, Client, Control, Port, ProcessHandler, ProcessScope};
 use log::info;
-use stoppable_thread::{spawn, StoppableHandle};
+use stoppable_thread::spawn;
 
 /// Which audio backend to use, and specific backend parameters
 pub enum AudioParameters {
@@ -25,7 +25,7 @@ pub trait AudioGetter {
     fn stop_processing(&mut self);
 }
 
-impl AudioGetter {
+impl dyn AudioGetter {
     /// Creates a new audio input with the given parameters
     pub fn new(params: &AudioParameters) -> Box<dyn AudioGetter> {
         match params {
@@ -71,22 +71,25 @@ impl AudioGetter for CpalAudioGetter {
 
     fn start_processing(&mut self, mut vals_handler: Box<dyn ValsHandler>) {
         let event_loop = self.host.event_loop();
-        let my_stream_id = event_loop
+        let _my_stream_id = event_loop
             .build_input_stream(&self.dev, &self.format)
             .unwrap();
-        let channels = self.format.channels;
-        spawn(move |stopped| {
-            event_loop.run(move |stream_id, data| match data.unwrap() {
-                StreamData::Input { buffer } => match buffer {
-                    UnknownTypeInputBuffer::U16(b) => println!("B"),
-                    UnknownTypeInputBuffer::I16(b) => println!("A"),
-                    UnknownTypeInputBuffer::F32(b) => {
-                        // take only a single channel
-                        let b_new: Vec<f32> = b.chunks(2).map(|c| c[0]).collect();
-                        vals_handler.take_frame(b_new.as_slice());
-                    }
-                },
-                _ => (),
+        let _channels = self.format.channels;
+        spawn(move |_stopped| {
+            event_loop.run(move |_stream_id, data| {
+                // TODO handle stopped
+                match data.unwrap() {
+                    StreamData::Input { buffer } => match buffer {
+                        UnknownTypeInputBuffer::U16(_) => println!("B"),
+                        UnknownTypeInputBuffer::I16(_) => println!("A"),
+                        UnknownTypeInputBuffer::F32(b) => {
+                            // take only a single channel
+                            let b_new: Vec<f32> = b.chunks(2).map(|c| c[0]).collect();
+                            vals_handler.take_frame(b_new.as_slice());
+                        }
+                    },
+                    _ => (),
+                }    
             });
         });
     }
