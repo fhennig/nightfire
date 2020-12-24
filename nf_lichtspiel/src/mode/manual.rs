@@ -8,7 +8,9 @@ use pi_ir_remote::Signal;
 pub struct DefaultMode {
     state: State,
     signal_processor: audio::SigProc<audio::DefaultSampleHandler>,
+    onset_stats: audio::RunningStats,
     speed_no: f32,
+    auto_rotate: bool,
 }
 
 impl DefaultMode {
@@ -25,7 +27,9 @@ impl DefaultMode {
         DefaultMode {
             state: State::new(),
             signal_processor: proc,
+            onset_stats: audio::RunningStats::new(),
             speed_no: 3f32,
+            auto_rotate: false,
         }
     }
 
@@ -150,6 +154,14 @@ impl Mode for DefaultMode {
 
     fn audio_update(&mut self, frame: &[f32]) {
         self.signal_processor.add_audio_frame(frame);
+        let oscore = self.signal_processor.sample_handler.curr_feats.onset_score;
+        self.onset_stats.push_val(oscore);
+        // if we get a significant onset score, we flash
+        if oscore > self.onset_stats.mean + 4. * self.onset_stats.mean_dev {
+            if self.auto_rotate {
+                self.state.manual_mode().rotate_cw();
+            }
+        }
         let mut intensity = self
             .signal_processor
             .sample_handler
@@ -188,6 +200,7 @@ impl Mode for DefaultMode {
             Signal::PlayPause => self.state.switch_pulse_mode(),
             Signal::Quick => self.audio_decay_faster(),
             Signal::Slow => self.audio_decay_slower(),
+            Signal::Auto => self.auto_rotate = !self.auto_rotate,
             _ => (),
         }
     }
