@@ -23,7 +23,7 @@ impl Conf {
     pub fn new() -> Conf {
         let conf_path = Conf::find_path().expect("Config file could not be found!");
         let yaml_str = std::fs::read_to_string(conf_path).expect("Error reading config file.");
-
+        println!("{}", &yaml_str);
         let docs =
             yaml_rust::YamlLoader::load_from_str(&yaml_str).expect("Error parsing config file.");
         let conf = &docs[0];

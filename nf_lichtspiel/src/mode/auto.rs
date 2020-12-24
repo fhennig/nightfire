@@ -3,7 +3,7 @@ use crate::sixaxis::controller::Controller;
 use nightfire::audio::{DefaultSampleHandler, RunningStats, SigProc, SignalFilter};
 use nightfire::light::cprov::{ColorMap, StaticSolidMap};
 use nightfire::light::layer::Layer;
-use nightfire::light::mask::EnvMask;
+use nightfire::light::mask::{SolidMask, EnvMask};
 use nightfire::light::{Color, ColorsExt, Coordinate};
 use pi_ir_remote::Signal;
 use rand::Rng;
@@ -50,7 +50,7 @@ impl RandomHitGenerator {
 
 pub struct AutoMode {
     // create a MaskedColorLayer
-    base_color: StaticSolidMap,
+    base_layer: Layer<StaticSolidMap, SolidMask>,
     flash_layer: Layer<StaticSolidMap, EnvMask>,
     signal_processor: SigProc<DefaultSampleHandler>,
     audio_stats: RunningStats,
@@ -63,8 +63,9 @@ pub struct AutoMode {
 impl AutoMode {
     pub fn new(sample_rate: f32) -> AutoMode {
         let base_color = StaticSolidMap::new(Color::red());
+        let base_layer = Layer::new(base_color, SolidMask::new());
         let flash_color = StaticSolidMap::new(Color::white());
-        let layer = Layer::new(flash_color, EnvMask::new_linear_decay(300, true));
+        let layer = Layer::new(flash_color, EnvMask::new_linear_decay(250, false));
         let filter = SignalFilter::new(20., 20_000., sample_rate, 3., 30);
         let sample_freq = 50.;
         let handler = DefaultSampleHandler::new(sample_freq, filter.freqs.clone());
@@ -75,7 +76,7 @@ impl AutoMode {
             handler,
         );
         AutoMode {
-            base_color: base_color,
+            base_layer: base_layer,
             flash_layer: layer,
             signal_processor: proc,
             audio_stats: RunningStats::new(),
@@ -89,7 +90,7 @@ impl AutoMode {
 
 impl Mode for AutoMode {
     fn get_color(&self, coordinate: &Coordinate) -> Color {
-        let color = self.base_color.get_color(coordinate);
+        let color = self.base_layer.get_color(coordinate, Color::black());
         let color = self.flash_layer.get_color(coordinate, color);
         color
     }
@@ -98,9 +99,9 @@ impl Mode for AutoMode {
 
     fn ir_remote_signal(&mut self, signal: &Signal) {
         match signal {
-            Signal::Red => self.base_color.set_color(Color::red()),
-            Signal::Green => self.base_color.set_color(Color::green()),
-            Signal::Blue => self.base_color.set_color(Color::blue()),
+            Signal::Red => self.base_layer.map.set_color(Color::red()),
+            Signal::Green => self.base_layer.map.set_color(Color::green()),
+            Signal::Blue => self.base_layer.map.set_color(Color::blue()),
             _ => (),
         }
     }
@@ -112,21 +113,38 @@ impl Mode for AutoMode {
         // if we get a significant onset score, we flash
         if oscore > self.audio_stats.mean + 4. * self.audio_stats.mean_dev {
             self.flash_layer.mask.reset();
+            self.base_layer.map.set_color(Color::random());
+            // self.flash_layer.map.set_color(Color::random());
         }
+        // set intensity 
+        let mut intensity = self
+            .signal_processor
+            .sample_handler
+            .curr_feats
+            .bass_intensity
+            .current_value();
+        if self.signal_processor.sample_handler.curr_feats.silence {
+            intensity = 1.0;
+        }
+        self.base_layer.mask.set_val(intensity.into());
     }
 
     fn periodic_update(&mut self) {
         return;
         if self.hit_gen_tl.draw_hit() {
+            self.flash_layer.map.set_color(Color::random());
             self.flash_layer.mask.reset_tl();
         }
         if self.hit_gen_tr.draw_hit() {
+            self.flash_layer.map.set_color(Color::random());
             self.flash_layer.mask.reset_tr();
         }
         if self.hit_gen_bl.draw_hit() {
+            self.flash_layer.map.set_color(Color::random());
             self.flash_layer.mask.reset_bl();
         }
         if self.hit_gen_br.draw_hit() {
+            self.flash_layer.map.set_color(Color::random());
             self.flash_layer.mask.reset_br();
         }
     }

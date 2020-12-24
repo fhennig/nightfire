@@ -19,7 +19,7 @@ use palette::Mix;
 /// and ignores the given color value.  If the mask is 1 the layer is
 /// fully transparent.
 pub struct Layer<C, M> {
-    map: C,
+    pub map: C,
     pub mask: M,
 }
 

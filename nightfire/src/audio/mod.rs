@@ -92,8 +92,8 @@ impl<T: SampleHandler> SigProc<T> {
         self.subsample_frame_size
     }
 
-    /// The audio_frame parameter is a view of a bufferslice from
-    /// jack, which is 1024 or 512 floats big and represents a frame
+    /// The audio_frame parameter is a view of a bufferslice from jack,
+    /// which is typically 1024 or 512 floats big and represents a frame
     /// of samples.
     pub fn add_audio_frame(&mut self, audio_frame: &[f32]) {
         for x in audio_frame {

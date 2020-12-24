@@ -3,6 +3,8 @@ use palette::encoding::linear::Linear;
 use palette::encoding::Srgb;
 use palette::rgb::Rgb;
 use palette::Hsv;
+use palette::RgbHue;
+use rand;
 use std::time;
 
 /// The PinValue is only in [0, 1]
@@ -12,7 +14,6 @@ pub type Color = Rgb<Linear<Srgb>, PinValue>;
 #[allow(dead_code)]
 pub trait ColorsExt {
     fn _self(&self) -> &Color;
-    
     fn black() -> Color {
         Color::new(0.0, 0.0, 0.0)
     }
@@ -53,6 +54,12 @@ pub trait ColorsExt {
         Color::new(1.0, 0.0, 1.0)
     }
 
+    fn random() -> Color {
+        let x = rand::random::<f64>();
+        let hue = RgbHue::from(x * 360. - 180.);
+        Color::from(Hsv::new(hue, 1., 1.))
+    }
+
     fn mask(&self, mut value: f64) -> Color {
         if value > 1. {
             value = 1.;
@@ -71,7 +78,6 @@ impl ColorsExt for Color {
         self
     }
 }
-
 
 pub struct Rainbow {
     rainbow_riser: Envelope,
