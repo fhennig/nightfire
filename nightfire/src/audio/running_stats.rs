@@ -20,11 +20,11 @@ impl RunningStats {
     pub fn new() -> RunningStats {
         let h_cap = 30 * 50;
         RunningStats {
-            hist: iter::repeat(0f32).take(h_cap).collect(),
-            dev_hist: iter::repeat(0f32).take(h_cap).collect(),
+            hist: iter::repeat(0.).take(h_cap).collect(),
+            dev_hist: iter::repeat(0.).take(h_cap).collect(),
             hist_capacity: h_cap,
-            mean: 0.,
-            mean_dev: 0.,
+            mean: 0.2,
+            mean_dev: 0.2,
         }
     }
 

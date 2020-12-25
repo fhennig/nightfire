@@ -112,7 +112,7 @@ impl IRSignalHandler for Main {
             }
             IRSignal::Diy3 => {
                 let mut ms = self.mode_switcher.lock().unwrap();
-                ms.activate_mode(ModeName::Manual3);
+                ms.activate_mode(ModeName::Auto1);
             }
             IRSignal::Diy4 => {
                 let mut ms = self.mode_switcher.lock().unwrap();
@@ -120,11 +120,11 @@ impl IRSignalHandler for Main {
             }
             IRSignal::Diy5 => {
                 let mut ms = self.mode_switcher.lock().unwrap();
-                ms.activate_mode(ModeName::Auto);
+                ms.activate_mode(ModeName::HighLow);
             }
             IRSignal::Diy6 => {
                 let mut ms = self.mode_switcher.lock().unwrap();
-                ms.activate_mode(ModeName::HighLow);
+                ms.activate_mode(ModeName::Auto2);
             }
             IRSignal::Power => {
                 println!("Power received");
