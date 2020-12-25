@@ -57,6 +57,17 @@ impl Quadrant {
             Quadrant::BL
         }
     }
+
+    pub fn random() -> Quadrant {
+        let mut r = rand::random::<u32>();
+        r = r % 4;
+        match r  {
+            0 => Quadrant::TL,
+            1 => Quadrant::TR,
+            2 => Quadrant::BL,
+            _ => Quadrant::BR,
+        }
+    }
 }
 
 pub fn distance(a: &Coordinate, b: &Coordinate) -> f64 {
