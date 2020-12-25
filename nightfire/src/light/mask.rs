@@ -164,6 +164,13 @@ impl EnvMask {
         }
     }
 
+    pub fn new_period(&mut self, decay_in_ms: u64) {
+        self.top_left.set_period(Duration::from_millis(decay_in_ms));
+        self.top_right.set_period(Duration::from_millis(decay_in_ms));
+        self.bot_left.set_period(Duration::from_millis(decay_in_ms));
+        self.bot_right.set_period(Duration::from_millis(decay_in_ms));
+    }
+
     pub fn invert(&mut self) {
         self.invert = !self.invert;
     }
@@ -182,6 +189,36 @@ impl EnvMask {
 
     pub fn reset_tl(&mut self) {
         self.top_left.reset();
+    }
+
+    pub fn reset_left(&mut self) {
+        self.reset_bl();
+        self.reset_tl();
+    }
+
+    pub fn reset_right(&mut self) {
+        self.reset_tr();
+        self.reset_br();
+    }
+
+    pub fn reset_top(&mut self) {
+        self.reset_tl();
+        self.reset_tr();
+    }
+
+    pub fn reset_bottom(&mut self) {
+        self.reset_bl();
+        self.reset_br();
+    }
+
+    pub fn reset_diag1(&mut self) {
+        self.reset_tl();
+        self.reset_br();
+    }
+
+    pub fn reset_diag2(&mut self) {
+        self.reset_tr();
+        self.reset_bl();
     }
 
     pub fn reset(&mut self) {

@@ -57,6 +57,10 @@ impl Envelope {
         }
     }
 
+    pub fn set_period(&mut self, period: Duration) {
+        self.period = period;
+    }
+
     /// Resets the starting time of the spline.  This will "restart"
     /// the animation for loops, or retrigger for non-looping splines.
     pub fn reset(&mut self) {
