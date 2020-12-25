@@ -1,5 +1,6 @@
 use crate::lightid::LightId;
 use nightfire::light as li;
+use nightfire::light::cprov::ColorMap;
 use piston_window::*;
 use std::sync::{Arc, Mutex};
 
@@ -8,8 +9,8 @@ fn fix_int(val: f32) -> f32 {
     ((1. - val).powi(2) * -1.) + 1.
 }
 
-fn piston_color(state: &Arc<Mutex<li::State>>, pos: &li::Coordinate) -> [f32; 4] {
-    let color = state.lock().unwrap().get_color(&pos);
+fn piston_color(color_map: &Box<dyn ColorMap + Send + Sync>, pos: &li::Coordinate) -> [f32; 4] {
+    let color = color_map.get_color(&pos);
     [
         fix_int(color.red as f32),
         fix_int(color.green as f32),
@@ -27,7 +28,7 @@ fn get_transf(context: Context, rot: f64, w: f64, n: f64) -> [[f64; 3]; 2] {
         .trans(w * -0.5, w * 0.5)
 }
 
-pub fn run_piston_thread(state: Arc<Mutex<li::State>>) {
+pub fn run_piston_thread(color_map: Box<dyn ColorMap + Send + Sync>) {
     println!("Startin window thread!");
     let n = 200.;
     let w = 50.;
@@ -43,40 +44,29 @@ pub fn run_piston_thread(state: Arc<Mutex<li::State>>) {
             clear([0.5, 0.5, 0.5, 1.0], g);
 
             rectangle(
-                piston_color(&state, &LightId::Top.pos()),
+                piston_color(&color_map, &LightId::Top.pos()),
                 stripe,
                 get_transf(c, 135., w, n),
                 g,
             );
             rectangle(
-                piston_color(&state, &LightId::Bottom.pos()),
+                piston_color(&color_map, &LightId::Bottom.pos()),
                 stripe,
                 get_transf(c, -45., w, n),
                 g,
             );
             rectangle(
-                piston_color(&state, &LightId::Left.pos()),
+                piston_color(&color_map, &LightId::Left.pos()),
                 stripe,
                 get_transf(c, 45., w, n),
                 g,
             );
             rectangle(
-                piston_color(&state, &LightId::Right.pos()),
+                piston_color(&color_map, &LightId::Right.pos()),
                 stripe,
                 get_transf(c, -135., w, n),
                 g,
             );
-
-            let position = state.lock().unwrap().get_value_mask_pos();
-            let x = n + position.0 * n;
-            let y = n + position.1 * -n; // invert
-
-            let mut color = [1.0; 4];
-            if state.lock().unwrap().is_off() {
-                color = [0.0; 4];
-            }
-
-            ellipse(color, [0.0, 0.0, 10.0, 10.0], c.transform.trans(x, y), g);
         });
     }
 }
