@@ -18,7 +18,7 @@ nf_audio = { path = "../nf_audio" }
 # commandline parsing
 clap = "2.33.0"
 # config file
-yaml-rust = "0.4"
+yaml-rust = "0.4.5"
 # logging
 log = "0.4"
 env_logger = "0.7.1"

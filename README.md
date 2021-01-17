@@ -30,6 +30,7 @@ the `nightfire` binary.
 
 ## Building and Installing
 
+
 The main binary is built with:
 
     cargo build --bin nightfire
@@ -38,11 +39,17 @@ Which compiles the full LED/Sound/Controller handling component.
   
 ### Builing for arm
 
-To deploy on the Raspberry Pi, the software needs to be compiled for
-the ARM architecture.
+Cross-compilation for arm uses [cross](https://github.com/rust-embedded/cross),
+which builds `armhf` binaries in docker container.  This also requires that 
+docker is installed, and the build image is build with 
 
-    cargo build --release --target armv7-unknown-linux-gnueabihf --bin nightfire
-    
+    docker build -t nightfire-build-armhf:latest .
+
+Then, the binary for nightfire can be built as such:
+
+    cross build --release --target armv7-unknown-linux-gnueabihf --bin nightfire
+
+The file is output in `target/armv7-unknown-linux-gnueabihf/release/nightfire`.
     
 ### Raspberry Pi Setup
 
