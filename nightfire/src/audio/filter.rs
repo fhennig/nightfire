@@ -99,6 +99,12 @@ impl FilterFreqs {
         }
     }
 
+    pub fn get_bins(&self, f_start: f32, f_end: f32, sample: &Sample) -> Vec<f32> {
+        let i_start = self.get_freq_index(f_start);
+        let i_end = self.get_freq_index(f_end);
+        sample.vals[i_start..i_end].to_vec()
+    }
+
     /// Returns a max value from the values within the frequency range.
     pub fn get_slice_value(&self, f_start: f32, f_end: f32, sample: &Sample) -> f32 {
         let i_start = self.get_freq_index(f_start);

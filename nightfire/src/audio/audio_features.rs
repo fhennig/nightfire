@@ -8,6 +8,7 @@ pub struct AudioFeatures {
     pub bass_intensity: DecayingValue,
     pub highs_intensity: DecayingValue,
     pub onset_score: f32,
+    pub bass_onset_score: f32,
 }
 
 impl AudioFeatures {
@@ -18,6 +19,7 @@ impl AudioFeatures {
             bass_intensity: DecayingValue::new(0.05),
             highs_intensity: DecayingValue::new(0.02),
             onset_score: 0.,
+            bass_onset_score: 0.,
         }
     }
 }

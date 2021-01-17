@@ -1,11 +1,11 @@
 use crate::audio::{AudioFeatures, FilterFreqs, Sample};
 use std::collections::VecDeque;
 
-fn onset_score(s1: &Sample, s2: &Sample) -> f32 {
-    let n = s1.vals.len();
+fn onset_score(vs1: &Vec<f32>, vs2: &Vec<f32>) -> f32 {
+    let n = vs1.len();
     let mut score = 0f32;
     for i in 0..n {
-        score += (s2.vals[i] - s1.vals[i]).abs();
+        score += (vs2[i] - vs1[i]).abs();
     }
     score
 }
@@ -68,16 +68,14 @@ impl DefaultSampleHandler {
     /// This function updates the current audio features, based on the
     /// new Sample.
     fn update_feats(&mut self, new_sample: &Sample) {
-        // TODO in this function I also have to do the beat detection.
-        // I need:
-        // - A function that takes two samples and returns the "loudness" score
-        //   -> CHECK: onset_score
-        // - An internal record of the last n scores
-        // - A few lines to decide whether the current sample is a beat or not,
-        //   based on the past history
         let mut curr_onset_score = 0.0;
+        let mut curr_bass_onset_score = 0.0;
         if self.hist.len() > 0 {
-            curr_onset_score = onset_score(self.hist.front().unwrap(), new_sample);
+            curr_onset_score = onset_score(&self.hist.front().unwrap().vals, &new_sample.vals);
+            curr_bass_onset_score = onset_score(
+                &self.filter_freqs.get_bins(130., 700., self.hist.front().unwrap()),
+                &self.filter_freqs.get_bins(130., 700., new_sample)
+            );
         }
         let new_intensity = self.filter_freqs.get_slice_value(130., 280., &new_sample);
         let new_highs_intensity = self
@@ -89,6 +87,7 @@ impl DefaultSampleHandler {
             raw_max_intensity: new_raw_max,
             silence: new_raw_max < 0.05,
             onset_score: curr_onset_score,
+            bass_onset_score: curr_bass_onset_score,
             bass_intensity: self
                 .curr_feats
                 .bass_intensity
