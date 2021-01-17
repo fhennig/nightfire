@@ -168,6 +168,13 @@ impl State {
         }
     }
 
+    pub fn shuffle_colors(&mut self, strength: f64) {
+        self.manual_color.tl_color = self.manual_color.tl_color.shuffle(strength);
+        self.manual_color.tr_color = self.manual_color.tr_color.shuffle(strength);
+        self.manual_color.bl_color = self.manual_color.bl_color.shuffle(strength);
+        self.manual_color.br_color = self.manual_color.br_color.shuffle(strength);
+    }
+
     /// A function that executes time based updates.  This function
     /// should be called regularly.
     pub fn periodic_update(&mut self) {

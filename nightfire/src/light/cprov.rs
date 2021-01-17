@@ -62,10 +62,10 @@ where
 /// A manual color map.  Allows setting colors for each quadrant of
 /// the Coordinate system manually.
 pub struct ManualMode {
-    tl_color: li::Color,
-    tr_color: li::Color,
-    bl_color: li::Color,
-    br_color: li::Color,
+    pub tl_color: li::Color,
+    pub tr_color: li::Color,
+    pub bl_color: li::Color,
+    pub br_color: li::Color,
 }
 
 impl ManualMode {

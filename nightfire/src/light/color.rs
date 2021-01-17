@@ -4,6 +4,7 @@ use palette::encoding::Srgb;
 use palette::rgb::Rgb;
 use palette::Hsv;
 use palette::RgbHue;
+use palette::IntoColor;
 use rand;
 use std::time;
 
@@ -58,6 +59,15 @@ pub trait ColorsExt {
         let x = rand::random::<f64>();
         let hue = RgbHue::from(x * 360. - 180.);
         Color::from(Hsv::new(hue, 1., 1.))
+    }
+
+    fn shuffle(&self, strength: f64) -> Color {
+        let hsv = self._self().into_hsv::<Srgb>();
+        let h = hsv.hue.to_positive_degrees();
+        let r = rand::random::<f64>();
+        let shift = (r * strength * 2.) - strength;
+        let hue = RgbHue::from(h - shift);
+        Color::from(Hsv::new(hue, hsv.saturation, hsv.value))
     }
 
     fn mask(&self, mut value: f64) -> Color {

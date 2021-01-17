@@ -3,6 +3,7 @@ use crate::sixaxis::controller::{Button, Controller};
 use nightfire::audio;
 use nightfire::light::{Color, Coordinate, Mode as LMode, Quadrant, State};
 use palette::Hsv;
+use palette::RgbHue;
 use pi_ir_remote::Signal;
 
 pub struct DefaultMode {
@@ -201,6 +202,23 @@ impl Mode for DefaultMode {
             Signal::Quick => self.audio_decay_faster(),
             Signal::Slow => self.audio_decay_slower(),
             Signal::Auto => self.auto_rotate = !self.auto_rotate,
+            Signal::Red => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(0.), 1., 1.))),
+            Signal::Orange1 => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(12.), 1., 1.))),
+            Signal::Orange2 => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(25.), 1., 1.))),
+            Signal::Orange3 => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(37.), 1., 1.))),
+            Signal::Yellow => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(50.), 1., 1.))),
+            Signal::Green => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(120.), 1., 1.))),
+            Signal::GrassGreen => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(115.), 1., 1.))),
+            Signal::Turquise => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(132.), 1., 1.))),
+            Signal::Petrol => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(150.), 1., 1.))),
+            Signal::DarkPetrol => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(160.), 1., 1.))),
+            Signal::Blue => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(-120.), 1., 1.))),
+            Signal::Blue2 => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(-140.), 1., 1.))),
+            Signal::Violet => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(-90.), 1., 1.))),
+            Signal::LightViolet => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(-60.), 1., 1.))),
+            Signal::Pink => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(-30.), 1., 1.))),
+            Signal::Jump3 => self.state.shuffle_colors(20.),
+            Signal::Jump7 => self.state.shuffle_colors(50.),
             _ => (),
         }
     }
