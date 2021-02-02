@@ -16,7 +16,7 @@ clap = "2.33.0"
 yaml-rust = "0.4"
 # logging
 log = "0.4"
-env_logger = "0.7.1"
+env_logger = "0.8.2"
 # stoppable thread
 stoppable_thread = "0.2.1"
 # partwise functions for envelopes
@@ -24,4 +24,4 @@ splines = "3.0"
 # color models
 palette = "0.5.0"
 # ui
-piston_window = "0.107.0"
+piston_window = "0.117.0"
