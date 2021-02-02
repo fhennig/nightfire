@@ -1,6 +1,6 @@
 use crate::mode::Mode;
 use crate::sixaxis::controller::Controller;
-use nightfire::audio::{DefaultSampleHandler, RunningStats, SigProc, SignalFilter};
+use nightfire::audio::{DefaultSampleHandler, SigProc, SignalFilter};
 use nightfire::light::coord::Quadrant;
 use nightfire::light::cprov::{ColorMap, ManualMode, StaticSolidMap};
 use nightfire::light::layer::Layer;
@@ -57,7 +57,6 @@ pub struct AutoMode {
     flash_layer: Layer<StaticSolidMap, EnvMask>,
     flash_active: bool,
     signal_processor: SigProc<DefaultSampleHandler>,
-    audio_stats: RunningStats,
 }
 
 impl AutoMode {
@@ -77,7 +76,6 @@ impl AutoMode {
             flash_layer: layer,
             flash_active: flash,
             signal_processor: proc,
-            audio_stats: RunningStats::new(),
         }
     }
 }
@@ -105,13 +103,31 @@ impl Mode for AutoMode {
 
     fn audio_update(&mut self, frame: &[f32]) {
         self.signal_processor.add_audio_frame(frame);
-        let oscore = self.signal_processor.sample_handler.curr_feats.onset_score;
-        self.audio_stats.push_val(oscore);
         // if we get a significant onset score, we flash
-        if oscore > self.audio_stats.mean + self.sensitivity * self.audio_stats.mean_dev {
-            self.flash_layer.mask.reset();
+        if self
+            .signal_processor
+            .sample_handler
+            .curr_feats
+            .is_onset_full(self.sensitivity)
+        {
+            self.flash_layer.mask.reset_top();
             if self.change_all {
-                self.base_layer.map.set_all(Color::random());
+                // self.base_layer.map.set_all(Color::random());
+            } else {
+                let c = Color::random();
+                self.base_layer.map.set_color(Quadrant::random(), c);
+                self.base_layer.map.set_color(Quadrant::random(), c);
+            }
+        }
+        if self
+            .signal_processor
+            .sample_handler
+            .curr_feats
+            .is_onset_bass(self.sensitivity * 0.5)
+        {
+            self.flash_layer.mask.reset_bottom();
+            if self.change_all {
+                // self.base_layer.map.set_all(Color::random());
             } else {
                 let c = Color::random();
                 self.base_layer.map.set_color(Quadrant::random(), c);

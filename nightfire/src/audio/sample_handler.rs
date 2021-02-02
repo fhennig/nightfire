@@ -1,4 +1,4 @@
-use crate::audio::{AudioFeatures, FilterFreqs, Sample};
+use crate::audio::{AudioFeatures, FilterFreqs, RunningStats, Sample};
 use std::collections::VecDeque;
 
 fn onset_score(vs1: &Vec<f32>, vs2: &Vec<f32>) -> f32 {
@@ -29,6 +29,8 @@ pub struct DefaultSampleHandler {
     pub curr_feats: AudioFeatures,
     /// processing params
     decay_for_max_val: f32,
+    onset_stats_full: RunningStats,
+    onset_stats_bass: RunningStats,
 }
 
 impl DefaultSampleHandler {
@@ -46,6 +48,8 @@ impl DefaultSampleHandler {
             hist_len: 30,
             curr_feats: AudioFeatures::new(),
             decay_for_max_val: decay_per_sample,
+            onset_stats_full: RunningStats::new(),
+            onset_stats_bass: RunningStats::new(),
         }
     }
 
@@ -68,35 +72,41 @@ impl DefaultSampleHandler {
     /// This function updates the current audio features, based on the
     /// new Sample.
     fn update_feats(&mut self, new_sample: &Sample) {
+        // onset score
         let mut curr_onset_score = 0.0;
         let mut curr_bass_onset_score = 0.0;
         if self.hist.len() > 0 {
             curr_onset_score = onset_score(&self.hist.front().unwrap().vals, &new_sample.vals);
+            self.onset_stats_full.push_val(curr_onset_score);
             curr_bass_onset_score = onset_score(
-                &self.filter_freqs.get_bins(130., 700., self.hist.front().unwrap()),
-                &self.filter_freqs.get_bins(130., 700., new_sample)
+                &self
+                    .filter_freqs
+                    .get_bins(130., 700., self.hist.front().unwrap()),
+                &self.filter_freqs.get_bins(130., 700., new_sample),
             );
+            self.onset_stats_bass.push_val(curr_bass_onset_score);
         }
+        // intensities
         let new_intensity = self.filter_freqs.get_slice_value(130., 280., &new_sample);
         let new_highs_intensity = self
             .filter_freqs
             .get_slice_value(6000., 22000., &new_sample);
         let prev_max = self.curr_feats.raw_max_intensity - self.decay_for_max_val;
         let new_raw_max = prev_max.max(new_intensity);
-        self.curr_feats = AudioFeatures {
-            raw_max_intensity: new_raw_max,
-            silence: new_raw_max < 0.05,
-            onset_score: curr_onset_score,
-            bass_onset_score: curr_bass_onset_score,
-            bass_intensity: self
-                .curr_feats
-                .bass_intensity
-                .update(new_intensity / new_raw_max, 1. / self.sample_freq),
-            highs_intensity: self
-                .curr_feats
-                .highs_intensity
-                .update(new_highs_intensity / new_raw_max, 1. / self.sample_freq),
-        };
+        // new features
+        self.curr_feats = self.curr_feats.update(
+            new_raw_max,
+            new_raw_max < 0.05,
+            new_intensity,
+            new_highs_intensity,
+            curr_onset_score,
+            self.onset_stats_full.mean,
+            self.onset_stats_full.mean_dev,
+            curr_bass_onset_score,
+            self.onset_stats_bass.mean,
+            self.onset_stats_bass.mean_dev,
+            1. / self.sample_freq,
+        );
     }
 }
 

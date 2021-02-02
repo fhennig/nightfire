@@ -7,8 +7,12 @@ pub struct AudioFeatures {
     pub silence: bool,
     pub bass_intensity: DecayingValue,
     pub highs_intensity: DecayingValue,
-    pub onset_score: f32,
-    pub bass_onset_score: f32,
+    full_onset_score: f32,
+    full_onset_mean: f32,
+    full_onset_stddev: f32,
+    bass_onset_score: f32,
+    bass_onset_mean: f32,
+    bass_onset_stddev: f32,
 }
 
 impl AudioFeatures {
@@ -18,9 +22,49 @@ impl AudioFeatures {
             silence: true,
             bass_intensity: DecayingValue::new(0.05),
             highs_intensity: DecayingValue::new(0.02),
-            onset_score: 0.,
+            full_onset_score: 0.,
+            full_onset_mean: 0.,
+            full_onset_stddev: 0.,
             bass_onset_score: 0.,
+            bass_onset_mean: 0.,
+            bass_onset_stddev: 0.,
         }
+    }
+
+    pub fn update(
+        &self,
+        raw_max_intensity: f32,
+        silence: bool,
+        bass_intensity_raw: f32,
+        highs_intensity_raw: f32,
+        full_onset_score: f32,
+        full_onset_mean: f32,
+        full_onset_stddev: f32,
+        bass_onset_score: f32,
+        bass_onset_mean: f32,
+        bass_onset_stddev: f32,
+        time_delta: f32
+    ) -> AudioFeatures {
+        AudioFeatures {
+            raw_max_intensity: raw_max_intensity,
+            silence: silence,
+            bass_intensity: self.bass_intensity.update(bass_intensity_raw / raw_max_intensity, time_delta),
+            highs_intensity: self.highs_intensity.update(highs_intensity_raw / raw_max_intensity, time_delta),
+            full_onset_score: full_onset_score,
+            full_onset_mean: full_onset_mean,
+            full_onset_stddev: full_onset_stddev,
+            bass_onset_score: bass_onset_score,
+            bass_onset_mean: bass_onset_mean,
+            bass_onset_stddev: bass_onset_stddev
+        }
+    }
+
+    pub fn is_onset_full(&self, sensitivity: f32) -> bool {
+        self.full_onset_score > self.full_onset_mean + sensitivity * self.full_onset_stddev
+    }
+
+    pub fn is_onset_bass(&self, sensitivity: f32) -> bool {
+        self.bass_onset_score > self.bass_onset_mean + sensitivity * self.bass_onset_stddev
     }
 }
 

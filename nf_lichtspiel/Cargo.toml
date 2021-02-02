@@ -29,7 +29,7 @@ splines = "3.0"
 # color models
 palette = "0.5.0"
 # ui
-piston_window = { version = "0.107.0", optional = true }
+piston_window = { version = "0.117.0", optional = true }
 # controller
 hidapi = { version = "1.2.1", features = ["linux-static-hidraw"], default-features = false }
 # network

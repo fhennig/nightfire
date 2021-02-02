@@ -155,10 +155,8 @@ impl Mode for DefaultMode {
 
     fn audio_update(&mut self, frame: &[f32]) {
         self.signal_processor.add_audio_frame(frame);
-        let oscore = self.signal_processor.sample_handler.curr_feats.onset_score;
-        self.onset_stats.push_val(oscore);
         // if we get a significant onset score, we flash
-        if oscore > self.onset_stats.mean + 4. * self.onset_stats.mean_dev {
+        if self.signal_processor.sample_handler.curr_feats.is_onset_full(4.) {
             if self.auto_rotate {
                 self.state.manual_mode().rotate_cw();
             }
