@@ -9,7 +9,6 @@ use pi_ir_remote::Signal;
 pub struct DefaultMode {
     state: State,
     signal_processor: audio::SigProc<audio::DefaultSampleHandler>,
-    onset_stats: audio::RunningStats,
     speed_no: f32,
     auto_rotate: bool,
 }
@@ -28,7 +27,6 @@ impl DefaultMode {
         DefaultMode {
             state: State::new(),
             signal_processor: proc,
-            onset_stats: audio::RunningStats::new(),
             speed_no: 3f32,
             auto_rotate: false,
         }
