@@ -1,6 +1,5 @@
 use crate::light as li;
 use crate::light::ColorsExt;
-use palette::Mix;
 
 /// A color map.  Maps any given coordinate to a color.
 pub trait ColorMap {
@@ -26,36 +25,6 @@ impl StaticSolidMap {
 impl ColorMap for StaticSolidMap {
     fn get_color(&self, _pos: &li::Coordinate) -> li::Color {
         self.color
-    }
-}
-
-/// A mix map. Takes two color maps, and mixes them according to a
-/// mask.
-pub struct MixMap<C1, C2, M> {
-    pub map_0: C1,
-    pub map_1: C2,
-    pub mask: M,
-}
-
-impl<C1, C2, M> MixMap<C1, C2, M> {
-    pub fn new(map_0: C1, map_1: C2, mask: M) -> MixMap<C1, C2, M> {
-        MixMap {
-            map_0: map_0,
-            map_1: map_1,
-            mask: mask,
-        }
-    }
-}
-
-impl<C1, C2, M> ColorMap for MixMap<C1, C2, M>
-where
-    C1: ColorMap,
-    C2: ColorMap,
-    M: li::Mask,
-{
-    fn get_color(&self, pos: &li::Coordinate) -> li::Color {
-        let value = self.mask.get_value(pos);
-        self.map_0.get_color(pos).mix(&self.map_1.get_color(pos), value)
     }
 }
 
