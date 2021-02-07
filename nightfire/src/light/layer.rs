@@ -1,5 +1,5 @@
 use crate::light::{Coordinate, Color, ColorsExt};
-use crate::light::cprov::{ColorMap, StaticSolidMap};
+use crate::light::cmap::{ColorMap, StaticSolidMap};
 use crate::light::mask::{Mask, ActivatableMask};
 use palette::Mix;
 

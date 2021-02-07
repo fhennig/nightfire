@@ -1,7 +1,7 @@
 pub mod color;
 pub mod coord;
 pub mod envelope;
-pub mod cprov;
+pub mod cmap;
 pub mod mask;
 pub mod layer;
 mod state;

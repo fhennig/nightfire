@@ -1,7 +1,7 @@
 use crate::mode::Mode;
 use crate::sixaxis::controller::{Button, Controller};
 use nightfire::light::color::{Color, ColorsExt};
-use nightfire::light::cprov::StaticSolidMap;
+use nightfire::light::cmap::StaticSolidMap;
 /// Idea: 2 blobs of color, one red one blue, one controlled with each stick.
 ///
 use nightfire::light::layer::SolidLayer;

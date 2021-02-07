@@ -1,6 +1,6 @@
 use crate::light::color;
 use crate::light::coord;
-use crate::light::cprov::{self, ColorMap};
+use crate::light::cmap::{self, ColorMap};
 use crate::light::layer::{Layers, SolidLayer};
 use crate::light::mask::{self, Mask};
 use crate::light::ColorsExt;
@@ -20,7 +20,7 @@ pub enum Mode {
 
 pub struct State {
     // color source
-    manual_color: cprov::ManualMode,
+    manual_color: cmap::ManualMode,
     rainbow: color::Rainbow,
     active_mode: Mode,
     /// white flash layer
@@ -46,7 +46,7 @@ pub struct State {
 impl State {
     pub fn new() -> State {
         State {
-            manual_color: cprov::ManualMode::new(),
+            manual_color: cmap::ManualMode::new(),
             rainbow: color::Rainbow::new(),
             active_mode: Mode::ManualMode,
             // ...
@@ -66,7 +66,7 @@ impl State {
         }
     }
 
-    pub fn manual_mode(&mut self) -> &mut cprov::ManualMode {
+    pub fn manual_mode(&mut self) -> &mut cmap::ManualMode {
         &mut self.manual_color
     }
 

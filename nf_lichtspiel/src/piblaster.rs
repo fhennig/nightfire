@@ -7,7 +7,7 @@ use std::thread;
 use std::time::Duration;
 use std::vec::Vec;
 use stoppable_thread::{spawn, StoppableHandle};
-use nightfire::light::cprov::ColorMap;
+use nightfire::light::cmap::ColorMap;
 
 pub type Pin = i64;
 

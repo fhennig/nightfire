@@ -2,7 +2,7 @@ use crate::mode::Mode;
 use crate::sixaxis::controller::Controller;
 use nightfire::audio::{DefaultSampleHandler, SigProc, SignalFilter};
 use nightfire::light::coord::Quadrant;
-use nightfire::light::cprov::{ManualMode, StaticSolidMap};
+use nightfire::light::cmap::{ManualMode, StaticSolidMap};
 use nightfire::light::layer::Layer;
 use nightfire::light::mask::{EnvMask, SolidMask};
 use nightfire::light::{Color, ColorsExt, Coordinate};

@@ -2,7 +2,7 @@ use crate::mode::Mode;
 use crate::sixaxis::controller::Controller;
 use nightfire::audio;
 use nightfire::light::color::{Color, ColorsExt};
-use nightfire::light::cprov::{ManualMode, StaticSolidMap};
+use nightfire::light::cmap::{ManualMode, StaticSolidMap};
 /// Idea: 2 blobs of color, one red one blue, one controlled with each stick.
 ///
 use nightfire::light::layer::{Layer, SolidLayer};

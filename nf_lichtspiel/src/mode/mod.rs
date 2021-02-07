@@ -10,7 +10,7 @@ use mode_switcher::{ModeName, ModeSwitcher};
 use nf_audio::ValsHandler;
 use nightfire::light::color::Color;
 use nightfire::light::coord::Coordinate;
-use nightfire::light::cprov::ColorMap;
+use nightfire::light::cmap::ColorMap;
 use pi_ir_remote::Signal as IRSignal;
 use pi_ir_remote::SignalHandler as IRSignalHandler;
 use std::sync::{Arc, Mutex};
