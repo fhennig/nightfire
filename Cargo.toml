@@ -5,6 +5,7 @@ members = [
     "nf_audio",
     "nf_lichtspiel",
     "nf_eq",
+    "nf_monitor",
     "mixxx_data",
     "bpm_tapper",
 ]

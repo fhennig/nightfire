@@ -1,0 +1,32 @@
+[package]
+name = "nf_monitor"
+version = "0.1.0"
+authors = ["Felix Hennig <mail@felixhennig.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# internal
+nightfire = { path = "../nightfire" }
+nf_audio = { path = "../nf_audio" }
+# commandline parsing
+clap = "2.33.0"
+# config file
+yaml-rust = "0.4"
+# logging
+log = "0.4"
+env_logger = "0.8.2"
+# stoppable thread
+stoppable_thread = "0.2.1"
+# partwise functions for envelopes
+splines = "3.5"
+# color models
+palette = "0.5.0"
+# ui
+plotters = "0.3.0"
+piston_window = "0.112.0"
+plotters-piston = "0.3.0"
+
+systemstat = "0.1.7"
+funty = "=1.1.0"
