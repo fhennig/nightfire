@@ -146,6 +146,7 @@ pub fn create_window(monitor_data: Arc<Mutex<MonitorData>>) {
         });
 
         cc.configure_series_labels()
+            .position(SeriesLabelPosition::UpperLeft)
             .background_style(&WHITE.mix(0.8))
             .border_style(&BLACK)
             .draw()?;
