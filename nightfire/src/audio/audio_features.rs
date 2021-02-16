@@ -7,12 +7,12 @@ pub struct AudioFeatures {
     pub silence: bool,
     pub bass_intensity: DecayingValue,
     pub highs_intensity: DecayingValue,
-    full_onset_score: f32,
-    full_onset_mean: f32,
-    full_onset_stddev: f32,
-    bass_onset_score: f32,
-    bass_onset_mean: f32,
-    bass_onset_stddev: f32,
+    pub full_onset_score: f32,
+    pub full_onset_mean: f32,
+    pub full_onset_stddev: f32,
+    pub bass_onset_score: f32,
+    pub bass_onset_mean: f32,
+    pub bass_onset_stddev: f32,
 }
 
 impl AudioFeatures {

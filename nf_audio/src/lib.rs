@@ -34,11 +34,11 @@ impl dyn AudioGetter {
         }
     }
 
-    fn new_jack(client_name: &str, port_name: &String) -> Box<dyn AudioGetter> {
+    pub fn new_jack(client_name: &str, port_name: &String) -> Box<dyn AudioGetter> {
         Box::new(JackAudioGetter::new(client_name, port_name))
     }
 
-    fn new_cpal() -> Box<dyn AudioGetter> {
+    pub fn new_cpal() -> Box<dyn AudioGetter> {
         Box::new(CpalAudioGetter::new())
     }
 }

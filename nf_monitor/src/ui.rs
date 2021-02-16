@@ -1,79 +1,155 @@
+use nf_audio;
+use nightfire::audio;
 use piston_window::{EventLoop, PistonWindow, WindowSettings};
 use plotters::prelude::*;
 use plotters_piston::{draw_piston_window, PistonBackend};
+use std::collections::vec_deque::VecDeque;
+use std::sync::{Arc, Mutex};
 use systemstat::platform::common::Platform;
 use systemstat::System;
 
-use std::collections::vec_deque::VecDeque;
-
-const FPS: u32 = 10;
+const FPS: u32 = 30;
 const LENGTH: u32 = 20;
 const N_DATA_POINTS: usize = (FPS * LENGTH) as usize;
-pub fn cpu_ui() {
+
+pub struct MonitorData {
+    onset_scores: VecDeque<f32>,
+    onset_means: VecDeque<f32>,
+    onset_stddevs: VecDeque<f32>,
+    onset_threshold: VecDeque<f32>
+}
+
+impl MonitorData {
+    pub fn new() -> MonitorData {
+        MonitorData {
+            onset_scores: VecDeque::from(vec![0f32; N_DATA_POINTS + 1]),
+            onset_means: VecDeque::from(vec![0f32; N_DATA_POINTS + 1]),
+            onset_stddevs: VecDeque::from(vec![0f32; N_DATA_POINTS + 1]),
+            onset_threshold: VecDeque::from(vec![0f32; N_DATA_POINTS + 1])
+        }
+    }
+
+    pub fn update(&mut self, new_feats: &audio::AudioFeatures) {
+        
+        if self.onset_scores.len() == N_DATA_POINTS + 1 {
+            self.onset_scores.pop_front();
+            self.onset_means.pop_front();
+            self.onset_stddevs.pop_front();
+            self.onset_threshold.pop_front();
+        }
+        self.onset_scores.push_back(new_feats.full_onset_score);
+        self.onset_means.push_back(new_feats.full_onset_mean);
+        self.onset_stddevs.push_back(new_feats.full_onset_stddev);
+        self.onset_threshold.push_back(new_feats.full_onset_mean + 3. * new_feats.full_onset_stddev);
+    }
+}
+
+pub struct SoundMonitor {
+    signal_processor: audio::SigProc<audio::DefaultSampleHandler>,
+    data: Arc<Mutex<MonitorData>>,
+}
+
+impl SoundMonitor {
+    pub fn new(sample_rate: f32, q: f32, n_filters: usize) -> SoundMonitor {
+        // prepare processor
+        let filter = audio::SignalFilter::new(20., 20_000., sample_rate, q, n_filters);
+        let sample_freq = 50.;
+        let handler = audio::DefaultSampleHandler::new(sample_freq, filter.freqs.clone());
+        let sig_proc = audio::SigProc::<audio::DefaultSampleHandler>::new(
+            sample_rate,
+            filter,
+            sample_freq,
+            handler,
+        );
+        SoundMonitor {
+            signal_processor: sig_proc,
+            data: Arc::new(Mutex::new(MonitorData::new()))
+        }
+    }
+
+    pub fn get_shared_vals(&mut self) -> Arc<Mutex<MonitorData>> {
+        Arc::clone(&self.data)
+    }
+}
+
+impl nf_audio::ValsHandler for SoundMonitor {
+    fn take_frame(&mut self, frame: &[f32]) {
+        self.signal_processor.add_audio_frame(frame);
+        let n = self.signal_processor.filter.num_filters();
+        let mut curr_data = self.data.lock().unwrap();
+        curr_data.update(&self.signal_processor.sample_handler.curr_feats);
+    }
+}
+
+// TODO write function to visualize arc<mutex<monitordata>>
+
+pub fn create_window(monitor_data: Arc<Mutex<MonitorData>>) {
     let mut window: PistonWindow = WindowSettings::new("Real Time CPU Usage", [450, 300])
         .samples(4)
         .build()
         .unwrap();
     window.set_max_fps(FPS as u64);
-    let sys = System::new();
-    let mut load_measurement: Vec<_> = (0..FPS).map(|_| sys.cpu_load().unwrap()).collect();
-    let mut epoch = 0;  // counts up the whole time
-    let mut data = vec![];  // a vec of length CPU_COUNT, with a VecDeque for each CPU
+    let mut epoch = 0; // counts up the whole time
     while let Some(_) = draw_piston_window(&mut window, |b| {
-        let cpu_loads = load_measurement[epoch % FPS as usize].done()?;
-
         let root = b.into_drawing_area();
         root.fill(&WHITE)?;
 
-        // initialize VecDeques for each CPU
-        if data.len() < cpu_loads.len() {
-            for _ in data.len()..cpu_loads.len() {
-                data.push(VecDeque::from(vec![0f32; N_DATA_POINTS + 1]));
-            }
-        }
-
-        // push updates into the VecDeques
-        for (core_load, target) in cpu_loads.into_iter().zip(data.iter_mut()) {
-            if target.len() == N_DATA_POINTS + 1 {
-                target.pop_front();
-            }
-            target.push_back(1.0 - core_load.idle);
-        }
-
         let mut cc = ChartBuilder::on(&root)
             .margin(10)
-            .caption("Real Time CPU Usage", ("sans-serif", 30))
+            .caption("Real Time Onsets", ("sans-serif", 30))
             .x_label_area_size(40)
             .y_label_area_size(50)
-            .build_ranged(0..N_DATA_POINTS as u32, 0f32..1f32)?;
+            .build_cartesian_2d(0..N_DATA_POINTS as u32, 0f32..10f32)?;
 
         cc.configure_mesh()
-            .x_label_formatter(&|x| format!("{}", -(LENGTH as f32) + (*x as f32 / FPS as f32)))
-            .y_label_formatter(&|y| format!("{}%", (*y * 100.0) as u32))
-            .x_labels(15)
-            .y_labels(5)
-            .x_desc("Seconds")
-            .y_desc("% Busy")
-            .axis_desc_style(("sans-serif", 15))
+            // .x_label_formatter(&|x| format!("{}", -(LENGTH as f32) + (*x as f32 / FPS as f32)))
+            // .y_label_formatter(&|y| format!("{}%", (*y * 100.0) as u32))
+            // .x_labels(15)
+            // .y_labels(5)
+            // .x_desc("Seconds")
+            // .y_desc("% Busy")
+            // .axis_desc_style(("sans-serif", 15))
             .draw()?;
 
-        for (idx, data) in (0..).zip(data.iter()) {
-            cc.draw_series(LineSeries::new(
-                (0..).zip(data.iter()).map(|(a, b)| (a, *b)),
-                &Palette99::pick(idx),
-            ))?
-            .label(format!("CPU {}", idx))
-            .legend(move |(x, y)| {
-                Rectangle::new([(x - 5, y - 5), (x + 5, y + 5)], &Palette99::pick(idx))
-            });
-        }
+        let data = monitor_data.lock().unwrap();
+        cc.draw_series(LineSeries::new(
+            (0..).zip(data.onset_stddevs.iter()).map(|(a, b)| (a, *b)),
+            &Palette99::pick(2),
+        ))?
+        .label("Onset Stddev")
+        .legend(move |(x, y)| {
+            Rectangle::new([(x - 5, y - 5), (x + 5, y + 5)], &Palette99::pick(2))
+        });
+        cc.draw_series(LineSeries::new(
+            (0..).zip(data.onset_means.iter()).map(|(a, b)| (a, *b)),
+            &Palette99::pick(1),
+        ))?
+        .label("Onset Mean")
+        .legend(move |(x, y)| {
+            Rectangle::new([(x - 5, y - 5), (x + 5, y + 5)], &Palette99::pick(1))
+        });
+        cc.draw_series(LineSeries::new(
+            (0..).zip(data.onset_scores.iter()).map(|(a, b)| (a, *b)),
+            &Palette99::pick(0),
+        ))?
+        .label("Onset Score")
+        .legend(move |(x, y)| {
+            Rectangle::new([(x - 5, y - 5), (x + 5, y + 5)], &Palette99::pick(0))
+        });
+        cc.draw_series(LineSeries::new(
+            (0..).zip(data.onset_threshold.iter()).map(|(a, b)| (a, *b)),
+            &Palette99::pick(3),
+        ))?
+        .label("Onset Threshold")
+        .legend(move |(x, y)| {
+            Rectangle::new([(x - 5, y - 5), (x + 5, y + 5)], &Palette99::pick(3))
+        });
 
         cc.configure_series_labels()
             .background_style(&WHITE.mix(0.8))
             .border_style(&BLACK)
             .draw()?;
 
-        load_measurement[epoch % FPS as usize] = sys.cpu_load()?;
         epoch += 1;
         Ok(())
     }) {}
