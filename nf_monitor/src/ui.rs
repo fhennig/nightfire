@@ -2,11 +2,9 @@ use nf_audio;
 use nightfire::audio;
 use piston_window::{EventLoop, PistonWindow, WindowSettings};
 use plotters::prelude::*;
-use plotters_piston::{draw_piston_window, PistonBackend};
+use plotters_piston::draw_piston_window;
 use std::collections::vec_deque::VecDeque;
 use std::sync::{Arc, Mutex};
-use systemstat::platform::common::Platform;
-use systemstat::System;
 
 const FPS: u32 = 30;
 const LENGTH: u32 = 20;
@@ -18,7 +16,7 @@ pub struct MonitorData {
     onset_stddevs: VecDeque<f32>,
     onset_threshold: VecDeque<f32>,
     bass_intensities: VecDeque<f32>,
-    highs_intensities: VecDeque<f32>
+    highs_intensities: VecDeque<f32>,
 }
 
 impl MonitorData {
@@ -29,12 +27,11 @@ impl MonitorData {
             onset_stddevs: VecDeque::from(vec![0f32; N_DATA_POINTS + 1]),
             onset_threshold: VecDeque::from(vec![0f32; N_DATA_POINTS + 1]),
             bass_intensities: VecDeque::from(vec![0f32; N_DATA_POINTS + 1]),
-            highs_intensities: VecDeque::from(vec![0f32; N_DATA_POINTS + 1])
+            highs_intensities: VecDeque::from(vec![0f32; N_DATA_POINTS + 1]),
         }
     }
 
     pub fn update(&mut self, new_feats: &audio::AudioFeatures) {
-        
         if self.onset_scores.len() == N_DATA_POINTS + 1 {
             self.onset_scores.pop_front();
             self.onset_means.pop_front();
@@ -46,9 +43,12 @@ impl MonitorData {
         self.onset_scores.push_back(new_feats.full_onset_score);
         self.onset_means.push_back(new_feats.full_onset_mean);
         self.onset_stddevs.push_back(new_feats.full_onset_stddev);
-        self.onset_threshold.push_back(new_feats.full_onset_mean + 3. * new_feats.full_onset_stddev);
-        self.bass_intensities.push_back(new_feats.bass_intensity.current_value());
-        self.highs_intensities.push_back(new_feats.highs_intensity.current_value());
+        self.onset_threshold
+            .push_back(new_feats.full_onset_mean + 3. * new_feats.full_onset_stddev);
+        self.bass_intensities
+            .push_back(new_feats.bass_intensity.current_value());
+        self.highs_intensities
+            .push_back(new_feats.highs_intensity.current_value());
     }
 }
 
@@ -71,7 +71,7 @@ impl SoundMonitor {
         );
         SoundMonitor {
             signal_processor: sig_proc,
-            data: Arc::new(Mutex::new(MonitorData::new()))
+            data: Arc::new(Mutex::new(MonitorData::new())),
         }
     }
 
@@ -83,7 +83,6 @@ impl SoundMonitor {
 impl nf_audio::ValsHandler for SoundMonitor {
     fn take_frame(&mut self, frame: &[f32]) {
         self.signal_processor.add_audio_frame(frame);
-        let n = self.signal_processor.filter.num_filters();
         let mut curr_data = self.data.lock().unwrap();
         curr_data.update(&self.signal_processor.sample_handler.curr_feats);
     }
@@ -119,21 +118,21 @@ pub fn create_window(monitor_data: Arc<Mutex<MonitorData>>) {
         let data = monitor_data.lock().unwrap();
 
         cc.draw_series(LineSeries::new(
-            (0..).zip(data.bass_intensities.iter()).map(|(a, b)| (a, *b)),
+            (0..)
+                .zip(data.bass_intensities.iter())
+                .map(|(a, b)| (a, *b)),
             &Palette99::pick(0),
-        ))?   
+        ))?
         .label("Bass")
         .legend(move |(x, y)| {
             Rectangle::new([(x - 5, y - 5), (x + 5, y + 5)], &Palette99::pick(2))
-        });   
+        });
 
         cc.configure_series_labels()
-        .position(SeriesLabelPosition::UpperLeft)
-        .background_style(&WHITE.mix(0.8))
-        .border_style(&BLACK)
-        .draw()?;
-        
-
+            .position(SeriesLabelPosition::UpperLeft)
+            .background_style(&WHITE.mix(0.8))
+            .border_style(&BLACK)
+            .draw()?;
 
         let mut cc = ChartBuilder::on(&lower)
             .margin(10)
