@@ -1,4 +1,5 @@
 mod ui;
+pub mod monitor;
 use clap::{App, Arg};
 use nf_audio::AudioGetter;
 
@@ -19,7 +20,7 @@ fn main() {
     // open audio client
     let mut audio_getter = AudioGetter::new_cpal();
     let sample_rate = audio_getter.get_sample_rate();
-    let mut monitor = ui::SoundMonitor::new(sample_rate, q, n_filters);
+    let mut monitor = monitor::SoundMonitor::new(sample_rate, q, n_filters);
     let data = monitor.get_shared_vals();
 
     audio_getter.start_processing(Box::new(monitor));
