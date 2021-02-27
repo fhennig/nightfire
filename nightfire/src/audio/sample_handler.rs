@@ -87,17 +87,17 @@ impl DefaultSampleHandler {
             self.onset_stats_bass.push_val(curr_bass_onset_score);
         }
         // intensities
-        let new_intensity = self.filter_freqs.get_slice_value(130., 280., &new_sample);
+        // let new_total_intensity = self.filter_freqs.get_slice_value(0., 22_000., &new_sample);
+        let new_bass_intensity = self.filter_freqs.get_slice_value(130., 280., &new_sample);
         let new_highs_intensity = self
             .filter_freqs
-            .get_slice_value(6000., 22000., &new_sample);
-        let prev_max = self.curr_feats.raw_max_intensity - self.decay_for_max_val;
-        let new_raw_max = prev_max.max(new_intensity);
+            .get_slice_value(6000., 22_000., &new_sample);
+        // let prev_max = self.curr_feats.raw_max_intensity - self.decay_for_max_val;
+        // let new_raw_max = prev_max.max(new_bass_intensity);
         // new features
         self.curr_feats = self.curr_feats.update(
-            new_raw_max,
-            new_raw_max < 0.05,
-            new_intensity,
+            false, //new_raw_max < 0.05,
+            new_bass_intensity,
             new_highs_intensity,
             curr_onset_score,
             self.onset_stats_full.mean,

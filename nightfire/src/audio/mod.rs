@@ -18,7 +18,7 @@ mod audio_features;
 mod filter;
 mod sample_handler;
 mod running_stats;
-pub use audio_features::{DecayingValue, AudioFeatures};
+pub use audio_features::{NormalizedDecayingValue, AudioFeatures};
 pub use filter::FilterFreqs;
 pub use filter::SignalFilter;
 pub use sample_handler::{
@@ -44,6 +44,22 @@ impl Sample {
 
     pub fn get_vals_cloned(&self) -> Vec<f32> {
         self.vals.to_vec()
+    }
+
+    /// The mean volume over all bins
+    pub fn mean(&self) -> f32 {
+        let sum = self.vals.iter().sum::<f32>();
+        let len = self.vals.len() as f32;
+        sum / len
+    }
+
+    /// The standard deviation in volumes in this sample
+    pub fn std_dev(&self) -> f32 {
+        let mean = self.mean();
+        let variance = self.vals.iter().map(|val| {
+            (mean - val).powf(2.0)
+        }).sum::<f32>() / self.vals.len() as f32;
+        variance.sqrt()
     }
 }
 

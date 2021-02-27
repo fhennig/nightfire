@@ -1,12 +1,9 @@
 /// A structure to contain features of the sample at a given time.
 #[derive(Copy, Clone)]
 pub struct AudioFeatures {
-    /// The raw maximum intensity.  This is subsequently used to scale
-    /// other frequency amplitudes between 0 and 1.
-    pub raw_max_intensity: f32,
     pub silence: bool,
-    pub bass_intensity: DecayingValue,
-    pub highs_intensity: DecayingValue,
+    pub bass_intensity: NormalizedDecayingValue,
+    pub highs_intensity: NormalizedDecayingValue,
     pub full_onset_score: f32,
     pub full_onset_mean: f32,
     pub full_onset_stddev: f32,
@@ -18,10 +15,9 @@ pub struct AudioFeatures {
 impl AudioFeatures {
     pub fn new() -> AudioFeatures {
         AudioFeatures {
-            raw_max_intensity: 0.,
             silence: true,
-            bass_intensity: DecayingValue::new(0.05),
-            highs_intensity: DecayingValue::new(0.02),
+            bass_intensity: NormalizedDecayingValue::new(0.05, 0.01666),
+            highs_intensity: NormalizedDecayingValue::new(0.02, 0.01666),
             full_onset_score: 0.,
             full_onset_mean: 0.,
             full_onset_stddev: 0.,
@@ -33,7 +29,6 @@ impl AudioFeatures {
 
     pub fn update(
         &self,
-        raw_max_intensity: f32,
         silence: bool,
         bass_intensity_raw: f32,
         highs_intensity_raw: f32,
@@ -46,10 +41,9 @@ impl AudioFeatures {
         time_delta: f32
     ) -> AudioFeatures {
         AudioFeatures {
-            raw_max_intensity: raw_max_intensity,
             silence: silence,
-            bass_intensity: self.bass_intensity.update(bass_intensity_raw / raw_max_intensity, time_delta),
-            highs_intensity: self.highs_intensity.update(highs_intensity_raw / raw_max_intensity, time_delta),
+            bass_intensity: self.bass_intensity.update(bass_intensity_raw, time_delta),
+            highs_intensity: self.highs_intensity.update(highs_intensity_raw, time_delta),
             full_onset_score: full_onset_score,
             full_onset_mean: full_onset_mean,
             full_onset_stddev: full_onset_stddev,
@@ -68,18 +62,24 @@ impl AudioFeatures {
     }
 }
 
+/// A value that slowly fades down after getting pushed up.  The value also normalizes itself between 0 and 1.
+/// The value itself decays with an exponential decay, while the max value decays linearly.
 #[derive(Copy, Clone)]
-pub struct DecayingValue {
+pub struct NormalizedDecayingValue {
     base_value: f32,
+    max_value: f32,
     pub decay_factor: f32,
+    decay_value_for_normal_max: f32, // per second
     decayed_time: f32, // in seconds
 }
 
-impl DecayingValue {
-    pub fn new(decay_factor: f32) -> DecayingValue {
-        DecayingValue {
+impl NormalizedDecayingValue {
+    pub fn new(decay_factor: f32, decay_value_for_normal_max: f32) -> NormalizedDecayingValue {
+        NormalizedDecayingValue {
             base_value: 0.,
+            max_value: 0.,
             decay_factor: decay_factor,
+            decay_value_for_normal_max: decay_value_for_normal_max,
             decayed_time: 0.,
         }
     }
@@ -89,17 +89,25 @@ impl DecayingValue {
         self.base_value * self.decay_factor.powf(self.decayed_time)
     }
 
-    pub fn update(&self, new_value: f32, time_delta: f32) -> DecayingValue {
-        if new_value > self.current_value() {
-            DecayingValue {
-                base_value: new_value,
+    /// Update with a new, unnormalized value, and the time passed since the last update.
+    pub fn update(&self, new_value: f32, time_delta: f32) -> NormalizedDecayingValue {
+        let current_max = self.max_value - self.decay_value_for_normal_max * (self.decayed_time + time_delta);
+        let new_max = current_max.max(new_value);
+        let normalized_new_value = new_value / new_max;
+        if normalized_new_value > self.current_value() {
+            NormalizedDecayingValue {
+                max_value: new_max,
+                base_value: normalized_new_value,
                 decay_factor: self.decay_factor,
+                decay_value_for_normal_max: self.decay_value_for_normal_max,
                 decayed_time: 0.,
             }
         } else {
-            DecayingValue {
+            NormalizedDecayingValue {
+                max_value: self.max_value,
                 base_value: self.base_value,
                 decay_factor: self.decay_factor,
+                decay_value_for_normal_max: self.decay_value_for_normal_max,
                 decayed_time: self.decayed_time + time_delta,
             }
         }
