@@ -36,9 +36,6 @@ impl DefaultSampleHandler {
     /// the filter frequencies corresponding to the values in the
     /// samples, to actually interpret the samples.
     pub fn new(sample_freq: f32, filter_freqs: FilterFreqs) -> Self {
-        // calc stuff for the decay of the max_intensity:
-        let total_decay_duration = 60.; // in seconds
-        let decay_per_sample = 1. / (sample_freq * total_decay_duration);
         Self {
             filter_freqs: filter_freqs,
             sample_freq: sample_freq,
