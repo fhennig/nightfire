@@ -26,26 +26,28 @@ impl HitDetector {
     }
 
     pub fn update(&mut self, hit: bool, time_delta: f32) {
+        if let Some(time_passed) = self.time_since_last_hit {
+            self.time_since_last_hit = Some(time_passed + time_delta);
+        }
         if hit {
             println!("Hit!");
-            self.hit_count += 1;
             if let Some(time_passed) = self.time_since_last_hit {
-                let time_passed = time_passed + time_delta;
-                let pos = self
-                    .sorted_time_deltas
-                    .binary_search_by(|a| a.partial_cmp(&time_passed).unwrap_or(Ordering::Equal))
-                    .unwrap_or_else(|e| e);
-                self.sorted_time_deltas.insert(pos, time_passed);
-                self.sorted_time_deltas.push(time_passed);
+                if time_passed > 0.2 {
+                    self.hit_count += 1;
+                    let pos = self
+                        .sorted_time_deltas
+                        .binary_search_by(|a| a.partial_cmp(&time_passed).unwrap_or(Ordering::Equal))
+                        .unwrap_or_else(|e| e);
+                    self.sorted_time_deltas.insert(pos, time_passed);
+                    self.sorted_time_deltas.push(time_passed);
+                }
+            } else {
+                self.hit_count += 1;
             }
             self.time_since_last_hit = Some(0f32);
-        } else {
-            if let Some(time_passed) = self.time_since_last_hit {
-                self.time_since_last_hit = Some(time_passed + time_delta);
+            if self.in_streak() {
+                println!("Streak len: {:?}, BPM: {:?}", self.hit_count, self.median_bpm().unwrap());
             }
-        }
-        if self.in_streak() {
-            println!("Streak len: {:?}, BPM: {:?}", self.hit_count, self.median_bpm().unwrap());
         }
         // TODO whipe streak if too long time out
         if let Some(over) = self.streak_over() {
