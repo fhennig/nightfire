@@ -1,4 +1,4 @@
-use crate::audio::{AudioFeatures, FilterFreqs, RunningStats, Sample};
+use crate::audio::{AudioFeatures, FilterFreqs, RunningStats, Sample, HitDetector};
 use std::collections::VecDeque;
 
 fn onset_score(vs1: &Vec<f32>, vs2: &Vec<f32>) -> f32 {
@@ -29,6 +29,7 @@ pub struct DefaultSampleHandler {
     pub curr_feats: AudioFeatures,
     onset_stats_full: RunningStats,
     onset_stats_bass: RunningStats,
+    hit_detector: HitDetector,
 }
 
 impl DefaultSampleHandler {
@@ -44,6 +45,7 @@ impl DefaultSampleHandler {
             curr_feats: AudioFeatures::new(),
             onset_stats_full: RunningStats::new(),
             onset_stats_bass: RunningStats::new(),
+            hit_detector: HitDetector::new(),
         }
     }
 
@@ -99,8 +101,10 @@ impl DefaultSampleHandler {
             curr_bass_onset_score,
             self.onset_stats_bass.mean,
             self.onset_stats_bass.mean_dev,
+            new_sample.std_dev(),
             1. / self.sample_freq,
         );
+        self.hit_detector.update(self.curr_feats.is_onset_full(3.), 1. / self.sample_freq);
     }
 }
 

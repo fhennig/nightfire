@@ -11,6 +11,7 @@ pub struct AudioFeatures {
     pub bass_onset_score: f32,
     pub bass_onset_mean: f32,
     pub bass_onset_stddev: f32,
+    pub spikiness: f32,
 }
 
 impl AudioFeatures {
@@ -26,6 +27,7 @@ impl AudioFeatures {
             bass_onset_score: 0.,
             bass_onset_mean: 0.,
             bass_onset_stddev: 0.,
+            spikiness: 0.,
         }
     }
 
@@ -40,6 +42,7 @@ impl AudioFeatures {
         bass_onset_score: f32,
         bass_onset_mean: f32,
         bass_onset_stddev: f32,
+        spikiness: f32,
         time_delta: f32,
     ) -> AudioFeatures {
         AudioFeatures {
@@ -53,6 +56,7 @@ impl AudioFeatures {
             bass_onset_score: bass_onset_score,
             bass_onset_mean: bass_onset_mean,
             bass_onset_stddev: bass_onset_stddev,
+            spikiness: spikiness,
         }
     }
 

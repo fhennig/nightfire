@@ -18,6 +18,7 @@ mod audio_features;
 mod filter;
 mod sample_handler;
 mod running_stats;
+mod hit_detector;
 pub use audio_features::{NormalizedDecayingValue, AudioFeatures};
 pub use filter::FilterFreqs;
 pub use filter::SignalFilter;
@@ -25,6 +26,7 @@ pub use sample_handler::{
     CollectSampleHandler, DefaultSampleHandler, SampleHandler,
 };
 pub use running_stats::RunningStats;
+pub use hit_detector::HitDetector;
 use std::vec::Vec;
 
 /// A sample of audio.  Represents a certain amount of time. The
