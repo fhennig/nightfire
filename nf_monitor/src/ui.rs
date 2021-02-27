@@ -74,14 +74,16 @@ pub fn create_intensity_plot<'a, 'b>(
 
     cc.configure_mesh().draw()?;
 
+    //Total
     cc.draw_series(LineSeries::new(
         (0..)
-            .zip(data.bass_intensities.iter())
+            .zip(data.total_intensities.iter())
             .map(|(a, b)| (a, *b)),
-        &Palette99::pick(0),
+        &Palette99::pick(1),
     ))?
-    .label("Bass")
-    .legend(move |(x, y)| Rectangle::new([(x - 5, y - 5), (x + 5, y + 5)], &Palette99::pick(0)));
+    .label("Total")
+    .legend(move |(x, y)| Rectangle::new([(x - 5, y - 5), (x + 5, y + 5)], &Palette99::pick(1)));
+    // Highs
     cc.draw_series(LineSeries::new(
         (0..)
             .zip(data.highs_intensities.iter())
@@ -90,6 +92,15 @@ pub fn create_intensity_plot<'a, 'b>(
     ))?
     .label("Highs")
     .legend(move |(x, y)| Rectangle::new([(x - 5, y - 5), (x + 5, y + 5)], &Palette99::pick(3)));
+    // Bass
+    cc.draw_series(LineSeries::new(
+        (0..)
+            .zip(data.bass_intensities.iter())
+            .map(|(a, b)| (a, *b)),
+        &Palette99::pick(0),
+    ))?
+    .label("Bass")
+    .legend(move |(x, y)| Rectangle::new([(x - 5, y - 5), (x + 5, y + 5)], &Palette99::pick(0)));
 
     cc.configure_series_labels()
         .position(SeriesLabelPosition::UpperLeft)

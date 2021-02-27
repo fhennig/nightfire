@@ -108,7 +108,7 @@ impl Mode for HighLow {
             .curr_feats
             .highs_intensity
             .current_value();
-        if self.signal_processor.sample_handler.curr_feats.silence {
+        if self.signal_processor.sample_handler.curr_feats.is_silence() {
             bass_intensity = 1.0;
             highs_intensity = 1.0;
         }

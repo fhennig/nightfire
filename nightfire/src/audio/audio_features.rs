@@ -1,9 +1,10 @@
 /// A structure to contain features of the sample at a given time.
 #[derive(Copy, Clone)]
 pub struct AudioFeatures {
-    pub silence: bool,
+    pub raw_max_decaying: RawLinearDecayValue,
     pub bass_intensity: NormalizedDecayingValue,
     pub highs_intensity: NormalizedDecayingValue,
+    pub total_intensity: NormalizedDecayingValue,
     pub full_onset_score: f32,
     pub full_onset_mean: f32,
     pub full_onset_stddev: f32,
@@ -15,9 +16,10 @@ pub struct AudioFeatures {
 impl AudioFeatures {
     pub fn new() -> AudioFeatures {
         AudioFeatures {
-            silence: true,
+            raw_max_decaying: RawLinearDecayValue::new(0.01666),
             bass_intensity: NormalizedDecayingValue::new(0.05, 0.01666),
             highs_intensity: NormalizedDecayingValue::new(0.02, 0.01666),
+            total_intensity: NormalizedDecayingValue::new(0.02, 0.01666),
             full_onset_score: 0.,
             full_onset_mean: 0.,
             full_onset_stddev: 0.,
@@ -29,27 +31,28 @@ impl AudioFeatures {
 
     pub fn update(
         &self,
-        silence: bool,
         bass_intensity_raw: f32,
         highs_intensity_raw: f32,
+        total_intensity_raw: f32,
         full_onset_score: f32,
         full_onset_mean: f32,
         full_onset_stddev: f32,
         bass_onset_score: f32,
         bass_onset_mean: f32,
         bass_onset_stddev: f32,
-        time_delta: f32
+        time_delta: f32,
     ) -> AudioFeatures {
         AudioFeatures {
-            silence: silence,
+            raw_max_decaying: self.raw_max_decaying.update(total_intensity_raw, time_delta),
             bass_intensity: self.bass_intensity.update(bass_intensity_raw, time_delta),
             highs_intensity: self.highs_intensity.update(highs_intensity_raw, time_delta),
+            total_intensity: self.highs_intensity.update(total_intensity_raw, time_delta),
             full_onset_score: full_onset_score,
             full_onset_mean: full_onset_mean,
             full_onset_stddev: full_onset_stddev,
             bass_onset_score: bass_onset_score,
             bass_onset_mean: bass_onset_mean,
-            bass_onset_stddev: bass_onset_stddev
+            bass_onset_stddev: bass_onset_stddev,
         }
     }
 
@@ -59,6 +62,10 @@ impl AudioFeatures {
 
     pub fn is_onset_bass(&self, sensitivity: f32) -> bool {
         self.bass_onset_score > self.bass_onset_mean + sensitivity * self.bass_onset_stddev
+    }
+
+    pub fn is_silence(&self) -> bool {
+        self.raw_max_decaying.current_value() < 0.05
     }
 }
 
@@ -70,7 +77,7 @@ pub struct NormalizedDecayingValue {
     max_value: f32,
     pub decay_factor: f32,
     decay_value_for_normal_max: f32, // per second
-    decayed_time: f32, // in seconds
+    decayed_time: f32,               // in seconds
 }
 
 impl NormalizedDecayingValue {
@@ -91,7 +98,8 @@ impl NormalizedDecayingValue {
 
     /// Update with a new, unnormalized value, and the time passed since the last update.
     pub fn update(&self, new_value: f32, time_delta: f32) -> NormalizedDecayingValue {
-        let current_max = self.max_value - self.decay_value_for_normal_max * (self.decayed_time + time_delta);
+        let current_max =
+            self.max_value - self.decay_value_for_normal_max * (self.decayed_time + time_delta);
         let new_max = current_max.max(new_value);
         let normalized_new_value = new_value / new_max;
         if normalized_new_value > self.current_value() {
@@ -108,6 +116,43 @@ impl NormalizedDecayingValue {
                 base_value: self.base_value,
                 decay_factor: self.decay_factor,
                 decay_value_for_normal_max: self.decay_value_for_normal_max,
+                decayed_time: self.decayed_time + time_delta,
+            }
+        }
+    }
+}
+
+#[derive(Copy, Clone)]
+pub struct RawLinearDecayValue {
+    base_value: f32,
+    decay_value: f32,
+    decayed_time: f32, // in seconds
+}
+
+impl RawLinearDecayValue {
+    pub fn new(decay_value: f32) -> RawLinearDecayValue {
+        RawLinearDecayValue {
+            base_value: 0f32,
+            decay_value: decay_value,
+            decayed_time: 0f32,
+        }
+    }
+
+    pub fn current_value(&self) -> f32 {
+        self.base_value - self.decayed_time * self.decay_value
+    }
+
+    pub fn update(&self, new_value: f32, time_delta: f32) -> RawLinearDecayValue {
+        if new_value > self.current_value() {
+            RawLinearDecayValue {
+                base_value: new_value,
+                decay_value: self.decay_value,
+                decayed_time: 0f32,
+            }
+        } else {
+            RawLinearDecayValue {
+                base_value: self.base_value,
+                decay_value: self.decay_value,
                 decayed_time: self.decayed_time + time_delta,
             }
         }

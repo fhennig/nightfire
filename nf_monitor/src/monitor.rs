@@ -14,6 +14,7 @@ pub struct MonitorData {
     pub onset_threshold: VecDeque<f32>,
     pub bass_intensities: VecDeque<f32>,
     pub highs_intensities: VecDeque<f32>,
+    pub total_intensities: VecDeque<f32>,
 }
 
 impl MonitorData {
@@ -25,6 +26,7 @@ impl MonitorData {
             onset_threshold: VecDeque::from(vec![0f32; N_DATA_POINTS + 1]),
             bass_intensities: VecDeque::from(vec![0f32; N_DATA_POINTS + 1]),
             highs_intensities: VecDeque::from(vec![0f32; N_DATA_POINTS + 1]),
+            total_intensities: VecDeque::from(vec![0f32; N_DATA_POINTS + 1]),
         }
     }
 
@@ -36,16 +38,19 @@ impl MonitorData {
             self.onset_threshold.pop_front();
             self.bass_intensities.pop_front();
             self.highs_intensities.pop_front();
+            self.total_intensities.pop_front();
         }
-        self.onset_scores.push_back(new_feats.full_onset_score);
-        self.onset_means.push_back(new_feats.full_onset_mean);
-        self.onset_stddevs.push_back(new_feats.full_onset_stddev);
+        self.onset_scores.push_back(new_feats.bass_onset_score);
+        self.onset_means.push_back(new_feats.bass_onset_mean);
+        self.onset_stddevs.push_back(new_feats.bass_onset_stddev);
         self.onset_threshold
             .push_back(new_feats.full_onset_mean + 3. * new_feats.full_onset_stddev);
         self.bass_intensities
             .push_back(new_feats.bass_intensity.current_value());
         self.highs_intensities
             .push_back(new_feats.highs_intensity.current_value());
+        self.total_intensities
+            .push_back(new_feats.total_intensity.current_value());
     }
 }
 

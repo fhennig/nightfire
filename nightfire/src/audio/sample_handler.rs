@@ -27,8 +27,6 @@ pub struct DefaultSampleHandler {
     hist_len: usize,
     /// Current Audio Features
     pub curr_feats: AudioFeatures,
-    /// processing params
-    decay_for_max_val: f32,
     onset_stats_full: RunningStats,
     onset_stats_bass: RunningStats,
 }
@@ -47,7 +45,6 @@ impl DefaultSampleHandler {
             hist: vec![].into_iter().collect(),
             hist_len: 30,
             curr_feats: AudioFeatures::new(),
-            decay_for_max_val: decay_per_sample,
             onset_stats_full: RunningStats::new(),
             onset_stats_bass: RunningStats::new(),
         }
@@ -87,7 +84,7 @@ impl DefaultSampleHandler {
             self.onset_stats_bass.push_val(curr_bass_onset_score);
         }
         // intensities
-        // let new_total_intensity = self.filter_freqs.get_slice_value(0., 22_000., &new_sample);
+        let new_total_intensity = self.filter_freqs.get_slice_value(0., 22_000., &new_sample);
         let new_bass_intensity = self.filter_freqs.get_slice_value(130., 280., &new_sample);
         let new_highs_intensity = self
             .filter_freqs
@@ -96,9 +93,9 @@ impl DefaultSampleHandler {
         // let new_raw_max = prev_max.max(new_bass_intensity);
         // new features
         self.curr_feats = self.curr_feats.update(
-            false, //new_raw_max < 0.05,
             new_bass_intensity,
             new_highs_intensity,
+            new_total_intensity,
             curr_onset_score,
             self.onset_stats_full.mean,
             self.onset_stats_full.mean_dev,

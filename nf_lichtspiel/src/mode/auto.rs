@@ -99,7 +99,7 @@ impl Mode for AutoMode {
             .curr_feats
             .bass_intensity
             .current_value();
-        if self.signal_processor.sample_handler.curr_feats.silence {
+        if self.signal_processor.sample_handler.curr_feats.is_silence() {
             intensity = 1.0;
         }
         self.base_layer.mask.set_val(intensity.into());
