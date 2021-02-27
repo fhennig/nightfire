@@ -82,6 +82,14 @@ pub fn create_intensity_plot<'a, 'b>(
     ))?
     .label("Bass")
     .legend(move |(x, y)| Rectangle::new([(x - 5, y - 5), (x + 5, y + 5)], &Palette99::pick(0)));
+    cc.draw_series(LineSeries::new(
+        (0..)
+            .zip(data.highs_intensities.iter())
+            .map(|(a, b)| (a, *b)),
+        &Palette99::pick(3),
+    ))?
+    .label("Highs")
+    .legend(move |(x, y)| Rectangle::new([(x - 5, y - 5), (x + 5, y + 5)], &Palette99::pick(3)));
 
     cc.configure_series_labels()
         .position(SeriesLabelPosition::UpperLeft)
@@ -92,7 +100,7 @@ pub fn create_intensity_plot<'a, 'b>(
 }
 
 pub fn create_window(monitor_data: Arc<Mutex<MonitorData>>) {
-    let mut window: PistonWindow = WindowSettings::new("Real Time CPU Usage", [600, 400])
+    let mut window: PistonWindow = WindowSettings::new("Real Time CPU Usage", [800, 500])
         .samples(4)
         .build()
         .unwrap();
