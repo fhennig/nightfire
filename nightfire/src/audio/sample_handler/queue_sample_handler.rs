@@ -1,12 +1,7 @@
 use crate::audio::{AudioFeatures, FilterFreqs, RunningStats, Sample, HitDetector, SampleHandler};
 use crate::audio::onset::onset_score;
+use crate::audio::audio_events::AudioEvent;
 use std::collections::VecDeque;
-
-pub enum AudioEvent {
-    BassOnset,
-    FullOnset,
-    NewIntensities(f32, f32, f32),
-}
 
 /// The default sample handler takes receives samples and extracts
 /// features.

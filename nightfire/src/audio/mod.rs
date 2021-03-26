@@ -16,19 +16,17 @@
 //! periodically and updates its own state based on that.
 mod audio_features;
 mod filter;
-mod sample_handler;
-mod running_stats;
-mod hit_detector;
 mod onset;
-mod queue_sample_handler;
-pub use audio_features::{NormalizedDecayingValue, AudioFeatures};
+mod processors;
+mod sample_handler;
+mod audio_events;
+pub use audio_features::{AudioFeatures, NormalizedDecayingValue};
 pub use filter::FilterFreqs;
 pub use filter::SignalFilter;
-pub use sample_handler::{
-    CollectSampleHandler, DefaultSampleHandler, SampleHandler,
-};
-pub use running_stats::RunningStats;
-pub use hit_detector::HitDetector;
+pub use processors::hit_detector::HitDetector;
+pub use processors::running_stats::RunningStats;
+pub use sample_handler::default_sample_handler::{CollectSampleHandler, DefaultSampleHandler};
+pub use sample_handler::SampleHandler;
 use std::vec::Vec;
 
 /// A sample of audio.  Represents a certain amount of time. The
@@ -60,9 +58,12 @@ impl Sample {
     /// The standard deviation in volumes in this sample
     pub fn std_dev(&self) -> f32 {
         let mean = self.mean();
-        let variance = self.vals.iter().map(|val| {
-            (mean - val).powf(2.0)
-        }).sum::<f32>() / self.vals.len() as f32;
+        let variance = self
+            .vals
+            .iter()
+            .map(|val| (mean - val).powf(2.0))
+            .sum::<f32>()
+            / self.vals.len() as f32;
         variance.sqrt()
     }
 }

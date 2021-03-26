@@ -1,10 +1,6 @@
-use crate::audio::{AudioFeatures, FilterFreqs, RunningStats, Sample, HitDetector};
+use crate::audio::{AudioFeatures, FilterFreqs, RunningStats, Sample, HitDetector, SampleHandler};
 use crate::audio::onset::onset_score;
 use std::collections::VecDeque;
-
-pub trait SampleHandler {
-    fn recv_sample(&mut self, sample: Sample);
-}
 
 /// The default sample handler takes receives samples and extracts
 /// features.
