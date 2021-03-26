@@ -14,16 +14,17 @@
 //! The SampleHandler is usually embedded in another object (UI
 //! display, LED lights, ...) which reads the audio features
 //! periodically and updates its own state based on that.
+mod audio_events;
 mod audio_features;
 mod filter;
 mod onset;
 mod processors;
 mod sample_handler;
-mod audio_events;
-pub use audio_features::{AudioFeatures, NormalizedDecayingValue};
+pub use audio_features::AudioFeatures;
 pub use filter::FilterFreqs;
 pub use filter::SignalFilter;
 pub use processors::hit_detector::HitDetector;
+pub use processors::primitives::NormalizedDecayingValue;
 pub use processors::running_stats::RunningStats;
 pub use sample_handler::default_sample_handler::{CollectSampleHandler, DefaultSampleHandler};
 pub use sample_handler::SampleHandler;
