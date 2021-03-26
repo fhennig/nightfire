@@ -19,6 +19,8 @@ mod filter;
 mod sample_handler;
 mod running_stats;
 mod hit_detector;
+mod onset;
+mod queue_sample_handler;
 pub use audio_features::{NormalizedDecayingValue, AudioFeatures};
 pub use filter::FilterFreqs;
 pub use filter::SignalFilter;

@@ -1,14 +1,16 @@
-use crate::audio::{AudioFeatures, FilterFreqs, RunningStats, Sample, HitDetector};
+use crate::audio::{AudioFeatures, FilterFreqs, RunningStats, Sample, HitDetector, SampleHandler};
 use crate::audio::onset::onset_score;
 use std::collections::VecDeque;
 
-pub trait SampleHandler {
-    fn recv_sample(&mut self, sample: Sample);
+pub enum AudioEvent {
+    BassOnset,
+    FullOnset,
+    NewIntensities(f32, f32, f32),
 }
 
 /// The default sample handler takes receives samples and extracts
 /// features.
-pub struct DefaultSampleHandler {
+pub struct QueueSampleHandler {
     /// Information about the samples that are arriving
     filter_freqs: FilterFreqs,
     sample_freq: f32,
@@ -18,13 +20,14 @@ pub struct DefaultSampleHandler {
     /// The length of the history in samples.
     hist_len: usize,
     /// Current Audio Features
-    pub curr_feats: AudioFeatures,
+    pub events: VecDeque<AudioEvent>,
+    curr_feats: AudioFeatures,
     onset_stats_full: RunningStats,
     onset_stats_bass: RunningStats,
     hit_detector: HitDetector,
 }
 
-impl DefaultSampleHandler {
+impl QueueSampleHandler {
     /// Receives the sample frequency (Hz) at which samples arrive.  Also
     /// the filter frequencies corresponding to the values in the
     /// samples, to actually interpret the samples.
@@ -35,6 +38,7 @@ impl DefaultSampleHandler {
             hist: vec![].into_iter().collect(),
             hist_len: 30,
             curr_feats: AudioFeatures::new(),
+            events: vec![].into_iter().collect(),
             onset_stats_full: RunningStats::new(),
             onset_stats_bass: RunningStats::new(),
             hit_detector: HitDetector::new(),
@@ -96,35 +100,22 @@ impl DefaultSampleHandler {
             new_sample.std_dev(),
             1. / self.sample_freq,
         );
+        let event = AudioEvent::NewIntensities(
+            self.curr_feats.bass_intensity.current_value(),
+            self.curr_feats.highs_intensity.current_value(),
+            self.curr_feats.total_intensity.current_value()
+        );
+        self.events.push_back(event);
         self.hit_detector.update(self.curr_feats.is_onset_full(3.), 1. / self.sample_freq);
     }
 }
 
-impl SampleHandler for DefaultSampleHandler {
+impl SampleHandler for QueueSampleHandler {
     fn recv_sample(&mut self, sample: Sample) {
         self.update_feats(&sample);
         self.hist.push_front(sample);
         if self.hist.len() > self.hist_len {
             self.hist.pop_back();
         }
-    }
-}
-
-/// A simple sample handler that just collects all the samples.
-/// Useful to run with a limited amount of audio, so the history can
-/// be retrieved later.
-pub struct CollectSampleHandler {
-    pub hist: Vec<Sample>,
-}
-
-impl CollectSampleHandler {
-    pub fn new() -> Self {
-        Self { hist: vec![] }
-    }
-}
-
-impl SampleHandler for CollectSampleHandler {
-    fn recv_sample(&mut self, sample: Sample) {
-        self.hist.push(sample);
     }
 }
