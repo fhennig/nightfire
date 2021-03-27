@@ -1,5 +1,6 @@
-use crate::audio::{AudioFeatures, FilterFreqs, RunningStats, Sample, HitDetector, SampleHandler};
 use crate::audio::onset::onset_score;
+use crate::audio::processors::{HitDetector, IntensityTracker, RunningStats};
+use crate::audio::{AudioFeatures, FilterFreqs, Sample, SampleHandler};
 use std::collections::VecDeque;
 
 /// The default sample handler takes receives samples and extracts
@@ -92,7 +93,8 @@ impl DefaultSampleHandler {
             new_sample.std_dev(),
             1. / self.sample_freq,
         );
-        self.hit_detector.update(self.curr_feats.is_onset_full(3.), 1. / self.sample_freq);
+        self.hit_detector
+            .update(self.curr_feats.is_onset_full(3.), 1. / self.sample_freq);
     }
 }
 

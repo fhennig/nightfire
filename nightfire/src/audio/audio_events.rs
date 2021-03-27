@@ -1,5 +1,5 @@
 pub enum AudioEvent {
-    BassOnset,
-    FullOnset,
-    NewIntensities(f32, f32, f32),
+    BassOnset(f32),                // strength
+    FullOnset(f32),                // strength
+    NewIntensities(f32, f32, f32), // bass, highs, total
 }

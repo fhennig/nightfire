@@ -53,7 +53,7 @@ impl AudioFeatures {
                 .update(total_intensity_raw, time_delta),
             bass_intensity: self.bass_intensity.update(bass_intensity_raw, time_delta),
             highs_intensity: self.highs_intensity.update(highs_intensity_raw, time_delta),
-            total_intensity: self.highs_intensity.update(total_intensity_raw, time_delta),
+            total_intensity: self.total_intensity.update(total_intensity_raw, time_delta),
             full_onset_score: full_onset_score,
             full_onset_mean: full_onset_mean,
             full_onset_stddev: full_onset_stddev,

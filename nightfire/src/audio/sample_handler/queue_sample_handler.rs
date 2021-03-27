@@ -1,24 +1,17 @@
-use crate::audio::{AudioFeatures, FilterFreqs, RunningStats, Sample, HitDetector, SampleHandler};
-use crate::audio::onset::onset_score;
 use crate::audio::audio_events::AudioEvent;
+use crate::audio::processors::{HitDetector, IntensityTracker, OnsetDetector};
+use crate::audio::{FilterFreqs, Sample, SampleHandler};
 use std::collections::VecDeque;
 
 /// The default sample handler takes receives samples and extracts
 /// features.
 pub struct QueueSampleHandler {
-    /// Information about the samples that are arriving
-    filter_freqs: FilterFreqs,
     sample_freq: f32,
-    /// The intensity history calculated from the last n buffers.  We
-    /// push to the front (newest element at index 0).
-    hist: VecDeque<Sample>,
-    /// The length of the history in samples.
-    hist_len: usize,
-    /// Current Audio Features
+    /// Latest Events
     pub events: VecDeque<AudioEvent>,
-    curr_feats: AudioFeatures,
-    onset_stats_full: RunningStats,
-    onset_stats_bass: RunningStats,
+    /// Processors
+    intensity_tracker: IntensityTracker,
+    onset_detector: OnsetDetector,
     hit_detector: HitDetector,
 }
 
@@ -28,89 +21,33 @@ impl QueueSampleHandler {
     /// samples, to actually interpret the samples.
     pub fn new(sample_freq: f32, filter_freqs: FilterFreqs) -> Self {
         Self {
-            filter_freqs: filter_freqs,
             sample_freq: sample_freq,
-            hist: vec![].into_iter().collect(),
-            hist_len: 30,
-            curr_feats: AudioFeatures::new(),
             events: vec![].into_iter().collect(),
-            onset_stats_full: RunningStats::new(),
-            onset_stats_bass: RunningStats::new(),
+            intensity_tracker: IntensityTracker::new(filter_freqs.clone()),
+            onset_detector: OnsetDetector::new(filter_freqs),
             hit_detector: HitDetector::new(),
         }
-    }
-
-    fn decay(&self, i: usize) -> f32 {
-        //1. - (1. / (1. + (-0.8 * (i as f32) + 5.).exp()))
-        // TODO decay should be time dependent, not per sample.
-        // 0.8f32.powi(i as i32)
-        let d = 0.1; // 0.1 -> slow. 0.9 -> fast
-        (1. - d * (i as f32)).max(0.)
-    }
-
-    pub fn get_filter_decayed(&self, f_index: usize) -> f32 {
-        self.hist
-            .iter()
-            .enumerate()
-            .map(|(i, val)| val.vals[f_index] * self.decay(i))
-            .fold(-1. / 0., f32::max)
-    }
-
-    /// This function updates the current audio features, based on the
-    /// new Sample.
-    fn update_feats(&mut self, new_sample: &Sample) {
-        // onset score
-        let mut curr_onset_score = 0.0;
-        let mut curr_bass_onset_score = 0.0;
-        if self.hist.len() > 0 {
-            curr_onset_score = onset_score(&self.hist.front().unwrap().vals, &new_sample.vals);
-            self.onset_stats_full.push_val(curr_onset_score);
-            curr_bass_onset_score = onset_score(
-                &self
-                    .filter_freqs
-                    .get_bins(130., 700., self.hist.front().unwrap()),
-                &self.filter_freqs.get_bins(130., 700., new_sample),
-            );
-            self.onset_stats_bass.push_val(curr_bass_onset_score);
-        }
-        // intensities
-        let new_total_intensity = self.filter_freqs.get_slice_value(0., 22_000., &new_sample);
-        let new_bass_intensity = self.filter_freqs.get_slice_value(130., 280., &new_sample);
-        let new_highs_intensity = self
-            .filter_freqs
-            .get_slice_value(6000., 22_000., &new_sample);
-        // let prev_max = self.curr_feats.raw_max_intensity - self.decay_for_max_val;
-        // let new_raw_max = prev_max.max(new_bass_intensity);
-        // new features
-        self.curr_feats = self.curr_feats.update(
-            new_bass_intensity,
-            new_highs_intensity,
-            new_total_intensity,
-            curr_onset_score,
-            self.onset_stats_full.mean,
-            self.onset_stats_full.mean_dev,
-            curr_bass_onset_score,
-            self.onset_stats_bass.mean,
-            self.onset_stats_bass.mean_dev,
-            new_sample.std_dev(),
-            1. / self.sample_freq,
-        );
-        let event = AudioEvent::NewIntensities(
-            self.curr_feats.bass_intensity.current_value(),
-            self.curr_feats.highs_intensity.current_value(),
-            self.curr_feats.total_intensity.current_value()
-        );
-        self.events.push_back(event);
-        self.hit_detector.update(self.curr_feats.is_onset_full(3.), 1. / self.sample_freq);
     }
 }
 
 impl SampleHandler for QueueSampleHandler {
-    fn recv_sample(&mut self, sample: Sample) {
-        self.update_feats(&sample);
-        self.hist.push_front(sample);
-        if self.hist.len() > self.hist_len {
-            self.hist.pop_back();
+    fn recv_sample(&mut self, new_sample: Sample) {
+        // intensities
+        let intensity_event = self
+            .intensity_tracker
+            .update(&new_sample, 1. / self.sample_freq);
+        self.events.push_back(intensity_event);
+        // onset score
+        let onset_events = self.onset_detector.update(&new_sample);
+        let mut hit = false;
+        for event in &onset_events {
+            match event {
+                AudioEvent::FullOnset(_) => hit = true,
+                _ => (),
+            }
         }
+        self.hit_detector.update(hit, 1. / self.sample_freq);
+        // TODO pass onset_events to the hit detector as well
+        self.events.extend(onset_events);
     }
 }
