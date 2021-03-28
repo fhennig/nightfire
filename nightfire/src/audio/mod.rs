@@ -27,7 +27,9 @@ pub use processors::hit_detector::HitDetector;
 pub use processors::primitives::NormalizedDecayingValue;
 pub use processors::running_stats::RunningStats;
 pub use sample_handler::default_sample_handler::{CollectSampleHandler, DefaultSampleHandler};
+pub use sample_handler::queue_sample_handler::QueueSampleHandler;
 pub use sample_handler::SampleHandler;
+pub use audio_events::AudioEvent;
 use std::vec::Vec;
 
 /// A sample of audio.  Represents a certain amount of time. The

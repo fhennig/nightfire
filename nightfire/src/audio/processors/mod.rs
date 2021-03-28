@@ -1,9 +1,11 @@
 pub mod hit_detector;
-pub mod running_stats;
-pub mod primitives;
 mod intensity;
 mod onset_detector;
-pub use intensity::IntensityTracker;
-pub use running_stats::RunningStats;
+pub mod primitives;
+pub mod running_stats;
+mod silence_detector;
 pub use hit_detector::HitDetector;
+pub use intensity::IntensityTracker;
 pub use onset_detector::OnsetDetector;
+pub use running_stats::RunningStats;
+pub use silence_detector::SilenceDetector;

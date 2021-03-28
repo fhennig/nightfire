@@ -1,6 +1,6 @@
 use crate::mode::Mode;
 use crate::sixaxis::controller::Controller;
-use nightfire::audio::{DefaultSampleHandler, SigProc, SignalFilter};
+use nightfire::audio::{QueueSampleHandler, SigProc, SignalFilter, AudioEvent};
 use nightfire::light::coord::Quadrant;
 use nightfire::light::cmap::{ManualMode, StaticSolidMap};
 use nightfire::light::layer::Layer;
@@ -15,7 +15,7 @@ pub struct AutoMode {
     change_all: bool,
     flash_layer: Layer<StaticSolidMap, EnvMask>,
     flash_active: bool,
-    signal_processor: SigProc<DefaultSampleHandler>,
+    signal_processor: SigProc<QueueSampleHandler>,
 }
 
 impl AutoMode {
@@ -25,8 +25,8 @@ impl AutoMode {
         let layer = Layer::new(flash_color, EnvMask::new_linear_decay(250, false));
         let filter = SignalFilter::new(20., 20_000., sample_rate, 3., 30);
         let sample_freq = 50.;
-        let handler = DefaultSampleHandler::new(sample_freq, filter.freqs.clone());
-        let proc = SigProc::<DefaultSampleHandler>::new(sample_rate, filter, sample_freq, handler);
+        let handler = QueueSampleHandler::new(sample_freq, filter.freqs.clone());
+        let proc = SigProc::<QueueSampleHandler>::new(sample_rate, filter, sample_freq, handler);
         AutoMode {
             sensitivity: sensitivity,
             base_layer: base_layer,
@@ -62,47 +62,45 @@ impl Mode for AutoMode {
     fn audio_update(&mut self, frame: &[f32]) {
         self.signal_processor.add_audio_frame(frame);
         // if we get a significant onset score, we flash
-        if self
-            .signal_processor
-            .sample_handler
-            .curr_feats
-            .is_onset_full(self.sensitivity)
-        {
-            self.flash_layer.mask.reset_top();
-            if self.change_all {
-                self.base_layer.map.set_top(Color::random());
-            } else {
-                let c = Color::random();
-                self.base_layer.map.set_color(Quadrant::random(), c);
-                self.base_layer.map.set_color(Quadrant::random(), c);
+        for event in &self.signal_processor.sample_handler.events {
+            match event {
+                AudioEvent::FullOnset(strength) => {
+                    if strength > &self.sensitivity {
+                        self.flash_layer.mask.reset_top();
+                        if self.change_all {
+                            self.base_layer.map.set_top(Color::random());
+                        } else {
+                            let c = Color::random();
+                            self.base_layer.map.set_color(Quadrant::random(), c);
+                            self.base_layer.map.set_color(Quadrant::random(), c);
+                        }
+                    }
+                }
+                AudioEvent::BassOnset(strength) => {
+                    if strength > &(self.sensitivity * 0.5) {
+                        self.flash_layer.mask.reset_bottom();
+                        if self.change_all {
+                            self.base_layer.map.set_all(Color::random());
+                        } else {
+                            let c = Color::random();
+                            self.base_layer.map.set_color(Quadrant::random(), c);
+                            self.base_layer.map.set_color(Quadrant::random(), c);
+                        }
+                    }
+                }
+                AudioEvent::NewIntensities(bass, highs, total) => {
+                    let intensity: f64 = if self.signal_processor.sample_handler.is_silence {
+                        1.0
+                    } else {
+                        (*bass).into()
+                    };
+                    self.base_layer.mask.set_val(intensity);
+                }
+                AudioEvent::SilenceStarted => (),
+                AudioEvent::SilenceEnded => (),
             }
         }
-        if self
-            .signal_processor
-            .sample_handler
-            .curr_feats
-            .is_onset_bass(self.sensitivity * 0.5)
-        {
-            self.flash_layer.mask.reset_bottom();
-            if self.change_all {
-                self.base_layer.map.set_all(Color::random());
-            } else {
-                let c = Color::random();
-                self.base_layer.map.set_color(Quadrant::random(), c);
-                self.base_layer.map.set_color(Quadrant::random(), c);
-            }
-        }
-        // set intensity
-        let mut intensity = self
-            .signal_processor
-            .sample_handler
-            .curr_feats
-            .bass_intensity
-            .current_value();
-        if self.signal_processor.sample_handler.curr_feats.is_silence() {
-            intensity = 1.0;
-        }
-        self.base_layer.mask.set_val(intensity.into());
+        self.signal_processor.sample_handler.events.clear();
     }
 
     fn periodic_update(&mut self) {}

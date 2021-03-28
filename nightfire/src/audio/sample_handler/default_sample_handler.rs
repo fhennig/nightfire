@@ -1,5 +1,5 @@
 use crate::audio::onset::onset_score;
-use crate::audio::processors::{HitDetector, IntensityTracker, RunningStats};
+use crate::audio::processors::{HitDetector, RunningStats};
 use crate::audio::{AudioFeatures, FilterFreqs, Sample, SampleHandler};
 use std::collections::VecDeque;
 

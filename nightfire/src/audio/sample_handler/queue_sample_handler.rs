@@ -1,5 +1,5 @@
 use crate::audio::audio_events::AudioEvent;
-use crate::audio::processors::{HitDetector, IntensityTracker, OnsetDetector};
+use crate::audio::processors::{HitDetector, IntensityTracker, OnsetDetector, SilenceDetector};
 use crate::audio::{FilterFreqs, Sample, SampleHandler};
 use std::collections::VecDeque;
 
@@ -7,12 +7,15 @@ use std::collections::VecDeque;
 /// features.
 pub struct QueueSampleHandler {
     sample_freq: f32,
-    /// Latest Events
-    pub events: VecDeque<AudioEvent>,
     /// Processors
     intensity_tracker: IntensityTracker,
     onset_detector: OnsetDetector,
     hit_detector: HitDetector,
+    silence_detector: SilenceDetector,
+    /// Latest Events
+    pub events: VecDeque<AudioEvent>,
+    /// Other features
+    pub is_silence: bool,
 }
 
 impl QueueSampleHandler {
@@ -22,10 +25,12 @@ impl QueueSampleHandler {
     pub fn new(sample_freq: f32, filter_freqs: FilterFreqs) -> Self {
         Self {
             sample_freq: sample_freq,
-            events: vec![].into_iter().collect(),
             intensity_tracker: IntensityTracker::new(filter_freqs.clone()),
-            onset_detector: OnsetDetector::new(filter_freqs),
+            onset_detector: OnsetDetector::new(filter_freqs.clone()),
             hit_detector: HitDetector::new(),
+            silence_detector: SilenceDetector::new(filter_freqs.clone()),
+            events: vec![].into_iter().collect(),
+            is_silence: true,
         }
     }
 }
@@ -37,17 +42,27 @@ impl SampleHandler for QueueSampleHandler {
             .intensity_tracker
             .update(&new_sample, 1. / self.sample_freq);
         self.events.push_back(intensity_event);
+        // silence
+        let silence_events = self.silence_detector.update(&new_sample, 1. / self.sample_freq);
+        silence_events.iter().for_each(
+            |e| match e {
+                AudioEvent::SilenceStarted => self.is_silence = true,
+                AudioEvent::SilenceEnded => self.is_silence = false,
+                _ => (),
+            }
+        );
+        self.events.extend(silence_events);
         // onset score
         let onset_events = self.onset_detector.update(&new_sample);
         let mut hit = false;
         for event in &onset_events {
             match event {
-                AudioEvent::FullOnset(_) => hit = true,
+                AudioEvent::FullOnset(strength) => hit = strength > &3.,
                 _ => (),
             }
         }
+        // TODO make hit detector generate events and process events, so the loop above is not necessary anymore
         self.hit_detector.update(hit, 1. / self.sample_freq);
-        // TODO pass onset_events to the hit detector as well
         self.events.extend(onset_events);
     }
 }
