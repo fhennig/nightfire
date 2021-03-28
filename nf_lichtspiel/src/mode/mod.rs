@@ -34,7 +34,7 @@ impl Main {
     pub fn new(sample_rate: f32) -> Main {
         Main {
             mode_switcher: Arc::new(Mutex::new(ModeSwitcher::new(
-                ModeName::Manual1,
+                ModeName::Auto1,
                 sample_rate,
             ))),
         }

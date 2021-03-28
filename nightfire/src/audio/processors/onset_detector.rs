@@ -36,10 +36,11 @@ impl OnsetDetector {
             );
             self.onset_stats_bass.push_val(curr_bass_onset_score);
             let score = (curr_bass_onset_score - self.onset_stats_bass.mean) / self.onset_stats_bass.mean_dev;
-            if score > 1. {
+            if score > 0.5 {
                 events.push(AudioEvent::BassOnset(score));
             }
         }
+        self.previous_sample = Some(new_sample.clone());
         events
     }
 }

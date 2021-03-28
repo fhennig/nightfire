@@ -1,8 +1,7 @@
 use crate::lightid::LightId;
 use nightfire::light as li;
-use nightfire::light::cprov::ColorMap;
+use nightfire::light::cmap::ColorMap;
 use piston_window::*;
-use std::sync::{Arc, Mutex};
 
 /// more realistic light intensity
 fn fix_int(val: f32) -> f32 {
