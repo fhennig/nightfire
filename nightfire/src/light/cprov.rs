@@ -22,6 +22,14 @@ impl ColorProvider {
             // vec![Color::magenta(), Color::cyan(), Color::yellow()],
             // vec![Color::red(), Color::rosy_pink(), Color::magenta(), Color::yellow()],
         ];
+        let colors = vec![
+            vec![Color::yellow(), Color::redish_orange(), Color::red()],
+            vec![Color::grass_green(), Color::yellow(), Color::redish_orange()],
+            vec![Color::navy_blue(), Color::grass_green(), Color::yellow()],
+            vec![Color::magenta(), Color::navy_blue(), Color::grass_green()],
+            vec![Color::red(), Color::magenta(), Color::navy_blue()],
+            vec![Color::redish_orange(), Color::red(), Color::magenta()],
+        ];
         let current_colors = colors[0].clone();
         Self {
             colors: colors,
@@ -37,5 +45,10 @@ impl ColorProvider {
     pub fn next_color_set(&mut self) {
         self.current_set = (self.current_set + 1).rem_euclid(self.colors.len());
         self.color_stream = Box::new(self.colors[self.current_set].clone().into_iter().cycle());
+    }
+
+    pub fn set_random_color_set(&mut self) {
+        let colors = vec![Color::random(), Color::random(), Color::random()];
+        self.color_stream = Box::new(colors.clone().into_iter().cycle());
     }
 }
