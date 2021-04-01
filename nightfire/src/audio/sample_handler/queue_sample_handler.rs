@@ -62,7 +62,8 @@ impl SampleHandler for QueueSampleHandler {
             }
         }
         // TODO make hit detector generate events and process events, so the loop above is not necessary anymore
-        self.hit_detector.update(hit, 1. / self.sample_freq);
+        let phrase_events = self.hit_detector.update(hit, 1. / self.sample_freq);
+        self.events.extend(phrase_events);
         self.events.extend(onset_events);
     }
 }

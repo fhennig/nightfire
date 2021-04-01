@@ -98,6 +98,11 @@ impl Mode for AutoMode {
                     };
                     self.base_layer.mask.set_val(intensity);
                 }
+                AudioEvent::PhraseEnded => {
+                    self.color_provider.next_color_set();
+                    self.flash_layer.mask.reset_tl();
+                    println!("AAAAAAAAAAAAAAAA");
+                },
                 AudioEvent::SilenceStarted => (),
                 AudioEvent::SilenceEnded => (),
             }

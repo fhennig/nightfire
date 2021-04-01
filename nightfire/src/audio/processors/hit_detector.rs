@@ -1,6 +1,7 @@
 use std::cmp::Ordering;
 use std::vec::Vec;
 use std::collections::VecDeque;
+use crate::audio::AudioEvent;
 
 
 fn get_median(v: &Vec<f32>) -> Option<f32> {
@@ -31,7 +32,8 @@ impl HitDetector {
         }
     }
 
-    pub fn update(&mut self, hit: bool, time_delta: f32) {
+    pub fn update(&mut self, hit: bool, time_delta: f32) -> Vec<AudioEvent> {
+        let mut res = vec![];
         if let Some(time_passed) = self.time_since_last_hit {
             self.time_since_last_hit = Some(time_passed + time_delta);
         }
@@ -70,12 +72,14 @@ impl HitDetector {
         if let Some(over) = self.streak_over() {
             if over {
                 println!("Streak of len {:?} is over!", self.hit_count);
+                res.push(AudioEvent::PhraseEnded);
                 self.hit_count = 0;
                 self.sorted_time_deltas.clear();
                 self.time_deltas.clear();
                 self.time_since_last_hit = None;
             }
         }
+        res
     }
 
     fn in_streak(&self) -> bool {
