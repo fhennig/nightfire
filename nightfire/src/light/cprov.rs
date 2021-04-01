@@ -11,9 +11,16 @@ pub struct ColorProvider {
 impl ColorProvider {
     pub fn new() -> Self {
         let colors = vec![
-            vec![Color::blue(), Color::red(), Color::green()],
-            vec![Color::magenta(), Color::cyan(), Color::yellow()],
-            vec![Color::red(), Color::rosy_pink(), Color::magenta(), Color::yellow()],
+            vec![Color::red(), Color::redish_orange(), Color::yellow()],
+            vec![Color::yellow(), Color::orange(), Color::grass_green()],
+            vec![Color::lime_green(), Color::cool_green(), Color::mint()],
+            vec![Color::green(), Color::cyan(), Color::steel_blue()],
+            vec![Color::navy_blue(), Color::blue(), Color::violet()],
+            vec![Color::purple(), Color::steel_blue(), Color::red()],
+            vec![Color::violet(), Color::pink(), Color::redish_orange()],
+            // vec![Color::blue(), Color::red(), Color::green()],
+            // vec![Color::magenta(), Color::cyan(), Color::yellow()],
+            // vec![Color::red(), Color::rosy_pink(), Color::magenta(), Color::yellow()],
         ];
         let current_colors = colors[0].clone();
         Self {
@@ -30,7 +37,5 @@ impl ColorProvider {
     pub fn next_color_set(&mut self) {
         self.current_set = (self.current_set + 1).rem_euclid(self.colors.len());
         self.color_stream = Box::new(self.colors[self.current_set].clone().into_iter().cycle());
-        println!("{}", self.current_set);
-        println!("----------------------------------------------------------");
     }
 }

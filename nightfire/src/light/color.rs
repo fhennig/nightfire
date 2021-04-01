@@ -23,36 +23,80 @@ pub trait ColorsExt {
         Color::new(1.0, 1.0, 1.0)
     }
 
-    fn rosy_pink() -> Color {
-        Color::new(1.0, 0.1, 0.7)
-    }
-
     fn red() -> Color {
         Color::new(1.0, 0.0, 0.0)
     }
 
+    fn redish_orange() -> Color {
+        Color::new(1.0, 0.2, 0.0)
+    }
+
     fn orange() -> Color {
-        Color::new(1.0, 0.5, 0.0)
+        Color::new(1.0, 0.65, 0.0)
     }
 
     fn yellow() -> Color {
         Color::new(1.0, 1.0, 0.0)
     }
 
+    fn lime_green() -> Color {
+        Color::new(0.65, 1.0, 0.0)
+    }
+
+    fn grass_green() -> Color {
+        Color::new(0.2, 1.0, 0.0)
+    }
+
     fn green() -> Color {
         Color::new(0.0, 1.0, 0.0)
+    }
+
+    fn cool_green() -> Color {
+        Color::new(0.0, 1.0, 0.25)
+    }
+
+    fn mint() -> Color {
+        Color::new(0.0, 1.0, 0.6)
     }
 
     fn cyan() -> Color {
         Color::new(0.0, 1.0, 1.0)
     }
 
+    fn steel_blue() -> Color {
+        Color::new(0.0, 0.6, 1.0)
+    }
+
+    fn navy_blue() -> Color {
+        Color::new(0.0, 0.2, 1.0)
+    }
+
     fn blue() -> Color {
         Color::new(0.0, 0.0, 1.0)
     }
 
+    fn purple() -> Color {
+        Color::new(0.2, 0.0, 1.0)
+    }
+
+    fn violet() -> Color {
+        Color::new(0.6, 0.0, 1.0)
+    }
+
     fn magenta() -> Color {
         Color::new(1.0, 0.0, 1.0)
+    }
+
+    fn pink() -> Color {
+        Color::new(1.0, 0.0, 0.6)
+    }
+
+    fn cool_red() -> Color {
+        Color::new(1.0, 0.0, 0.2)
+    }
+
+    fn rosy_pink() -> Color {
+        Color::new(1.0, 0.1, 0.7)
     }
 
     fn random() -> Color {
