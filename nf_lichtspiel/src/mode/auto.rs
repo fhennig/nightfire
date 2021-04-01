@@ -88,7 +88,7 @@ impl Mode for AutoMode {
                         }
                     }
                 }
-                AudioEvent::NewIntensities(bass, highs, total) => {
+                AudioEvent::NewIntensities(bass, _highs, _total) => {
                     let intensity: f64 = if self.signal_processor.sample_handler.is_silence {
                         1.0
                     } else {
