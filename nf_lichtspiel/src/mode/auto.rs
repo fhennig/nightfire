@@ -1,11 +1,11 @@
 use crate::mode::Mode;
 use crate::sixaxis::controller::Controller;
-use nightfire::audio::{QueueSampleHandler, SigProc, SignalFilter, AudioEvent};
-use nightfire::light::coord::Quadrant;
+use nightfire::audio::{AudioEvent, QueueSampleHandler, SigProc, SignalFilter};
 use nightfire::light::cmap::{ManualMode, StaticSolidMap};
+use nightfire::light::coord::Quadrant;
 use nightfire::light::layer::Layer;
 use nightfire::light::mask::{EnvMask, SolidMask};
-use nightfire::light::{Color, ColorsExt, Coordinate};
+use nightfire::light::{Color, ColorProvider, ColorsExt, Coordinate};
 use pi_ir_remote::Signal;
 
 pub struct AutoMode {
@@ -16,6 +16,7 @@ pub struct AutoMode {
     flash_layer: Layer<StaticSolidMap, EnvMask>,
     flash_active: bool,
     signal_processor: SigProc<QueueSampleHandler>,
+    color_provider: ColorProvider,
 }
 
 impl AutoMode {
@@ -34,6 +35,7 @@ impl AutoMode {
             flash_layer: layer,
             flash_active: flash,
             signal_processor: proc,
+            color_provider: ColorProvider::new(),
         }
     }
 }
@@ -68,9 +70,9 @@ impl Mode for AutoMode {
                     if strength > &self.sensitivity {
                         self.flash_layer.mask.reset_top();
                         if self.change_all {
-                            self.base_layer.map.set_top(Color::random());
+                            self.base_layer.map.set_top(self.color_provider.get_next_color());
                         } else {
-                            let c = Color::random();
+                            let c = self.color_provider.get_next_color();
                             self.base_layer.map.set_color(Quadrant::random(), c);
                             self.base_layer.map.set_color(Quadrant::random(), c);
                         }
@@ -80,9 +82,9 @@ impl Mode for AutoMode {
                     if strength > &(self.sensitivity * 0.5) {
                         self.flash_layer.mask.reset_bottom();
                         if self.change_all {
-                            self.base_layer.map.set_all(Color::random());
+                            self.base_layer.map.set_all(self.color_provider.get_next_color());
                         } else {
-                            let c = Color::random();
+                            let c = self.color_provider.get_next_color();
                             self.base_layer.map.set_color(Quadrant::random(), c);
                             self.base_layer.map.set_color(Quadrant::random(), c);
                         }
