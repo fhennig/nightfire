@@ -15,7 +15,7 @@ piston-ui = ["piston_window"]
 # internal
 nightfire = { path = "../nightfire" }
 nf_audio = { path = "../nf_audio" }
-dualshock3 = { path = "../../dualshock3" }
+dualshock3 = "0.1"
 # commandline parsing
 clap = "2.33.0"
 # config file

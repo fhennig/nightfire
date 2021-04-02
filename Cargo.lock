@@ -805,6 +805,8 @@ dependencies = [
 [[package]]
 name = "dualshock3"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b37c1833e356be696524c67234c85166f0f707562d388c8158df93abd2297d14"
 dependencies = [
  "hidapi",
  "log",
