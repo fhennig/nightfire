@@ -28,14 +28,13 @@ impl Coordinate {
         Some(angle)
     }
 
-    pub fn hue_from_angle(&self) -> Option<RgbHue<PinValue>> {
-        self.angle().map(|angle| RgbHue::from(angle * 180.))
-        // .map(|angle| RgbHue::from_radians(angle * std::f64::consts::PI))
-    }
-
     pub fn length(&self) -> f64 {
         (self.0.powi(2) + self.1.powi(2)).sqrt()
     }
+}
+
+pub fn hue_from_angle(coord: &Coordinate) -> Option<RgbHue<PinValue>> {
+    coord.angle().map(|angle| RgbHue::from(angle * 180.))
 }
 
 pub enum Quadrant {

@@ -1,7 +1,7 @@
 use crate::mode::Mode;
 use crate::sixaxis::controller::{Button, Controller};
 use nightfire::audio;
-use nightfire::light::{Color, Coordinate, Mode as LMode, Quadrant, State};
+use nightfire::light::{Color, Coordinate, Mode as LMode, Quadrant, State, hue_from_angle};
 use palette::Hsv;
 use palette::RgbHue;
 use pi_ir_remote::Signal;
@@ -224,7 +224,7 @@ impl Mode for DefaultMode {
 /// right controller stick.
 fn get_color_from_controller(controller: &Controller) -> Option<Color> {
     if controller.right_pos().length() > 0.75 {
-        let hue = controller.right_pos().hue_from_angle().unwrap();
+        let hue = hue_from_angle(&controller.right_pos()).unwrap();
         // let value = 1. - controller.left_trigger();
         Some(Color::from(Hsv::new(hue, 1., 1.)))
     } else {
