@@ -54,10 +54,22 @@ impl Mode for AutoMode {
 
     fn ir_remote_signal(&mut self, signal: &Signal) {
         match signal {
-            Signal::Yellow => self.color_provider.push_color(Color::yellow()),
             Signal::Red => self.color_provider.push_color(Color::red()),
+            Signal::Orange1 => self.color_provider.push_color(Color::redish_orange()),
+            Signal::Orange2 => self.color_provider.push_color(Color::orange()),
+            Signal::Orange3 => self.color_provider.push_color(Color::gold()),
+            Signal::Yellow => self.color_provider.push_color(Color::yellow()),
             Signal::Green => self.color_provider.push_color(Color::green()),
+            Signal::GrassGreen => self.color_provider.push_color(Color::grass_green()),
+            Signal::Turquise => self.color_provider.push_color(Color::cyan()),
+            Signal::Petrol => self.color_provider.push_color(Color::cool_green()),
+            Signal::DarkPetrol => self.color_provider.push_color(Color::steel_blue()),
             Signal::Blue => self.color_provider.push_color(Color::blue()),
+            Signal::Blue2 => self.color_provider.push_color(Color::navy_blue()),
+            Signal::Violet => self.color_provider.push_color(Color::purple()),
+            Signal::LightViolet => self.color_provider.push_color(Color::violet()),
+            Signal::Pink => self.color_provider.push_color(Color::pink()),
+            Signal::Flash => self.flash_active = true,
             _ => (),
         }
     }

@@ -28,10 +28,14 @@ pub trait ColorsExt {
     }
 
     fn redish_orange() -> Color {
-        Color::new(1.0, 0.2, 0.0)
+        Color::new(1.0, 0.15, 0.0)
     }
 
     fn orange() -> Color {
+        Color::new(1.0, 0.25, 0.0)
+    }
+
+    fn gold() -> Color {
         Color::new(1.0, 0.65, 0.0)
     }
 
