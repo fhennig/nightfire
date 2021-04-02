@@ -1,10 +1,10 @@
 use clap::{App, Arg, ArgMatches};
+use dualshock3::read_controller;
 use nf_audio::AudioGetter;
 use nf_lichtspiel::conf::Conf;
 use nf_lichtspiel::mode::Main;
 use nf_lichtspiel::periodic_updater::start_periodic_update_thread;
 use nf_lichtspiel::piblaster::start_piblaster_thread;
-use nf_lichtspiel::sixaxis::read_controller;
 #[cfg(feature = "piston-ui")]
 use nf_lichtspiel::ui::piston::run_piston_thread;
 use pi_ir_remote::read_ir_remote;
@@ -41,10 +41,13 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     if cfg!(feature = "ir-remote") {
         read_ir_remote(4, main.new_ir_remote_handler());
     }
-    #[cfg(feature = "piston-ui")] {
+    #[cfg(feature = "piston-ui")]
+    {
         run_piston_thread(main.new_color_map());
         Ok(())
-    } #[cfg(not(feature = "piston-ui"))] {
+    }
+    #[cfg(not(feature = "piston-ui"))]
+    {
         loop {
             let dur = time::Duration::from_millis(10000);
             thread::sleep(dur);

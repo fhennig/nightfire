@@ -1,5 +1,6 @@
 use crate::mode::Mode;
-use crate::sixaxis::controller::{Button, Controller};
+use crate::util::controller_coordinate_to_coordinate;
+use dualshock3::{Controller, Button};
 use nightfire::light::color::{Color, ColorsExt};
 use nightfire::light::cmap::StaticSolidMap;
 /// Idea: 2 blobs of color, one red one blue, one controlled with each stick.
@@ -130,8 +131,8 @@ impl Mode for DoubleBlob {
 
     fn controller_update(&mut self, controller: &Controller) {
         self.ltrigger_layer.mask.set_val(controller.left_trigger());
-        self.left_blob.mask.set_pos(controller.left_pos());
-        self.right_blob.mask.set_pos(controller.right_pos());
+        self.left_blob.mask.set_pos(controller_coordinate_to_coordinate(&controller.left_pos()));
+        self.right_blob.mask.set_pos(controller_coordinate_to_coordinate(&controller.right_pos()));
         if controller.is_pressed(Button::Left) {
             self.dpad_layer.mask.reset_left();
         }

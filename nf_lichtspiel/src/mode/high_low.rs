@@ -1,5 +1,6 @@
 use crate::mode::Mode;
-use crate::sixaxis::controller::Controller;
+use crate::util::controller_coordinate_to_coordinate;
+use dualshock3::Controller;
 use nightfire::audio;
 use nightfire::light::color::{Color, ColorsExt};
 use nightfire::light::cmap::{ManualMode, StaticSolidMap};
@@ -82,8 +83,8 @@ impl Mode for HighLow {
     }
 
     fn controller_update(&mut self, controller: &Controller) {
-        self.left_blob.mask.set_pos(controller.left_pos());
-        self.right_blob.mask.set_pos(controller.right_pos());
+        self.left_blob.mask.set_pos(controller_coordinate_to_coordinate(&controller.left_pos()));
+        self.right_blob.mask.set_pos(controller_coordinate_to_coordinate(&controller.right_pos()));
     }
 
     fn ir_remote_signal(&mut self, signal: &Signal) {

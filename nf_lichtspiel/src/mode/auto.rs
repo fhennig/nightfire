@@ -1,5 +1,5 @@
 use crate::mode::Mode;
-use crate::sixaxis::controller::Controller;
+use dualshock3::Controller;
 use nightfire::audio::{AudioEvent, QueueSampleHandler, SigProc, SignalFilter};
 use nightfire::light::cmap::{ManualMode, StaticSolidMap};
 use nightfire::light::coord::Quadrant;

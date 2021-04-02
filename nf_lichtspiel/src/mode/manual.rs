@@ -1,5 +1,6 @@
 use crate::mode::Mode;
-use crate::sixaxis::controller::{Button, Controller};
+use crate::util::controller_coordinate_to_coordinate;
+use dualshock3::{Controller, Button};
 use nightfire::audio;
 use nightfire::light::{Color, Coordinate, Mode as LMode, Quadrant, State, hue_from_angle};
 use palette::Hsv;
@@ -69,7 +70,7 @@ impl Mode for DefaultMode {
             }
             // overall brightness mask
             s.set_value_mask_base(controller.left_trigger());
-            s.set_value_mask_pos(controller.left_pos());
+            s.set_value_mask_pos(controller_coordinate_to_coordinate(&controller.left_pos()));
             s.set_invert_factor(controller.right_trigger());
             // pulse mode
             if controller.was_pressed(Button::Select) {
@@ -224,7 +225,7 @@ impl Mode for DefaultMode {
 /// right controller stick.
 fn get_color_from_controller(controller: &Controller) -> Option<Color> {
     if controller.right_pos().length() > 0.75 {
-        let hue = hue_from_angle(&controller.right_pos()).unwrap();
+        let hue = hue_from_angle(&controller_coordinate_to_coordinate(&controller.right_pos())).unwrap();
         // let value = 1. - controller.left_trigger();
         Some(Color::from(Hsv::new(hue, 1., 1.)))
     } else {
@@ -236,7 +237,7 @@ fn get_color_from_controller(controller: &Controller) -> Option<Color> {
 /// ...) based on the position of the left joystick.
 fn get_quad_from_controller(controller: &Controller) -> Option<Quadrant> {
     if controller.left_pos().length() > 0.75 {
-        Some(Quadrant::from(&controller.left_pos()))
+        Some(Quadrant::from(&controller_coordinate_to_coordinate(&controller.left_pos())))
     } else {
         None
     }
