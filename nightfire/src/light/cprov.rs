@@ -1,11 +1,12 @@
 use super::Color;
 use super::ColorsExt;
-use std::iter::Iterator;
+use std::collections::VecDeque;
 
 pub struct ColorProvider {
     colors: Vec<Vec<Color>>,
     current_set: usize,
-    color_stream: Box<dyn Iterator<Item = Color> + Send + Sync>,
+    color_cycle: VecDeque<Color>,
+    cycle_pos: usize,
 }
 
 impl ColorProvider {
@@ -24,7 +25,11 @@ impl ColorProvider {
         ];
         let colors = vec![
             vec![Color::yellow(), Color::redish_orange(), Color::red()],
-            vec![Color::grass_green(), Color::yellow(), Color::redish_orange()],
+            vec![
+                Color::grass_green(),
+                Color::yellow(),
+                Color::redish_orange(),
+            ],
             vec![Color::navy_blue(), Color::grass_green(), Color::yellow()],
             vec![Color::magenta(), Color::navy_blue(), Color::grass_green()],
             vec![Color::red(), Color::magenta(), Color::navy_blue()],
@@ -34,21 +39,32 @@ impl ColorProvider {
         Self {
             colors: colors,
             current_set: 0,
-            color_stream: Box::new(current_colors.into_iter().cycle()),
+            color_cycle: current_colors.into_iter().collect(),
+            cycle_pos: 0,
         }
     }
 
     pub fn get_next_color(&mut self) -> Color {
-        self.color_stream.next().unwrap()
+        self.cycle_pos = (self.cycle_pos + 1).rem_euclid(self.color_cycle.len());
+        self.color_cycle[self.cycle_pos]
     }
 
     pub fn next_color_set(&mut self) {
         self.current_set = (self.current_set + 1).rem_euclid(self.colors.len());
-        self.color_stream = Box::new(self.colors[self.current_set].clone().into_iter().cycle());
+        self.color_cycle = self.colors[self.current_set].clone().into_iter().collect();
+        self.cycle_pos = 0;
     }
 
     pub fn set_random_color_set(&mut self) {
-        let colors = vec![Color::random(), Color::random(), Color::random()];
-        self.color_stream = Box::new(colors.clone().into_iter().cycle());
+        self.color_cycle = vec![Color::random(), Color::random(), Color::random()]
+            .into_iter()
+            .collect();
+        self.cycle_pos = 0;
+    }
+
+    pub fn push_color(&mut self, color: Color) {
+        self.color_cycle.push_front(color);
+        self.color_cycle.pop_back();
+        self.cycle_pos = 0;
     }
 }

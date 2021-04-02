@@ -54,9 +54,10 @@ impl Mode for AutoMode {
 
     fn ir_remote_signal(&mut self, signal: &Signal) {
         match signal {
-            Signal::Red => self.base_layer.map.set_all(Color::red()),
-            Signal::Green => self.base_layer.map.set_all(Color::green()),
-            Signal::Blue => self.base_layer.map.set_all(Color::blue()),
+            Signal::Yellow => self.color_provider.push_color(Color::yellow()),
+            Signal::Red => self.color_provider.push_color(Color::red()),
+            Signal::Green => self.color_provider.push_color(Color::green()),
+            Signal::Blue => self.color_provider.push_color(Color::blue()),
             _ => (),
         }
     }
