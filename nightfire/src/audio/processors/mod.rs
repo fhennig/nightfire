@@ -7,5 +7,6 @@ mod silence_detector;
 pub use hit_detector::HitDetector;
 pub use intensity::IntensityTracker;
 pub use onset_detector::OnsetDetector;
+pub use onset_detector::onset_score;
 pub use running_stats::RunningStats;
 pub use silence_detector::SilenceDetector;

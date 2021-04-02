@@ -17,7 +17,6 @@
 mod audio_events;
 mod audio_features;
 mod filter;
-mod onset;
 mod processors;
 mod sample_handler;
 pub use audio_features::AudioFeatures;

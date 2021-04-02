@@ -69,7 +69,7 @@ impl Mode for AutoMode {
             Signal::Violet => self.color_provider.push_color(Color::purple()),
             Signal::LightViolet => self.color_provider.push_color(Color::violet()),
             Signal::Pink => self.color_provider.push_color(Color::pink()),
-            Signal::Flash => self.flash_active = true,
+            Signal::Flash => self.flash_active = !self.flash_active,
             _ => (),
         }
     }
