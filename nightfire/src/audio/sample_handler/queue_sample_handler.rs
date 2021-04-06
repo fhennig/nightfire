@@ -1,5 +1,5 @@
 use crate::audio::audio_events::AudioEvent;
-use crate::audio::processors::{PhraseDetector, IntensityTracker, OnsetDetector, SilenceDetector};
+use crate::audio::processors::{PhraseDetector, IntensityTracker, OnsetDetector, SilenceDetector, EdgeDetector};
 use crate::audio::{FilterFreqs, Sample, SampleHandler};
 use std::collections::VecDeque;
 
@@ -9,6 +9,7 @@ pub struct QueueSampleHandler {
     sample_freq: f32,
     /// Processors
     intensity_tracker: IntensityTracker,
+    edge_detector: EdgeDetector,
     onset_detector: OnsetDetector,
     phrase_detector: PhraseDetector,
     silence_detector: SilenceDetector,
@@ -26,6 +27,7 @@ impl QueueSampleHandler {
         Self {
             sample_freq: sample_freq,
             intensity_tracker: IntensityTracker::new(filter_freqs.clone()),
+            edge_detector: EdgeDetector::new(0.3),
             onset_detector: OnsetDetector::new(filter_freqs.clone()),
             phrase_detector: PhraseDetector::new(),
             silence_detector: SilenceDetector::new(filter_freqs.clone()),
@@ -38,9 +40,14 @@ impl QueueSampleHandler {
 impl SampleHandler for QueueSampleHandler {
     fn recv_sample(&mut self, new_sample: Sample) {
         // intensities
+        let mut bass_intensity = 0f32;
         let intensity_event = self
             .intensity_tracker
             .update(&new_sample, 1. / self.sample_freq);
+        match intensity_event {
+            AudioEvent::NewIntensities(bass, _, _) => bass_intensity = bass,
+            _ => (),
+        }
         self.events.push_back(intensity_event);
         // silence
         let silence_events = self.silence_detector.update(&new_sample, 1. / self.sample_freq);
@@ -60,6 +67,17 @@ impl SampleHandler for QueueSampleHandler {
                 AudioEvent::FullOnset(strength) => hit = strength > &3.,
                 _ => (),
             }
+        }
+        // let edge detector
+        let edge_hit = self.edge_detector.update(bass_intensity, 1. / self.sample_freq);
+        if hit && edge_hit {
+            println!("              XXXXXXXXXXXX                     ooooooooooooooo         ");
+        } else if hit && !edge_hit {
+            println!("              XXXXXXXXXXXX                                             ");
+        } else if !hit && edge_hit {
+            println!("                                               ooooooooooooooo         ");
+        } else {
+            println!();
         }
         // TODO make hit detector generate events and process events, so the loop above is not necessary anymore
         let phrase_events = self.phrase_detector.update(hit, 1. / self.sample_freq);

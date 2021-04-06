@@ -40,7 +40,6 @@ impl PhraseDetector {
         if hit {
             if let Some(time_passed) = self.time_since_last_hit {
                 if time_passed > 0.2 {
-                    println!("Hit!");
                     self.hit_count += 1;
                     if self.time_deltas.len() == self.streak_buf_size {
                         let val = self.time_deltas.pop_back().unwrap();
@@ -48,9 +47,6 @@ impl PhraseDetector {
                             .sorted_time_deltas
                             .binary_search_by(|a| a.partial_cmp(&val).unwrap_or(Ordering::Equal))
                             .unwrap_or_else(|e| e);
-                        println!("{:?}", self.time_deltas);
-                        println!("{:?}", self.sorted_time_deltas);
-                        println!("{:?}", val);
                         self.sorted_time_deltas.remove(pos);
                     }
                     self.time_deltas.push_front(time_passed);
@@ -64,9 +60,6 @@ impl PhraseDetector {
                 self.hit_count += 1;
             }
             self.time_since_last_hit = Some(0f32);
-            if self.in_streak() {
-                println!("Streak len: {:?}, BPM: {:?}", self.hit_count, self.median_bpm().unwrap());
-            }
         }
         // TODO whipe streak if too long time out
         if let Some(over) = self.streak_over() {
