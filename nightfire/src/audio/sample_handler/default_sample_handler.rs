@@ -1,4 +1,4 @@
-use crate::audio::processors::{HitDetector, RunningStats, onset_score};
+use crate::audio::processors::{PhraseDetector, RunningStats, onset_score};
 use crate::audio::{AudioFeatures, FilterFreqs, Sample, SampleHandler};
 use std::collections::VecDeque;
 
@@ -17,7 +17,7 @@ pub struct DefaultSampleHandler {
     pub curr_feats: AudioFeatures,
     onset_stats_full: RunningStats,
     onset_stats_bass: RunningStats,
-    hit_detector: HitDetector,
+    phrase_detector: PhraseDetector,
 }
 
 impl DefaultSampleHandler {
@@ -33,7 +33,7 @@ impl DefaultSampleHandler {
             curr_feats: AudioFeatures::new(),
             onset_stats_full: RunningStats::new(),
             onset_stats_bass: RunningStats::new(),
-            hit_detector: HitDetector::new(),
+            phrase_detector: PhraseDetector::new(),
         }
     }
 
@@ -92,7 +92,7 @@ impl DefaultSampleHandler {
             new_sample.std_dev(),
             1. / self.sample_freq,
         );
-        self.hit_detector
+        self.phrase_detector
             .update(self.curr_feats.is_onset_full(3.), 1. / self.sample_freq);
     }
 }

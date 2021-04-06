@@ -22,7 +22,7 @@ mod sample_handler;
 pub use audio_features::AudioFeatures;
 pub use filter::FilterFreqs;
 pub use filter::SignalFilter;
-pub use processors::hit_detector::HitDetector;
+pub use processors::PhraseDetector;
 pub use processors::primitives::NormalizedDecayingValue;
 pub use processors::running_stats::RunningStats;
 pub use sample_handler::default_sample_handler::{CollectSampleHandler, DefaultSampleHandler};

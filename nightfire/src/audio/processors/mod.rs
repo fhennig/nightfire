@@ -1,10 +1,10 @@
-pub mod hit_detector;
+mod phrase_detector;
 mod intensity;
 mod onset_detector;
 pub mod primitives;
 pub mod running_stats;
 mod silence_detector;
-pub use hit_detector::HitDetector;
+pub use phrase_detector::PhraseDetector;
 pub use intensity::IntensityTracker;
 pub use onset_detector::OnsetDetector;
 pub use onset_detector::onset_score;

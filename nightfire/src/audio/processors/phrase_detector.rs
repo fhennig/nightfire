@@ -13,7 +13,7 @@ fn get_median(v: &Vec<f32>) -> Option<f32> {
     }
 }
 
-pub struct HitDetector {
+pub struct PhraseDetector {
     hit_count: usize,
     streak_buf_size: usize,
     time_deltas: VecDeque<f32>,
@@ -21,7 +21,7 @@ pub struct HitDetector {
     time_since_last_hit: Option<f32>,
 }
 
-impl HitDetector {
+impl PhraseDetector {
     pub fn new() -> Self {
         Self {
             hit_count: 0,
