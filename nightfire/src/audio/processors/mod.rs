@@ -1,12 +1,14 @@
-mod phrase_detector;
+mod edge_detector;
 mod intensity;
 mod onset_detector;
+mod phrase_detector;
 pub mod primitives;
 pub mod running_stats;
 mod silence_detector;
-pub use phrase_detector::PhraseDetector;
 pub use intensity::IntensityTracker;
-pub use onset_detector::OnsetDetector;
 pub use onset_detector::onset_score;
+pub use onset_detector::OnsetDetector;
+pub use phrase_detector::PhraseDetector;
 pub use running_stats::RunningStats;
 pub use silence_detector::SilenceDetector;
+pub use edge_detector::EdgeDetector;
