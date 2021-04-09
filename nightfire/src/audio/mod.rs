@@ -20,6 +20,8 @@ mod filter;
 mod processors;
 mod sample_handler;
 mod filter_ft;
+mod intensity;
+pub use filter_ft::FilterID;
 pub use audio_features::AudioFeatures;
 pub use filter::FilterFreqs;
 pub use filter::SignalFilter;
