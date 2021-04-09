@@ -3,7 +3,8 @@ use std::iter;
 
 pub struct EdgeDetector {
     sensitivity: f32,
-    hist: VecDeque<f32>
+    hist: VecDeque<f32>,
+    prev_was_edge: bool
 }
 
 impl EdgeDetector {
@@ -11,7 +12,8 @@ impl EdgeDetector {
         let h_cap = 3;
         Self {
             sensitivity: sensitivity,
-            hist: iter::repeat(0.).take(h_cap).collect()
+            hist: iter::repeat(0.).take(h_cap).collect(),
+            prev_was_edge: false,
         }
     }
 
@@ -21,11 +23,17 @@ impl EdgeDetector {
         self.is_currently_edge()
     }
 
-    fn is_currently_edge(&self) -> bool {
+    fn is_currently_edge(&mut self) -> bool {
+        if self.prev_was_edge {
+            self.prev_was_edge = false;
+            return false;
+        }
         if self.hist[0] - self.hist[1] > self.sensitivity {
+            self.prev_was_edge = true;
             return true;
         }
         if self.hist[0] - self.hist[2] > self.sensitivity {
+            self.prev_was_edge = true;
             return true;
         }
         false

@@ -14,7 +14,7 @@ impl IntensityTracker {
     pub fn new(filter_freqs: FilterFreqs) -> Self {
         Self {
             filter_freqs: filter_freqs,
-            bass_intensity: NormalizedDecayingValue::new(0.05, 0.01666),
+            bass_intensity: NormalizedDecayingValue::new(0.005, 0.01666),  // 0.05
             highs_intensity: NormalizedDecayingValue::new(0.02, 0.01666),
             total_intensity: NormalizedDecayingValue::new(0.02, 0.01666),
         }
@@ -22,7 +22,7 @@ impl IntensityTracker {
 
     pub fn update(&mut self, new_sample: &Sample, time_delta: f32) -> AudioEvent {
         let new_total_intensity = self.filter_freqs.get_slice_value(0., 22_000., &new_sample);
-        let new_bass_intensity = self.filter_freqs.get_slice_value(130., 280., &new_sample);
+        let new_bass_intensity = self.filter_freqs.get_slice_value(130., 320., &new_sample);
         let new_highs_intensity = self
             .filter_freqs
             .get_slice_value(6000., 22_000., &new_sample);
