@@ -19,6 +19,7 @@ mod audio_features;
 mod filter;
 mod processors;
 mod sample_handler;
+mod filter_ft;
 pub use audio_features::AudioFeatures;
 pub use filter::FilterFreqs;
 pub use filter::SignalFilter;
