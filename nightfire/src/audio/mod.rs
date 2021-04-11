@@ -16,22 +16,24 @@
 //! periodically and updates its own state based on that.
 mod audio_events;
 mod audio_features;
+mod edge_detector;
 mod filter;
-mod processors;
-mod sample_handler;
 mod filter_ft;
 mod intensity;
-pub use filter_ft::FilterID;
+mod processors;
+mod sample_handler;
+pub use audio_events::AudioEvent;
 pub use audio_features::AudioFeatures;
 pub use filter::FilterFreqs;
 pub use filter::SignalFilter;
-pub use processors::PhraseDetector;
+pub use filter_ft::FilterID;
+pub use intensity::IntensityID;
 pub use processors::primitives::NormalizedDecayingValue;
 pub use processors::running_stats::RunningStats;
+pub use processors::PhraseDetector;
 pub use sample_handler::default_sample_handler::{CollectSampleHandler, DefaultSampleHandler};
 pub use sample_handler::queue_sample_handler::QueueSampleHandler;
 pub use sample_handler::SampleHandler;
-pub use audio_events::AudioEvent;
 use std::vec::Vec;
 
 /// A sample of audio.  Represents a certain amount of time. The
