@@ -34,23 +34,6 @@ pub fn make_filter(f_s: f32, params: &FilterParams) -> bq::DirectForm2Transposed
     }
 }
 
-fn default_map() -> HashMap<FilterID, FilterParams> {
-    let mut res = HashMap::new();
-    res.insert(
-        FilterID::get("band_120_3"),
-        FilterParams::BandPass(BandPassParams { f_c: 120., q: 3. }),
-    );
-    res.insert(
-        FilterID::get("band_220_3"),
-        FilterParams::BandPass(BandPassParams { f_c: 220., q: 3. }),
-    );
-    res.insert(
-        FilterID::get("band_320_3"),
-        FilterParams::BandPass(BandPassParams { f_c: 320., q: 3. }),
-    );
-    res
-}
-
 /// The FilterMap takes definitions of filters as parameters and can subsequently be used to get these filter
 /// values from a waveform, which is inputted one sample at a time.
 pub struct FilterMap {

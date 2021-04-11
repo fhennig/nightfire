@@ -95,12 +95,4 @@ impl PhraseDetector {
     fn median_hit_period(&self) -> Option<f32> {
         get_median(&self.sorted_time_deltas)
     }
-
-    fn median_bpm(&self) -> Option<f32> {
-        if let Some(mp) = self.median_hit_period() {
-            Some(60. / mp)
-        } else {
-            None
-        }
-    }
 }

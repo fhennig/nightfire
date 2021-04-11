@@ -21,7 +21,7 @@ impl EdgeDetector {
         }
     }
 
-    pub fn update(&mut self, time_delta: f32, intensities: &HashMap<IntensityID, f32>) -> bool {
+    pub fn update(&mut self, _time_delta: f32, intensities: &HashMap<IntensityID, f32>) -> bool {
         if let Some(intensity) = intensities.get(&self.source_intensity) {
             self.hist.push_front(*intensity);
             self.hist.pop_back();
