@@ -93,11 +93,12 @@ impl Windower {
 
     pub fn update(&mut self, vals: HashMap<FilterID, f32>) -> Option<HashMap<FilterID, f32>> {
         for (filter, val) in vals.iter() {
-            let mut v = *self.accumulators.entry(filter.clone()).or_insert(0.);
-            v = v.max(*val);
+            let v = self.accumulators.entry(filter.clone()).or_insert(0.);
+            *v = v.max(*val);
         }
         self.missing_samples -= 1;
         if self.missing_samples == 0 {
+            self.missing_samples = self.window_size;
             Some(std::mem::replace(&mut self.accumulators, HashMap::new()))
         } else {
             None

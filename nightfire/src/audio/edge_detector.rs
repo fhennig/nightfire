@@ -54,7 +54,7 @@ pub struct EdgeDetectorParams {
     pub sensitivity: f32,
 }
 
-#[derive(PartialEq, Eq, Hash, Clone)]
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct EdgeID(String);
 
 impl EdgeID {

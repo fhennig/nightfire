@@ -61,7 +61,15 @@ pub enum IntensityInputParams {
 }
 
 fn get_pre_intensity_value(input_params: &IntensityInputParams, filter_vals: &HashMap<FilterID, f32>) -> f32 {
-    0.  // TODO
+    match input_params {
+        IntensityInputParams::TakeMax(filter_ids) => {
+            let mut res = 0f32;
+            for filter_id in filter_ids.iter() {
+                res = res.max(*filter_vals.get(&filter_id).unwrap());
+            }
+            res
+        }
+    }
 }
 
 pub struct NormalizedDecayingParams {

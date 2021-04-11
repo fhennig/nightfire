@@ -53,6 +53,7 @@ fn default_edge_params() -> HashMap<EdgeID, EdgeDetectorParams> {
     res
 }
 
+#[derive(Debug)]
 pub enum AudioEvent {
     Intensities(HashMap<intensity::IntensityID, f32>),
     Onset(EdgeID),
