@@ -53,18 +53,30 @@ fn default_edge_params() -> HashMap<EdgeID, EdgeDetectorParams> {
 }
 
 pub struct SignalProcessor {
+    time_delta: f32,
     filter_ft: FilterFT,
     intensity_trackers: intensity::IntensityTrackers,
     edge_detectors: EdgeDetectors,
 }
 
 impl SignalProcessor {
-    pub fn new(sample_freq: f32) -> Self {
-        let window_size = 500; // TODO
+    pub fn new(sample_freq: f32, fps: f32) -> Self {
+        let window_size = (sample_freq / fps) as usize;
         Self {
+            time_delta: 1. / fps,
             filter_ft: FilterFT::new(sample_freq, window_size, &default_filter_params()),
             intensity_trackers: intensity::IntensityTrackers::new(&default_intensity_params()),
             edge_detectors: EdgeDetectors::new(&default_edge_params()),
+        }
+    }
+
+    pub fn add_audio_frame(&mut self, audio_frame: &[f32]) {
+        // TODO push out all the info as events in the return value of this function
+        for x in audio_frame {
+            if let Some(ft_vec) = self.filter_ft.update(*x) {
+                let intensities = self.intensity_trackers.update(self.time_delta, &ft_vec);
+                let edge_events = self.edge_detectors.update(self.time_delta, &intensities);
+            }
         }
     }
 }
