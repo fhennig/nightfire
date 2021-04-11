@@ -2,9 +2,9 @@ use biquad as bq;
 use biquad::Biquad;
 use std::collections::HashMap;
 
-struct BandPassParams {
-    f_c: f32,
-    q: f32,
+pub struct BandPassParams {
+    pub f_c: f32,
+    pub q: f32,
 }
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
@@ -12,7 +12,7 @@ pub struct FilterID(String);
 
 impl FilterID {
     pub fn get(s: &str) -> Self {
-        FilterID(s.to_string())
+        Self(s.to_string())
     }
 }
 

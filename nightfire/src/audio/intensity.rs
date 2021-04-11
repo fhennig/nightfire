@@ -51,7 +51,7 @@ pub struct IntensityID(String);
 
 impl IntensityID {
     pub fn get(s: &str) -> Self {
-        IntensityID(s.to_string())
+        Self(s.to_string())
     }
 }
 
@@ -65,11 +65,11 @@ fn get_pre_intensity_value(input_params: &IntensityInputParams, filter_vals: &Ha
 }
 
 pub struct NormalizedDecayingParams {
-    decay_factor: f32,
-    decay_val_for_max: f32
+    pub decay_factor: f32,
+    pub decay_val_for_max: f32
 }
 
-pub struct IntensityParams(IntensityInputParams, NormalizedDecayingParams);
+pub struct IntensityParams(pub IntensityInputParams, pub NormalizedDecayingParams);
 
 pub struct IntensityTracker {
     intensity_input_params: IntensityInputParams,

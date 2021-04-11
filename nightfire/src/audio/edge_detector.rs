@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::iter;
-use crate::audio::IntensityID;
+use crate::audio::intensity::IntensityID;
 
 pub struct EdgeDetector {
     source_intensity: IntensityID,
@@ -50,12 +50,18 @@ impl EdgeDetector {
 
 #[derive(Clone)]
 pub struct EdgeDetectorParams {
-    source_intensity: IntensityID,
-    sensitivity: f32,
+    pub source_intensity: IntensityID,
+    pub sensitivity: f32,
 }
 
 #[derive(PartialEq, Eq, Hash, Clone)]
 pub struct EdgeID(String);
+
+impl EdgeID {
+    pub fn get(s: &str) -> Self {
+        Self(s.to_string())
+    }
+}
 
 pub enum EdgeEvent {
     Rising(EdgeID)
@@ -66,7 +72,7 @@ pub struct EdgeDetectors {
 }
 
 impl EdgeDetectors {
-    pub fn new(params: HashMap<EdgeID, EdgeDetectorParams>) -> Self {
+    pub fn new(params: &HashMap<EdgeID, EdgeDetectorParams>) -> Self {
         let mut detectors = HashMap::new();
         for (edge_id, ps) in params.iter() {
             detectors.insert(edge_id.clone(), EdgeDetector::new(&ps));
