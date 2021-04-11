@@ -1,6 +1,6 @@
 use crate::mode::Mode;
 use dualshock3::Controller;
-use nightfire::audio::{AudioEvent2, SignalProcessor, EdgeID, intensity::IntensityID};
+use nightfire::audio::{intensity::IntensityID, AudioEvent2, EdgeID, SignalProcessor};
 use nightfire::light::cmap::{ManualMode, StaticSolidMap};
 use nightfire::light::coord::Quadrant;
 use nightfire::light::layer::Layer;
@@ -83,7 +83,9 @@ impl Mode for AutoMode {
                     if edge_id == EdgeID::get("bass") {
                         self.flash_layer.mask.reset_bottom();
                         if self.change_all {
-                            self.base_layer.map.set_all(self.color_provider.get_next_color());
+                            self.base_layer
+                                .map
+                                .set_all(self.color_provider.get_next_color());
                         } else {
                             let c = self.color_provider.get_next_color();
                             self.base_layer.map.set_color(Quadrant::random(), c);
@@ -92,7 +94,9 @@ impl Mode for AutoMode {
                     } else if edge_id == EdgeID::get("highs") {
                         self.flash_layer.mask.reset_top();
                         if self.change_all {
-                            self.base_layer.map.set_top(self.color_provider.get_next_color());
+                            self.base_layer
+                                .map
+                                .set_top(self.color_provider.get_next_color());
                         } else {
                             let c = self.color_provider.get_next_color();
                             self.base_layer.map.set_color(Quadrant::random(), c);
@@ -109,7 +113,7 @@ impl Mode for AutoMode {
                         };
                         self.base_layer.mask.set_val(intensity);
                     }
-                },
+                }
                 AudioEvent2::SilenceEnded => self.is_silence = false,
                 AudioEvent2::SilenceStarted => self.is_silence = true,
                 AudioEvent2::PhraseEnded => self.color_provider.set_random_color_set(),
