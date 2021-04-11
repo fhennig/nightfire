@@ -25,7 +25,7 @@ mod sample_handler;
 mod signal_processor;
 pub use audio_events::AudioEvent;
 pub use audio_features::AudioFeatures;
-pub use edge_detector::{EdgeDetectorParams, EdgeDetectors, EdgeID};
+pub use edge_detector::{EdgeDetectorParams, EdgeDetectors, EdgeID, EdgeEvent};
 pub use filter::FilterFreqs;
 pub use filter::SignalFilter;
 pub use filter_ft::{BandPassParams, FilterFT, FilterID, FilterParams};

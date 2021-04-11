@@ -1,6 +1,7 @@
 use crate::audio::intensity;
 use crate::audio::{
-    BandPassParams, EdgeDetectorParams, EdgeDetectors, EdgeID, FilterFT, FilterID, FilterParams,
+    BandPassParams, EdgeDetectorParams, EdgeDetectors, EdgeEvent, EdgeID, FilterFT, FilterID,
+    FilterParams,
 };
 use std::collections::HashMap;
 
@@ -35,7 +36,7 @@ fn default_intensity_params() -> HashMap<intensity::IntensityID, intensity::Inte
                 decay_factor: 0.05,
                 decay_val_for_max: 0.01666,
             },
-    ),
+        ),
     );
     res
 }
@@ -50,6 +51,11 @@ fn default_edge_params() -> HashMap<EdgeID, EdgeDetectorParams> {
         },
     );
     res
+}
+
+pub enum AudioEvent {
+    Intensities(HashMap<intensity::IntensityID, f32>),
+    Onset(EdgeID),
 }
 
 pub struct SignalProcessor {
@@ -70,13 +76,22 @@ impl SignalProcessor {
         }
     }
 
-    pub fn add_audio_frame(&mut self, audio_frame: &[f32]) {
+    pub fn add_audio_frame(&mut self, audio_frame: &[f32]) -> Vec<AudioEvent> {
         // TODO push out all the info as events in the return value of this function
+        let mut events = Vec::new();
         for x in audio_frame {
             if let Some(ft_vec) = self.filter_ft.update(*x) {
                 let intensities = self.intensity_trackers.update(self.time_delta, &ft_vec);
                 let edge_events = self.edge_detectors.update(self.time_delta, &intensities);
+                // Create final events
+                events.push(AudioEvent::Intensities(intensities));
+                for edge_event in edge_events.iter() {
+                    match edge_event {
+                        EdgeEvent::Rising(event_id) => events.push(AudioEvent::Onset(event_id.clone())),
+                    }
+                }
             }
         }
+        events
     }
 }
