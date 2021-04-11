@@ -9,8 +9,6 @@ use nightfire::light::{Color, ColorProvider, ColorsExt, Coordinate};
 use pi_ir_remote::Signal;
 
 pub struct AutoMode {
-    // create a MaskedColorLayer
-    sensitivity: f32,
     base_layer: Layer<ManualMode, SolidMask>,
     change_all: bool,
     flash_layer: Layer<StaticSolidMap, EnvMask>,
@@ -21,14 +19,13 @@ pub struct AutoMode {
 }
 
 impl AutoMode {
-    pub fn new(sample_rate: f32, sensitivity: f32, change_all: bool, flash: bool) -> AutoMode {
+    pub fn new(sample_rate: f32, change_all: bool, flash: bool) -> AutoMode {
         let base_layer = Layer::new(ManualMode::new(), SolidMask::new());
         let flash_color = StaticSolidMap::new(Color::white());
         let layer = Layer::new(flash_color, EnvMask::new_linear_decay(250, false));
         let fps = 50.;
         let proc = SignalProcessor::new(sample_rate, fps);
         AutoMode {
-            sensitivity: sensitivity,
             base_layer: base_layer,
             change_all: change_all,
             flash_layer: layer,
