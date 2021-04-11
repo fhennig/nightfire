@@ -1,6 +1,6 @@
 use crate::mode::Mode;
 use dualshock3::Controller;
-use nightfire::audio::{AudioEvent, QueueSampleHandler, SigProc, SignalFilter};
+use nightfire::audio::{AudioEvent2, SignalProcessor, EdgeID, intensity::IntensityID};
 use nightfire::light::cmap::{ManualMode, StaticSolidMap};
 use nightfire::light::coord::Quadrant;
 use nightfire::light::layer::Layer;
@@ -15,8 +15,9 @@ pub struct AutoMode {
     change_all: bool,
     flash_layer: Layer<StaticSolidMap, EnvMask>,
     flash_active: bool,
-    signal_processor: SigProc<QueueSampleHandler>,
+    signal_processor: SignalProcessor,
     color_provider: ColorProvider,
+    is_silence: bool,
 }
 
 impl AutoMode {
@@ -24,10 +25,8 @@ impl AutoMode {
         let base_layer = Layer::new(ManualMode::new(), SolidMask::new());
         let flash_color = StaticSolidMap::new(Color::white());
         let layer = Layer::new(flash_color, EnvMask::new_linear_decay(250, false));
-        let filter = SignalFilter::new(20., 20_000., sample_rate, 3., 30);
-        let sample_freq = 50.;
-        let handler = QueueSampleHandler::new(sample_freq, filter.freqs.clone());
-        let proc = SigProc::<QueueSampleHandler>::new(sample_rate, filter, sample_freq, handler);
+        let fps = 50.;
+        let proc = SignalProcessor::new(sample_rate, fps);
         AutoMode {
             sensitivity: sensitivity,
             base_layer: base_layer,
@@ -36,6 +35,7 @@ impl AutoMode {
             flash_active: flash,
             signal_processor: proc,
             color_provider: ColorProvider::new(),
+            is_silence: true,
         }
     }
 }
@@ -75,12 +75,21 @@ impl Mode for AutoMode {
     }
 
     fn audio_update(&mut self, frame: &[f32]) {
-        self.signal_processor.add_audio_frame(frame);
+        let events = self.signal_processor.add_audio_frame(frame);
         // if we get a significant onset score, we flash
-        for event in &self.signal_processor.sample_handler.events {
+        for event in events {
             match event {
-                AudioEvent::FullOnset(strength) => {
-                    if strength > &self.sensitivity {
+                AudioEvent2::Onset(edge_id) => {
+                    if edge_id == EdgeID::get("bass") {
+                        self.flash_layer.mask.reset_bottom();
+                        if self.change_all {
+                            self.base_layer.map.set_all(self.color_provider.get_next_color());
+                        } else {
+                            let c = self.color_provider.get_next_color();
+                            self.base_layer.map.set_color(Quadrant::random(), c);
+                            self.base_layer.map.set_color(Quadrant::random(), c);
+                        }
+                    } else if edge_id == EdgeID::get("highs") {
                         self.flash_layer.mask.reset_top();
                         if self.change_all {
                             self.base_layer.map.set_top(self.color_provider.get_next_color());
@@ -91,34 +100,21 @@ impl Mode for AutoMode {
                         }
                     }
                 }
-                AudioEvent::BassOnset(strength) => {
-                    if strength > &(self.sensitivity * 0.5) {
-                        self.flash_layer.mask.reset_bottom();
-                        if self.change_all {
-                            self.base_layer.map.set_all(self.color_provider.get_next_color());
+                AudioEvent2::Intensities(intensities) => {
+                    if let Some(bass_intensity) = intensities.get(&IntensityID::get("bass")) {
+                        let intensity: f64 = if self.is_silence {
+                            1.0
                         } else {
-                            let c = self.color_provider.get_next_color();
-                            self.base_layer.map.set_color(Quadrant::random(), c);
-                            self.base_layer.map.set_color(Quadrant::random(), c);
-                        }
+                            (*bass_intensity).into()
+                        };
+                        self.base_layer.mask.set_val(intensity);
                     }
-                }
-                AudioEvent::NewIntensities(bass, _highs, _total) => {
-                    let intensity: f64 = if self.signal_processor.sample_handler.is_silence {
-                        1.0
-                    } else {
-                        (*bass).into()
-                    };
-                    self.base_layer.mask.set_val(intensity);
-                }
-                AudioEvent::PhraseEnded => {
-                    self.color_provider.set_random_color_set();
                 },
-                AudioEvent::SilenceStarted => (),
-                AudioEvent::SilenceEnded => (),
+                AudioEvent2::SilenceEnded => self.is_silence = false,
+                AudioEvent2::SilenceStarted => self.is_silence = true,
+                AudioEvent2::PhraseEnded => self.color_provider.set_random_color_set(),
             }
         }
-        self.signal_processor.sample_handler.events.clear();
     }
 
     fn periodic_update(&mut self) {}
