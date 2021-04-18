@@ -1,46 +1,46 @@
 use crate::mode::Mode;
 use crate::util::controller_coordinate_to_coordinate;
-use dualshock3::{Controller, Button};
-use nightfire::audio;
-use nightfire::light::{Color, Coordinate, Mode as LMode, Quadrant, State, hue_from_angle};
+use dualshock3::{Button, Controller};
+use nightfire::audio::{intensity::IntensityID, AudioEvent2, EdgeID, SignalProcessor};
+use nightfire::light::{hue_from_angle, Color, Coordinate, Mode as LMode, Quadrant, State};
 use palette::Hsv;
 use palette::RgbHue;
 use pi_ir_remote::Signal;
 
 pub struct DefaultMode {
     state: State,
-    signal_processor: audio::SigProc<audio::DefaultSampleHandler>,
-    speed_no: f32,
+    signal_processor: SignalProcessor,
+    speed_no: usize,
+    various_speed_intensity_ids: Vec<IntensityID>,
     auto_rotate: bool,
+    is_silence: bool,
 }
 
 impl DefaultMode {
     pub fn new(sample_rate: f32) -> DefaultMode {
-        let filter = audio::SignalFilter::new(20., 20_000., sample_rate, 3., 30);
-        let sample_freq = 50.;
-        let handler = audio::DefaultSampleHandler::new(sample_freq, filter.freqs.clone());
-        let proc = audio::SigProc::<audio::DefaultSampleHandler>::new(
-            sample_rate,
-            filter,
-            sample_freq,
-            handler,
-        );
+        let fps = 50.;
         DefaultMode {
             state: State::new(),
-            signal_processor: proc,
-            speed_no: 3f32,
+            signal_processor: SignalProcessor::new(sample_rate, fps),
+            speed_no: 1,
+            various_speed_intensity_ids: vec![
+                IntensityID::get("bass_speed01"),
+                IntensityID::get("bass_speed02"),
+                IntensityID::get("bass_speed03"),
+            ],
             auto_rotate: false,
+            is_silence: true,
         }
     }
 
     pub fn audio_decay_faster(&mut self) {
-        self.speed_no = 0f32.max(10f32.min(self.speed_no +1f32));
-        self.signal_processor.sample_handler.curr_feats.bass_intensity.decay_factor = (- self.speed_no).exp();
+        self.speed_no = self.speed_no - 1;
+        self.speed_no = self.speed_no.min(0);
     }
 
     pub fn audio_decay_slower(&mut self) {
-        self.speed_no = 0f32.max(10f32.min(self.speed_no -1f32));
-        self.signal_processor.sample_handler.curr_feats.bass_intensity.decay_factor = (- self.speed_no).exp();
+        self.speed_no = self.speed_no + 1;
+        self.speed_no = self.speed_no.max(self.various_speed_intensity_ids.len());
     }
 }
 
@@ -153,23 +153,30 @@ impl Mode for DefaultMode {
     }
 
     fn audio_update(&mut self, frame: &[f32]) {
-        self.signal_processor.add_audio_frame(frame);
-        // if we get a significant onset score, we flash
-        if self.signal_processor.sample_handler.curr_feats.is_onset_full(4.) {
-            if self.auto_rotate {
-                self.state.manual_mode().rotate_cw();
+        let events = self.signal_processor.add_audio_frame(frame);
+        for event in events {
+            match event {
+                AudioEvent2::Onset(onset_id) => {
+                    if self.auto_rotate && onset_id == EdgeID::get("bass") {
+                        self.state.manual_mode().rotate_cw();
+                    }
+                }
+                AudioEvent2::Intensities(intensities) => {
+                    let int_id = &self.various_speed_intensity_ids[self.speed_no];
+                    if let Some(bass_intensity) = intensities.get(int_id) {
+                        let intensity = if self.is_silence {
+                            1.0
+                        } else {
+                            *bass_intensity
+                        };
+                        self.state.set_intensity(intensity);
+                    }
+                }
+                AudioEvent2::SilenceEnded => self.is_silence = false,
+                AudioEvent2::SilenceStarted => self.is_silence = true,
+                _ => (),
             }
         }
-        let mut intensity = self
-            .signal_processor
-            .sample_handler
-            .curr_feats
-            .bass_intensity
-            .current_value();
-        if self.signal_processor.sample_handler.curr_feats.is_silence() {
-            intensity = 1.0;
-        }
-        self.state.set_intensity(intensity);
         /*
                         let mut state = self.state.lock().unwrap();
                         let c1 = nf_lichtspiel::models::Color::new(
@@ -199,21 +206,81 @@ impl Mode for DefaultMode {
             Signal::Quick => self.audio_decay_faster(),
             Signal::Slow => self.audio_decay_slower(),
             Signal::Auto => self.auto_rotate = !self.auto_rotate,
-            Signal::Red => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(0.), 1., 1.))),
-            Signal::Orange1 => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(12.), 1., 1.))),
-            Signal::Orange2 => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(25.), 1., 1.))),
-            Signal::Orange3 => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(37.), 1., 1.))),
-            Signal::Yellow => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(50.), 1., 1.))),
-            Signal::Green => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(120.), 1., 1.))),
-            Signal::GrassGreen => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(115.), 1., 1.))),
-            Signal::Turquise => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(132.), 1., 1.))),
-            Signal::Petrol => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(150.), 1., 1.))),
-            Signal::DarkPetrol => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(160.), 1., 1.))),
-            Signal::Blue => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(-120.), 1., 1.))),
-            Signal::Blue2 => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(-140.), 1., 1.))),
-            Signal::Violet => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(-90.), 1., 1.))),
-            Signal::LightViolet => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(-60.), 1., 1.))),
-            Signal::Pink => self.state.manual_mode().set_all(Color::from(Hsv::new(RgbHue::from(-30.), 1., 1.))),
+            Signal::Red => {
+                self.state
+                    .manual_mode()
+                    .set_all(Color::from(Hsv::new(RgbHue::from(0.), 1., 1.)))
+            }
+            Signal::Orange1 => {
+                self.state
+                    .manual_mode()
+                    .set_all(Color::from(Hsv::new(RgbHue::from(12.), 1., 1.)))
+            }
+            Signal::Orange2 => {
+                self.state
+                    .manual_mode()
+                    .set_all(Color::from(Hsv::new(RgbHue::from(25.), 1., 1.)))
+            }
+            Signal::Orange3 => {
+                self.state
+                    .manual_mode()
+                    .set_all(Color::from(Hsv::new(RgbHue::from(37.), 1., 1.)))
+            }
+            Signal::Yellow => {
+                self.state
+                    .manual_mode()
+                    .set_all(Color::from(Hsv::new(RgbHue::from(50.), 1., 1.)))
+            }
+            Signal::Green => {
+                self.state
+                    .manual_mode()
+                    .set_all(Color::from(Hsv::new(RgbHue::from(120.), 1., 1.)))
+            }
+            Signal::GrassGreen => {
+                self.state
+                    .manual_mode()
+                    .set_all(Color::from(Hsv::new(RgbHue::from(115.), 1., 1.)))
+            }
+            Signal::Turquise => {
+                self.state
+                    .manual_mode()
+                    .set_all(Color::from(Hsv::new(RgbHue::from(132.), 1., 1.)))
+            }
+            Signal::Petrol => {
+                self.state
+                    .manual_mode()
+                    .set_all(Color::from(Hsv::new(RgbHue::from(150.), 1., 1.)))
+            }
+            Signal::DarkPetrol => {
+                self.state
+                    .manual_mode()
+                    .set_all(Color::from(Hsv::new(RgbHue::from(160.), 1., 1.)))
+            }
+            Signal::Blue => {
+                self.state
+                    .manual_mode()
+                    .set_all(Color::from(Hsv::new(RgbHue::from(-120.), 1., 1.)))
+            }
+            Signal::Blue2 => {
+                self.state
+                    .manual_mode()
+                    .set_all(Color::from(Hsv::new(RgbHue::from(-140.), 1., 1.)))
+            }
+            Signal::Violet => {
+                self.state
+                    .manual_mode()
+                    .set_all(Color::from(Hsv::new(RgbHue::from(-90.), 1., 1.)))
+            }
+            Signal::LightViolet => {
+                self.state
+                    .manual_mode()
+                    .set_all(Color::from(Hsv::new(RgbHue::from(-60.), 1., 1.)))
+            }
+            Signal::Pink => {
+                self.state
+                    .manual_mode()
+                    .set_all(Color::from(Hsv::new(RgbHue::from(-30.), 1., 1.)))
+            }
             Signal::Jump3 => self.state.shuffle_colors(20.),
             Signal::Jump7 => self.state.shuffle_colors(50.),
             _ => (),
@@ -225,7 +292,10 @@ impl Mode for DefaultMode {
 /// right controller stick.
 fn get_color_from_controller(controller: &Controller) -> Option<Color> {
     if controller.right_pos().length() > 0.75 {
-        let hue = hue_from_angle(&controller_coordinate_to_coordinate(&controller.right_pos())).unwrap();
+        let hue = hue_from_angle(&controller_coordinate_to_coordinate(
+            &controller.right_pos(),
+        ))
+        .unwrap();
         // let value = 1. - controller.left_trigger();
         Some(Color::from(Hsv::new(hue, 1., 1.)))
     } else {
@@ -237,7 +307,9 @@ fn get_color_from_controller(controller: &Controller) -> Option<Color> {
 /// ...) based on the position of the left joystick.
 fn get_quad_from_controller(controller: &Controller) -> Option<Quadrant> {
     if controller.left_pos().length() > 0.75 {
-        Some(Quadrant::from(&controller_coordinate_to_coordinate(&controller.left_pos())))
+        Some(Quadrant::from(&controller_coordinate_to_coordinate(
+            &controller.left_pos(),
+        )))
     } else {
         None
     }
