@@ -60,6 +60,48 @@ fn default_intensity_params() -> HashMap<intensity::IntensityID, intensity::Inte
         ),
     );
     res.insert(
+        intensity::IntensityID::get("bass_speed01"),
+        intensity::IntensityParams(
+            intensity::IntensityInputParams::TakeMax(vec![
+                FilterID::get("band_20_3"),
+                FilterID::get("band_130_3"),
+                FilterID::get("band_310_3"),
+            ]),
+            intensity::NormalizedDecayingParams {
+                decay_factor: 0.005,
+                decay_val_for_max: 0.01666,
+            },
+        ),
+    );
+    res.insert(
+        intensity::IntensityID::get("bass_speed02"),
+        intensity::IntensityParams(
+            intensity::IntensityInputParams::TakeMax(vec![
+                FilterID::get("band_20_3"),
+                FilterID::get("band_130_3"),
+                FilterID::get("band_310_3"),
+            ]),
+            intensity::NormalizedDecayingParams {
+                decay_factor: 0.05,
+                decay_val_for_max: 0.01666,
+            },
+        ),
+    );
+    res.insert(
+        intensity::IntensityID::get("bass_speed03"),
+        intensity::IntensityParams(
+            intensity::IntensityInputParams::TakeMax(vec![
+                FilterID::get("band_20_3"),
+                FilterID::get("band_130_3"),
+                FilterID::get("band_310_3"),
+            ]),
+            intensity::NormalizedDecayingParams {
+                decay_factor: 0.5,
+                decay_val_for_max: 0.01666,
+            },
+        ),
+    );
+    res.insert(
         intensity::IntensityID::get("highs"),
         intensity::IntensityParams(
             intensity::IntensityInputParams::TakeMax(vec![
