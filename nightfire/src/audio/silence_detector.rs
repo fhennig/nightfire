@@ -53,7 +53,7 @@ impl SilenceDetector {
     pub fn new(filter_id: FilterID) -> Self {
         Self {
             filter_id: filter_id,
-            raw_max_decaying: RawLinearDecayValue::new(0.01666),
+            raw_max_decaying: RawLinearDecayValue::new(0.003),
             is_silence: true,
         }
     }
@@ -64,7 +64,7 @@ impl SilenceDetector {
             .raw_max_decaying
             .update(*val, time_delta);
         let was_silence = self.is_silence;
-        self.is_silence = self.raw_max_decaying.current_value() < 0.05;
+        self.is_silence = self.raw_max_decaying.current_value() < 0.005;
         if was_silence && !self.is_silence {
             Some(SilenceEvent::SilenceEnded)
         } else if !was_silence && self.is_silence {

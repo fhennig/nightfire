@@ -11,7 +11,7 @@ fn default_filter_params() -> HashMap<FilterID, FilterParams> {
         FilterID::get("no_filter"),
         FilterParams::BandPass(BandPassParams {
             f_c: 11_000.,
-            q: 0.,
+            q: 1.,
         }),
     );
     res.insert(
