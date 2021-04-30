@@ -46,8 +46,8 @@ impl NormalizedDecayingValue {
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Debug, Clone)]
-pub struct IntensityID(String);
+#[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Clone)]
+pub struct IntensityID(pub String);
 
 impl IntensityID {
     pub fn get(s: &str) -> Self {
