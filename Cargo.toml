@@ -6,5 +6,6 @@ members = [
     "nf_lichtspiel",
     "nf_eq",
     "nf_monitor",
+    "nf_osc",
     "mixxx_data",
 ]
