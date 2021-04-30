@@ -64,7 +64,7 @@ impl SilenceDetector {
             .raw_max_decaying
             .update(*val, time_delta);
         let was_silence = self.is_silence;
-        self.is_silence = self.raw_max_decaying.current_value() < 0.005;
+        self.is_silence = self.raw_max_decaying.current_value() < 0.0005;
         if was_silence && !self.is_silence {
             Some(SilenceEvent::SilenceEnded)
         } else if !was_silence && self.is_silence {

@@ -79,14 +79,6 @@ impl Sample {
     }
 }
 
-// This is only to demonstrate how the stuff should be called.
-pub fn setup(f_start: f32, f_end: f32, f_s: f32, q: f32, n_filters: usize) {
-    let signal_filter = SignalFilter::new(f_start, f_end, f_s, q, n_filters);
-    let sample_freq = 50.0;
-    let sample_handler = DefaultSampleHandler::new(sample_freq, signal_filter.freqs.clone());
-    let _signal_processor = SigProc::new(f_s, signal_filter, sample_freq, sample_handler);
-}
-
 /// The SigProc signal processor receives a stream of floating point
 /// samples, which it aggregates into [Sample](Sample) objects, creating a fixed
 /// amount of samples per second.  It uses a SignalFilter using biquad
