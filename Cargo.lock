@@ -1322,29 +1322,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "jack"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "385739905427d1bdb561fa018a0a8e26fc023b7eeb975a1a0150512ff828f736"
-dependencies = [
- "bitflags",
- "jack-sys",
- "lazy_static",
- "libc",
-]
-
-[[package]]
-name = "jack-sys"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0d4ca501477fd3cd93a36df581046e5d6338ed826cf7e9b8d302603521e6cc3"
-dependencies = [
- "lazy_static",
- "libc",
- "libloading 0.4.3",
-]
-
-[[package]]
 name = "jni-sys"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1413,17 +1390,6 @@ name = "libc"
 version = "0.2.85"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ccac4b00700875e6a07c6cde370d44d32fa01c5a65cdd2fca6858c479d28bb3"
-
-[[package]]
-name = "libloading"
-version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd38073de8f7965d0c17d30546d4bb6da311ab428d1c7a3fc71dff7f9d4979b9"
-dependencies = [
- "kernel32-sys",
- "lazy_static",
- "winapi 0.2.8",
-]
 
 [[package]]
 name = "libloading"
@@ -1706,7 +1672,6 @@ version = "0.1.0"
 dependencies = [
  "cpal",
  "env_logger 0.7.1",
- "jack",
  "log",
  "stoppable_thread",
 ]
