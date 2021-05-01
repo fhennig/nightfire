@@ -48,10 +48,10 @@ pub struct SoundMonitor {
 }
 
 impl SoundMonitor {
-    pub fn new(sample_rate: f32, q: f32, n_filters: usize) -> SoundMonitor {
+    pub fn new(sample_rate: f32, q: f32, n_filters: usize) -> Self {
         let fps = 50.;
         let proc = SignalProcessor::new(sample_rate, fps);
-        SoundMonitor {
+        Self {
             signal_processor: proc,
             data: Arc::new(Mutex::new(MonitorData::new())),
         }

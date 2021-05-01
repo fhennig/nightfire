@@ -1742,7 +1742,7 @@ dependencies = [
  "pi_ir_remote",
  "piston_window 0.117.0",
  "rand 0.7.3",
- "rosc",
+ "rosc 0.3.0",
  "splines",
  "stoppable_thread",
  "yaml-rust",
@@ -1773,8 +1773,8 @@ dependencies = [
  "log",
  "nf_audio",
  "nightfire",
+ "rosc 0.5.1",
  "stoppable_thread",
- "yaml-rust",
 ]
 
 [[package]]
@@ -2700,6 +2700,15 @@ name = "rosc"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f0a6261c06ead0b8191098af35de11dafd910e4f28391a2a0c5778aa1eb13161"
+dependencies = [
+ "byteorder",
+]
+
+[[package]]
+name = "rosc"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "44f303c9e8b5c2334e84ff00307ee1615bae04a3a60bf997b161e57f8a7deae1"
 dependencies = [
  "byteorder",
 ]
