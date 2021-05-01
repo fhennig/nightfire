@@ -55,7 +55,7 @@ pub struct EdgeDetectorParams {
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
-pub struct EdgeID(String);
+pub struct EdgeID(pub String);
 
 impl EdgeID {
     pub fn get(s: &str) -> Self {

@@ -1,15 +1,14 @@
 use nf_audio::AudioGetter;
 use nf_audio::ValsHandler;
-use nightfire::audio::{SignalProcessor, AudioEvent2 as AudioEvent};
+use nightfire::audio::{SignalProcessor, AudioEvent2 as AudioEvent, EdgeID};
 use rosc::encoder;
 use rosc::{OscMessage, OscPacket, OscBundle, OscType, OscTime};
 use std::{convert::TryFrom, time::SystemTime};
-use std::net::{SocketAddrV4, UdpSocket};
+use std::net::{SocketAddrV4, UdpSocket, ToSocketAddrs};
 use std::str::FromStr;
 use std::io::{self, Read};
 
 pub struct OSCPublisher {
-    to_addr: SocketAddrV4,
     socket: UdpSocket,
     signal_processor: SignalProcessor,
 }
@@ -18,11 +17,10 @@ impl OSCPublisher {
     pub fn new(sample_rate: f32) -> Self {
         let fps = 50.;
         let proc = SignalProcessor::new(sample_rate, fps);
-        let host_addr = SocketAddrV4::from_str("127.0.0.1:9999").unwrap();
-        let to_addr = SocketAddrV4::from_str("0.0.0.0:4242").unwrap();
+        let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
+        socket.set_broadcast(true);
         Self {
-            to_addr: to_addr,
-            socket: UdpSocket::bind(host_addr).unwrap(),
+            socket: socket,
             signal_processor: proc,
         }
     }
@@ -36,7 +34,7 @@ impl ValsHandler for OSCPublisher {
                 AudioEvent::Intensities(intensities) => {
                     let msgs = intensities.iter().map(|(id, val)| {
                         OscPacket::Message(OscMessage {
-                            addr: id.0.clone(),
+                            addr: format!("/intensity/{}", id.0.clone()),
                             args: vec![OscType::Float(*val)],
                         }
                     )}).collect();
@@ -44,8 +42,16 @@ impl ValsHandler for OSCPublisher {
                         timetag: OscTime::try_from(SystemTime::UNIX_EPOCH).unwrap(),
                         content: msgs,
                     })).unwrap();
-                    self.socket.send_to(&msg_enc, self.to_addr).unwrap();
+                    self.socket.send_to(&msg_enc, "192.168.178.255:4242").unwrap();
                 },
+                AudioEvent::Onset(edge_id) => {
+                    println!("XXX");
+                    let msg_enc = encoder::encode(&OscPacket::Message(OscMessage {
+                        addr: format!("/onset/{}", edge_id.0.clone()),
+                        args: vec![],
+                    })).unwrap();
+                    self.socket.send_to(&msg_enc, "192.168.178.255:4242").unwrap();
+                }
                 _ => (),
             }
         }
