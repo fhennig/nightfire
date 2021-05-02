@@ -2,8 +2,8 @@
 //!
 //! There is support generical audio recording support through CPAL,
 //! as well as support for JACK.
-use cpal::traits::{DeviceTrait, EventLoopTrait, HostTrait};
-use cpal::{StreamData, UnknownTypeInputBuffer};
+use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use cpal::{SupportedStreamConfig};
 use log::info;
 use stoppable_thread::spawn;
 
@@ -39,53 +39,70 @@ impl dyn AudioGetter {
 pub struct CpalAudioGetter {
     host: cpal::Host,
     dev: cpal::Device,
-    format: cpal::Format,
+    config: SupportedStreamConfig,
+    stream: Option<cpal::Stream>,
 }
 
 impl CpalAudioGetter {
     pub fn new() -> CpalAudioGetter {
         let host = cpal::default_host();
-        let dev = host.default_input_device().unwrap();
+        let dev = host.default_input_device().expect("failed to find input device");
         println!("Device: {}", dev.name().unwrap());
-        let format = dev.default_input_format().unwrap();
+        let config = dev.default_input_config().expect("Failed to get default input config");
         CpalAudioGetter {
             host: host,
             dev: dev,
-            format: format,
+            config: config,
+            stream: None,
         }
     }
 }
 
 impl AudioGetter for CpalAudioGetter {
     fn get_sample_rate(&self) -> f32 {
-        println!("{}", self.format.channels);
-        self.format.sample_rate.0 as f32
+        println!("{}", self.config.channels());
+        self.config.sample_rate().0 as f32
     }
 
     fn start_processing(&mut self, mut vals_handler: Box<dyn ValsHandler>) {
-        let event_loop = self.host.event_loop();
-        let _my_stream_id = event_loop
-            .build_input_stream(&self.dev, &self.format)
-            .unwrap();
-        let _channels = self.format.channels;
-        spawn(move |_stopped| {
-            event_loop.run(move |_stream_id, data| {
-                // TODO handle stopped
-                match data.unwrap() {
-                    StreamData::Input { buffer } => match buffer {
-                        UnknownTypeInputBuffer::U16(_) => println!("B"),
-                        UnknownTypeInputBuffer::I16(_) => println!("A"),
-                        UnknownTypeInputBuffer::F32(b) => {
-                            // take only a single channel
-                            let b_new: Vec<f32> = b.chunks(2).map(|c| c[0]).collect();
-                            vals_handler.take_frame(b_new.as_slice());
-                        }
-                    },
-                    _ => (),
-                }    
-            });
-        });
+        let err_fn = move |err| {
+            eprintln!("an error occurred on stream: {}", err);
+        };
+        println!("XXX");
+        let stream = match self.config.sample_format() {
+            cpal::SampleFormat::F32 => self.dev.build_input_stream(
+                &self.config.clone().into(),
+                move |data, _: &_| {
+                    println!("LALALA A");
+                    let b_new: Vec<f32> = data.chunks(2).map(|c| c[0]).collect();
+                    vals_handler.take_frame(b_new.as_slice());
+                },
+                err_fn,
+            ).unwrap(),
+            cpal::SampleFormat::I16 => self.dev.build_input_stream(
+                &self.config.clone().into(),
+                move |data, _: &_| {
+                    println!("LALALA B");
+                    let b_new: Vec<f32> = data.chunks(2).map(|c| c[0]).collect();
+                    vals_handler.take_frame(b_new.as_slice());
+                },
+                err_fn,
+            ).unwrap(),
+            cpal::SampleFormat::U16 => self.dev.build_input_stream(
+                &self.config.clone().into(),
+                move |data, _: &_| {
+                    println!("LALALA C");
+                    let b_new: Vec<f32> = data.chunks(2).map(|c| c[0]).collect();
+                    vals_handler.take_frame(b_new.as_slice());
+                },
+                err_fn,
+            ).unwrap(),
+        };
+        stream.play().unwrap();
+        self.stream = Some(stream);
     }
 
-    fn stop_processing(&mut self) {}
+    fn stop_processing(&mut self) {
+        let stream = std::mem::replace(&mut self.stream, None).unwrap();
+    }
 }

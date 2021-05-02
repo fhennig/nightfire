@@ -62,7 +62,7 @@ fn main() {
     let mut audio_getter = AudioGetter::new_cpal();
     let sample_rate = audio_getter.get_sample_rate();
     let publisher = OSCPublisher::new(sample_rate);
-    audio_getter.start_processing(Box::new(publisher));
+    let stream = audio_getter.start_processing(Box::new(publisher));
     let mut buffer = String::new();
     io::stdin().read_to_string(&mut buffer);
 }
