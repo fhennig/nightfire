@@ -15,7 +15,7 @@ dirs = "2.0.2"
 sqlite = "0.24"
 prost = "0.6"
 # audio file loading
-rodio = "0.11.0"
+rodio = "0.13"
 # saving to pickle format
 serde = { version  = "1.0", features = ["derive"] }
 serde-pickle = "0.6"

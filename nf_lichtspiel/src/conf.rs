@@ -54,8 +54,6 @@ impl Conf {
                     audio_params = None;
                 } else if s == "default" {
                     audio_params = Some(AudioParameters::Cpal);
-                } else {
-                    audio_params = Some(AudioParameters::Jack(s.to_string()));
                 }
             }
             None => {
