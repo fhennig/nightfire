@@ -44,8 +44,23 @@ pub struct CpalAudioGetter {
 }
 
 impl CpalAudioGetter {
+    #[cfg(target_os = "windows")]  // asio
     pub fn new() -> CpalAudioGetter {
-        let host = cpal::default_host();
+        let host = cpal::host_from_id(cpal::HostId::Asio).expect("failed to initialise ASIO host");
+        let dev = host.default_input_device().expect("failed to find input device");
+        println!("Device: {}", dev.name().unwrap());
+        let config = dev.default_input_config().expect("Failed to get default input config");
+        CpalAudioGetter {
+            host: host,
+            dev: dev,
+            config: config,
+            stream: None,
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    pub fn new() -> CpalAudioGetter {
+        let host = cpal::default_host();  // whatever linux uses
         let dev = host.default_input_device().expect("failed to find input device");
         println!("Device: {}", dev.name().unwrap());
         let config = dev.default_input_config().expect("Failed to get default input config");
