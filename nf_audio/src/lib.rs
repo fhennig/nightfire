@@ -63,6 +63,7 @@ impl CpalAudioGetter {
                 .find(|x| x.name().map(|y| y == dev_name).unwrap_or(false))
         }
         .expect("failed to find input device");
+        println!("{:?}", device.driver.input_data_type().unwrap());
         println!("Selected input device: {}", device.name().unwrap());
         let config = device.default_input_config().expect("Failed to get default input config");
         let config = StreamConfig {
