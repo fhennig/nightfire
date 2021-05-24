@@ -13,4 +13,4 @@ env_logger = "0.8"
 # stoppable thread
 stoppable_thread = "0.2.1"
 # audio
-cpal = "0.13"
+cpal = { version = "0.13", features = [ "asio" ] }

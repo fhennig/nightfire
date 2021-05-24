@@ -1,5 +1,6 @@
 use nf_audio::AudioGetter;
 use nf_audio::ValsHandler;
+use nf_audio::list_devices;
 use nightfire::audio::{SignalProcessor, AudioEvent2 as AudioEvent, EdgeID};
 use rosc::encoder;
 use rosc::{OscMessage, OscPacket, OscBundle, OscType, OscTime};
@@ -7,6 +8,7 @@ use std::{convert::TryFrom, time::SystemTime};
 use std::net::{SocketAddrV4, UdpSocket};
 use std::str::FromStr;
 use std::io::{self, Read};
+use clap::{Arg, App, SubCommand};
 
 fn get_addr_from_arg(arg: &str) -> SocketAddrV4 {
     SocketAddrV4::from_str(arg).unwrap()
@@ -83,10 +85,27 @@ impl ValsHandler for OSCPublisher {
 }
 
 fn main() {
-    let mut audio_getter = AudioGetter::new_cpal();
-    let sample_rate = audio_getter.get_sample_rate();
-    let publisher = OSCPublisher::new(sample_rate);
-    let stream = audio_getter.start_processing(Box::new(publisher));
-    let mut buffer = String::new();
-    io::stdin().read_to_string(&mut buffer);
+    let matches = App::new("My Super Program")
+        .subcommand(SubCommand::with_name("run")
+                    .about("run processing on given device")
+                    .arg(Arg::with_name("DEVICE")
+                        .required(true)
+                        .index(1)
+                        .help("print debug information verbosely")))
+        .subcommand(SubCommand::with_name("list")
+        .about("list devices"))
+        .get_matches();
+    match matches.subcommand() {
+        ("run", Some(sub_m)) => {
+            let device_name = sub_m.value_of("DEVICE").unwrap();
+            let mut audio_getter = AudioGetter::new_cpal(device_name.to_string());
+            let sample_rate = audio_getter.get_sample_rate();
+            let publisher = OSCPublisher::new(sample_rate);
+            let stream = audio_getter.start_processing(Box::new(publisher));
+            let mut buffer = String::new();
+            io::stdin().read_to_string(&mut buffer);
+        },
+        ("list", _) => list_devices(),
+        _ => (),
+    }
 }
