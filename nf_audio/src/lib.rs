@@ -45,8 +45,8 @@ pub struct CpalAudioGetter {
 
 pub fn list_devices() {
     let host = cpal::host_from_id(cpal::HostId::Asio).expect("failed to initialise ASIO host");
-    for (_, dev) in host.devices().unwrap().enumerate() {
-        let name = dev.name().unwrap();
+    for input_dev in host.input_devices().expect("Failed to get input devices") {
+        let name = input_dev.name().unwrap_or("NO NAME".to_string());
         println!("Device: {:?}", name);
     }
 }
@@ -55,19 +55,17 @@ impl CpalAudioGetter {
     #[cfg(target_os = "windows")]  // asio
     pub fn new(dev_name: String) -> CpalAudioGetter {
         let host = cpal::host_from_id(cpal::HostId::Asio).expect("failed to initialise ASIO host");
-        let mut device = None;
-        for (_, dev) in host.devices().unwrap().enumerate() {
-            let name = dev.name().unwrap();
-            println!("Device: {:?}", name);
-            if name == dev_name {
-                device = Some(dev);
-            }
+        // Setup the input device and stream with the default input config.
+        let device = if dev_name == "default" {
+            host.default_input_device()
+        } else {
+            host.input_devices()?
+                .find(|x| x.name().map(|y| y == dev_name).unwrap_or(false))
         }
-        let device = device.unwrap();
-        // let dev = host.default_input_device().expect("failed to find input device");
-        println!("Device: {}", device.name().unwrap());
+        .expect("failed to find input device");
+        println!("Selected input device: {}", device.name().unwrap());
         let config = device.default_input_config().expect("Failed to get default input config");
-        println!("config: {:?}", config);
+        println!("Selected config: {:?}", config);
         CpalAudioGetter {
             host: host,
             dev: device,
