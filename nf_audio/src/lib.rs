@@ -110,7 +110,7 @@ impl AudioGetter for CpalAudioGetter {
                     vals_handler.take_frame(b_new.as_slice());
                 },
                 err_fn,
-            ).unwrap(),
+            ).expect("Failed to open stream"),
             cpal::SampleFormat::I16 => self.dev.build_input_stream(
                 &self.config.clone().into(),
                 move |data, _: &_| {
@@ -119,7 +119,7 @@ impl AudioGetter for CpalAudioGetter {
                     vals_handler.take_frame(b_new.as_slice());
                 },
                 err_fn,
-            ).unwrap(),
+            ).expect("Failed to open stream"),
             cpal::SampleFormat::U16 => self.dev.build_input_stream(
                 &self.config.clone().into(),
                 move |data, _: &_| {
@@ -128,9 +128,9 @@ impl AudioGetter for CpalAudioGetter {
                     vals_handler.take_frame(b_new.as_slice());
                 },
                 err_fn,
-            ).unwrap(),
+            ).expect("Failed to open stream"),
         };
-        stream.play().unwrap();
+        stream.play().expect("Failed to start stream");
         self.stream = Some(stream);
     }
 
