@@ -3,7 +3,7 @@
 //! There is support generical audio recording support through CPAL,
 //! as well as support for JACK.
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::{SupportedStreamConfig, SampleFormat};
+use cpal::{SupportedStreamConfig, SampleFormat, StreamConfig};
 use log::info;
 use stoppable_thread::spawn;
 
@@ -39,7 +39,7 @@ impl dyn AudioGetter {
 pub struct CpalAudioGetter {
     host: cpal::Host,
     dev: cpal::Device,
-    config: SupportedStreamConfig,
+    config: StreamConfig,
     stream: Option<cpal::Stream>,
 }
 
@@ -65,11 +65,10 @@ impl CpalAudioGetter {
         .expect("failed to find input device");
         println!("Selected input device: {}", device.name().unwrap());
         let config = device.default_input_config().expect("Failed to get default input config");
-        let config = SupportedStreamConfig {
+        let config = StreamConfig {
             channels: config.channels(),
             sample_rate: config.sample_rate(),
-            buffer_size: config.buffer_size().clone(),
-            sample_format: SampleFormat::F32,
+            buffer_size: config.buffer_size().clone()
         };
         println!("Selected config: {:?}", config);
         CpalAudioGetter {
@@ -90,7 +89,7 @@ impl CpalAudioGetter {
         CpalAudioGetter {
             host: host,
             dev: dev,
-            config: config,
+            config: config.into(),
             stream: None,
         }
     }
@@ -98,8 +97,8 @@ impl CpalAudioGetter {
 
 impl AudioGetter for CpalAudioGetter {
     fn get_sample_rate(&self) -> f32 {
-        println!("{}", self.config.channels());
-        self.config.sample_rate().0 as f32
+        println!("{}", self.config.channels);
+        self.config.sample_rate.0 as f32
     }
 
     fn start_processing(&mut self, mut vals_handler: Box<dyn ValsHandler>) {
@@ -107,8 +106,7 @@ impl AudioGetter for CpalAudioGetter {
             eprintln!("an error occurred on stream: {}", err);
         };
         println!("XXX");
-        let stream = match self.config.sample_format() {
-            cpal::SampleFormat::F32 => self.dev.build_input_stream(
+        let stream = self.dev.build_input_stream(
                 &self.config.clone().into(),
                 move |data, _: &_| {
                     println!("LALALA A");
@@ -116,26 +114,7 @@ impl AudioGetter for CpalAudioGetter {
                     vals_handler.take_frame(b_new.as_slice());
                 },
                 err_fn,
-            ).expect("Failed to open stream"),
-            cpal::SampleFormat::I16 => self.dev.build_input_stream(
-                &self.config.clone().into(),
-                move |data, _: &_| {
-                    println!("LALALA B");
-                    let b_new: Vec<f32> = data.chunks(2).map(|c| c[0]).collect();
-                    vals_handler.take_frame(b_new.as_slice());
-                },
-                err_fn,
-            ).expect("Failed to open stream"),
-            cpal::SampleFormat::U16 => self.dev.build_input_stream(
-                &self.config.clone().into(),
-                move |data, _: &_| {
-                    println!("LALALA C");
-                    let b_new: Vec<f32> = data.chunks(2).map(|c| c[0]).collect();
-                    vals_handler.take_frame(b_new.as_slice());
-                },
-                err_fn,
-            ).expect("Failed to open stream"),
-        };
+            ).expect("Failed to open stream");
         stream.play().expect("Failed to start stream");
         self.stream = Some(stream);
     }
