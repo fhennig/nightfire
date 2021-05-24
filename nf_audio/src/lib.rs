@@ -59,7 +59,7 @@ impl CpalAudioGetter {
         let device = if dev_name == "default" {
             host.default_input_device()
         } else {
-            host.input_devices()?
+            host.input_devices().expect("Failed to scan input devices")
                 .find(|x| x.name().map(|y| y == dev_name).unwrap_or(false))
         }
         .expect("failed to find input device");
