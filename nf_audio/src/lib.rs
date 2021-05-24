@@ -3,7 +3,7 @@
 //! There is support generical audio recording support through CPAL,
 //! as well as support for JACK.
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::{SupportedStreamConfig};
+use cpal::{SupportedStreamConfig, SampleFormat};
 use log::info;
 use stoppable_thread::spawn;
 
@@ -81,6 +81,12 @@ impl CpalAudioGetter {
         println!("Device: {}", dev.name().unwrap());
         let config = dev.default_input_config().expect("Failed to get default input config");
         println!("config: {:?}", config);
+        let config = SupportedStreamConfig {
+            channels: config.channels(),
+            sample_rate: config.sample_rate(),
+            buffer_size: config.buffer_size().clone(),
+            sample_format: SampleFormat::F32,
+        };
         CpalAudioGetter {
             host: host,
             dev: dev,
