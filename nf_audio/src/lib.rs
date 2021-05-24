@@ -3,7 +3,7 @@
 //! There is support generical audio recording support through CPAL,
 //! as well as support for JACK.
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::{SupportedStreamConfig, SampleFormat, StreamConfig, BufferSize};
+use cpal::{SupportedStreamConfig, SampleFormat, StreamConfig};
 use log::info;
 use stoppable_thread::spawn;
 
@@ -63,13 +63,12 @@ impl CpalAudioGetter {
                 .find(|x| x.name().map(|y| y == dev_name).unwrap_or(false))
         }
         .expect("failed to find input device");
-        println!("{:?}", device.driver.input_data_type().unwrap());
         println!("Selected input device: {}", device.name().unwrap());
         let config = device.default_input_config().expect("Failed to get default input config");
         let config = StreamConfig {
             channels: config.channels(),
             sample_rate: config.sample_rate(),
-            buffer_size: BufferSize::Default,
+            buffer_size: config.buffer_size().clone()
         };
         println!("Selected config: {:?}", config);
         CpalAudioGetter {
@@ -107,7 +106,8 @@ impl AudioGetter for CpalAudioGetter {
             eprintln!("an error occurred on stream: {}", err);
         };
         println!("XXX");
-        let stream = self.dev.build_input_stream(
+        let stream =
+            cpal::SampleFormat::F32 => self.dev.build_input_stream(
                 &self.config.clone().into(),
                 move |data, _: &_| {
                     println!("LALALA A");
@@ -116,6 +116,27 @@ impl AudioGetter for CpalAudioGetter {
                 },
                 err_fn,
             ).expect("Failed to open stream");
+            cpal::SampleFormat::I16 => self.dev.build_input_stream(
+                &self.config.clone().into(),
+                move |data, _: &_| {
+                    println!("LALALA B");
+                    let b_new: Vec<i16> = data.chunks(2).map(|c| c[0]).collect();
+                    let b_new: Vec<f32> = b_new.map(|v| v as f32);
+                    vals_handler.take_frame(b_new.as_slice());
+                },
+                err_fn,
+            ).expect("Failed to open stream"),
+            cpal::SampleFormat::U16 => self.dev.build_input_stream(
+                &self.config.clone().into(),
+                move |data, _: &_| {
+                    println!("LALALA C");
+                    let b_new: Vec<u16> = data.chunks(2).map(|c| c[0]).collect();
+                    let b_new: Vec<f32> = b_new.map(|v| v as f32);
+                    vals_handler.take_frame(b_new.as_slice());
+                },
+                err_fn,
+            ).expect("Failed to open stream"),
+        };
         stream.play().expect("Failed to start stream");
         self.stream = Some(stream);
     }
