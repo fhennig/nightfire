@@ -39,7 +39,7 @@ impl dyn AudioGetter {
 pub struct CpalAudioGetter {
     host: cpal::Host,
     dev: cpal::Device,
-    config: StreamConfig,
+    config: SupportedStreamConfig,
     stream: Option<cpal::Stream>,
 }
 
@@ -65,11 +65,6 @@ impl CpalAudioGetter {
         .expect("failed to find input device");
         println!("Selected input device: {}", device.name().unwrap());
         let config = device.default_input_config().expect("Failed to get default input config");
-        let config = StreamConfig {
-            channels: config.channels(),
-            sample_rate: config.sample_rate(),
-            buffer_size: config.buffer_size().clone()
-        };
         println!("Selected config: {:?}", config);
         CpalAudioGetter {
             host: host,
@@ -97,8 +92,8 @@ impl CpalAudioGetter {
 
 impl AudioGetter for CpalAudioGetter {
     fn get_sample_rate(&self) -> f32 {
-        println!("{}", self.config.channels);
-        self.config.sample_rate.0 as f32
+        println!("{}", self.config.channels());
+        self.config.sample_rate().0 as f32
     }
 
     fn start_processing(&mut self, mut vals_handler: Box<dyn ValsHandler>) {
@@ -106,7 +101,7 @@ impl AudioGetter for CpalAudioGetter {
             eprintln!("an error occurred on stream: {}", err);
         };
         println!("XXX");
-        let stream =
+        let stream = match self.config.sample_format() {
             cpal::SampleFormat::F32 => self.dev.build_input_stream(
                 &self.config.clone().into(),
                 move |data, _: &_| {
@@ -115,13 +110,13 @@ impl AudioGetter for CpalAudioGetter {
                     vals_handler.take_frame(b_new.as_slice());
                 },
                 err_fn,
-            ).expect("Failed to open stream");
+            ).expect("Failed to open stream"),
             cpal::SampleFormat::I16 => self.dev.build_input_stream(
                 &self.config.clone().into(),
                 move |data, _: &_| {
                     println!("LALALA B");
                     let b_new: Vec<i16> = data.chunks(2).map(|c| c[0]).collect();
-                    let b_new: Vec<f32> = b_new.map(|v| v as f32);
+                    let b_new: Vec<f32> = b_new.into_iter().map(|v| v as f32).collect();
                     vals_handler.take_frame(b_new.as_slice());
                 },
                 err_fn,
@@ -131,7 +126,7 @@ impl AudioGetter for CpalAudioGetter {
                 move |data, _: &_| {
                     println!("LALALA C");
                     let b_new: Vec<u16> = data.chunks(2).map(|c| c[0]).collect();
-                    let b_new: Vec<f32> = b_new.map(|v| v as f32);
+                    let b_new: Vec<f32> = b_new.into_iter().map(|v| v as f32).collect();
                     vals_handler.take_frame(b_new.as_slice());
                 },
                 err_fn,

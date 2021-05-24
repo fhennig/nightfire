@@ -104,6 +104,7 @@ fn main() {
             let stream = audio_getter.start_processing(Box::new(publisher));
             let mut buffer = String::new();
             io::stdin().read_to_string(&mut buffer);
+            audio_getter.stop_processing();
         },
         ("list", _) => list_devices(),
         _ => (),
