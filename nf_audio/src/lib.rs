@@ -65,6 +65,12 @@ impl CpalAudioGetter {
         .expect("failed to find input device");
         println!("Selected input device: {}", device.name().unwrap());
         let config = device.default_input_config().expect("Failed to get default input config");
+        let config = SupportedStreamConfig {
+            channels: config.channels(),
+            sample_rate: config.sample_rate(),
+            buffer_size: config.buffer_size().clone(),
+            sample_format: SampleFormat::F32,
+        };
         println!("Selected config: {:?}", config);
         CpalAudioGetter {
             host: host,
@@ -81,12 +87,6 @@ impl CpalAudioGetter {
         println!("Device: {}", dev.name().unwrap());
         let config = dev.default_input_config().expect("Failed to get default input config");
         println!("config: {:?}", config);
-        let config = SupportedStreamConfig {
-            channels: config.channels(),
-            sample_rate: config.sample_rate(),
-            buffer_size: config.buffer_size().clone(),
-            sample_format: SampleFormat::F32,
-        };
         CpalAudioGetter {
             host: host,
             dev: dev,
