@@ -3,7 +3,7 @@
 //! There is support generical audio recording support through CPAL,
 //! as well as support for JACK.
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::{SupportedStreamConfig, SampleFormat, StreamConfig};
+use cpal::{SupportedStreamConfig, SampleFormat, StreamConfig, BufferSize};
 use log::info;
 use stoppable_thread::spawn;
 
@@ -68,7 +68,7 @@ impl CpalAudioGetter {
         let config = StreamConfig {
             channels: config.channels(),
             sample_rate: config.sample_rate(),
-            buffer_size: config.buffer_size().clone()
+            buffer_size: BufferSize::Default,
         };
         println!("Selected config: {:?}", config);
         CpalAudioGetter {
