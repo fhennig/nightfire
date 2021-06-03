@@ -7,8 +7,10 @@ use rosc::{OscMessage, OscPacket, OscBundle, OscType, OscTime};
 use std::{convert::TryFrom, time::SystemTime};
 use std::net::{SocketAddrV4, UdpSocket};
 use std::str::FromStr;
-use std::io::{self, Read};
-use clap::{Arg, App, SubCommand};
+use clap::{AppSettings, Clap};
+use log::{info, debug};
+use env_logger;
+use text_io::read;
 
 fn get_addr_from_arg(arg: &str) -> SocketAddrV4 {
     SocketAddrV4::from_str(arg).unwrap()
@@ -53,7 +55,7 @@ impl ValsHandler for OSCPublisher {
                     self.socket.send_to(&msg_enc, self.to_addr).unwrap();
                 },
                 AudioEvent::Onset(edge_id) => {
-                    println!("XXX");
+                    debug!("Onset Event detected.");
                     let msg_enc = encoder::encode(&OscPacket::Message(OscMessage {
                         addr: format!("/onset/{}", edge_id.0.clone()),
                         args: vec![OscType::Int(1)],
@@ -66,7 +68,7 @@ impl ValsHandler for OSCPublisher {
                     self.socket.send_to(&msg_enc, self.to_addr).unwrap();
                 },
                 AudioEvent::PhraseEnded => {
-                    println!("XXX");
+                    debug!("Phrase end detected.");
                     let msg_enc = encoder::encode(&OscPacket::Message(OscMessage {
                         addr: format!("/phrase/end"),
                         args: vec![OscType::Int(1)],
@@ -84,29 +86,47 @@ impl ValsHandler for OSCPublisher {
     }
 }
 
+#[derive(Clap)]
+struct Opts {
+    #[clap(short, long, parse(from_occurrences))]
+    verbose: i32,
+    #[clap(subcommand)]
+    subcommand: Option<SubCommand>,
+}
+
+#[derive(Clap)]
+enum SubCommand {
+    List(ListCommand),
+    Run(RunCommand)
+}
+
+#[derive(Clap)]
+struct ListCommand { }
+
+#[derive(Clap)]
+struct RunCommand {
+    device: String
+}
+
+fn run(device_name: String) {
+    info!("Initializing Audio Settings.");
+    let mut audio_getter = AudioGetter::new_cpal(device_name);
+    let sample_rate = audio_getter.get_sample_rate();
+    let publisher = OSCPublisher::new(sample_rate);
+    info!("Opening Audio Input Stream.");
+    let stream = audio_getter.start_processing(Box::new(publisher));
+    info!("Waiting for input, press [ENTER] to terminate ...");
+    let line: String = read!("{}quit\r\n");
+    info!("Terminating Audio Processing.");
+    audio_getter.stop_processing();
+}
+
 fn main() {
-    let matches = App::new("My Super Program")
-        .subcommand(SubCommand::with_name("run")
-                    .about("run processing on given device")
-                    .arg(Arg::with_name("DEVICE")
-                        .required(true)
-                        .index(1)
-                        .help("print debug information verbosely")))
-        .subcommand(SubCommand::with_name("list")
-        .about("list devices"))
-        .get_matches();
-    match matches.subcommand() {
-        ("run", Some(sub_m)) => {
-            let device_name = sub_m.value_of("DEVICE").unwrap();
-            let mut audio_getter = AudioGetter::new_cpal(device_name.to_string());
-            let sample_rate = audio_getter.get_sample_rate();
-            let publisher = OSCPublisher::new(sample_rate);
-            let stream = audio_getter.start_processing(Box::new(publisher));
-            let mut buffer = String::new();
-            io::stdin().read_to_string(&mut buffer);
-            audio_getter.stop_processing();
-        },
-        ("list", _) => list_devices(),
-        _ => (),
+    env_logger::init();
+    let opts = Opts::parse();
+    match opts.subcommand {
+        Some(SubCommand::List(l)) => list_devices(),
+        Some(SubCommand::Run(r)) => run(r.device),
+        None => run("Voicemeeter Virtual ASIO".to_string()),
     }
 }

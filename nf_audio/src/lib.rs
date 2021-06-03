@@ -3,8 +3,8 @@
 //! There is support generical audio recording support through CPAL,
 //! as well as support for JACK.
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::{SupportedStreamConfig, SampleFormat, StreamConfig};
-use log::info;
+use cpal::{SupportedStreamConfig, SampleFormat, StreamConfig, BufferSize};
+use log::{info, debug};
 use stoppable_thread::spawn;
 
 /// Which audio backend to use, and specific backend parameters
@@ -63,9 +63,9 @@ impl CpalAudioGetter {
                 .find(|x| x.name().map(|y| y == dev_name).unwrap_or(false))
         }
         .expect("failed to find input device");
-        println!("Selected input device: {}", device.name().unwrap());
+        info!("Selected input device: {}", device.name().unwrap());
         let config = device.default_input_config().expect("Failed to get default input config");
-        println!("Selected config: {:?}", config);
+        info!("Selected config: {:?}", config);
         CpalAudioGetter {
             host: host,
             dev: device,
@@ -100,43 +100,69 @@ impl AudioGetter for CpalAudioGetter {
         let err_fn = move |err| {
             eprintln!("an error occurred on stream: {}", err);
         };
-        println!("XXX");
+        debug!("In start_processing.");
         let stream = match self.config.sample_format() {
-            cpal::SampleFormat::F32 => self.dev.build_input_stream(
-                &self.config.clone().into(),
-                move |data, _: &_| {
-                    println!("LALALA A");
-                    let b_new: Vec<f32> = data.chunks(2).map(|c| c[0]).collect();
-                    vals_handler.take_frame(b_new.as_slice());
-                },
-                err_fn,
-            ).expect("Failed to open stream"),
-            cpal::SampleFormat::I16 => self.dev.build_input_stream(
-                &self.config.clone().into(),
-                move |data, _: &_| {
-                    println!("LALALA B");
-                    let b_new: Vec<i16> = data.chunks(2).map(|c| c[0]).collect();
-                    let b_new: Vec<f32> = b_new.into_iter().map(|v| v as f32).collect();
-                    vals_handler.take_frame(b_new.as_slice());
-                },
-                err_fn,
-            ).expect("Failed to open stream"),
-            cpal::SampleFormat::U16 => self.dev.build_input_stream(
-                &self.config.clone().into(),
-                move |data, _: &_| {
-                    println!("LALALA C");
-                    let b_new: Vec<u16> = data.chunks(2).map(|c| c[0]).collect();
-                    let b_new: Vec<f32> = b_new.into_iter().map(|v| v as f32).collect();
-                    vals_handler.take_frame(b_new.as_slice());
-                },
-                err_fn,
-            ).expect("Failed to open stream"),
+            cpal::SampleFormat::F32 => {
+                info!("Building input stream with F32 sample_format.");
+                self.dev.build_input_stream(
+                    &StreamConfig {
+                        channels: 2,
+                        sample_rate: self.config.sample_rate(),
+                        buffer_size: BufferSize::Default,
+                    },
+                    //&self.config.clone().into(),
+                    move |data, _: &_| {
+                        debug!("Received {:?} samples.", data.len());
+                        let b_new: Vec<f32> = data.chunks(2).map(|c| c[0]).collect();
+                        vals_handler.take_frame(b_new.as_slice());
+                    },
+                    err_fn,
+                ).expect("Failed to open stream")
+            },
+            cpal::SampleFormat::I16 => {
+                info!("Building input stream with I16 sample_format.");
+                self.dev.build_input_stream(
+                    &StreamConfig {
+                        channels: 2,
+                        sample_rate: self.config.sample_rate(),
+                        buffer_size: BufferSize::Default,
+                    },
+                    //&self.config.clone().into(),
+                    move |data, _: &_| {
+                        debug!("Received {:?} samples.", data.len());
+                        let b_new: Vec<i16> = data.chunks(2).map(|c| c[0]).collect();
+                        let b_new: Vec<f32> = b_new.into_iter().map(|v| v as f32).collect();
+                        vals_handler.take_frame(b_new.as_slice());
+                    },
+                    err_fn,
+                ).expect("Failed to open stream")
+            },
+            cpal::SampleFormat::U16 => {
+                info!("Building input stream with U16 sample_format.");
+                self.dev.build_input_stream(
+                    &StreamConfig {
+                        channels: 2,
+                        sample_rate: self.config.sample_rate(),
+                        buffer_size: BufferSize::Default,
+                    },
+                    //&self.config.clone().into(),
+                    move |data, _: &_| {
+                        debug!("Received {:?} samples.", data.len());
+                        let b_new: Vec<u16> = data.chunks(2).map(|c| c[0]).collect();
+                        let b_new: Vec<f32> = b_new.into_iter().map(|v| v as f32).collect();
+                        vals_handler.take_frame(b_new.as_slice());
+                    },
+                    err_fn,
+                ).expect("Failed to open stream")
+            },
         };
+        info!("Starting stream.")
         stream.play().expect("Failed to start stream");
         self.stream = Some(stream);
     }
 
     fn stop_processing(&mut self) {
+        info!("Stopping processing.");
         let stream = std::mem::replace(&mut self.stream, None).unwrap();
     }
 }

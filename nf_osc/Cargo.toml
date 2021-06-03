@@ -11,10 +11,11 @@ edition = "2018"
 nightfire = { path = "../nightfire" }
 nf_audio = { path = "../nf_audio" }
 # commandline parsing
-clap = "2.33"
+clap = "3.0.0-beta.2"
 # logging
 log = "0.4"
 env_logger = "0.8.2"
 # stoppable thread
 stoppable_thread = "0.2.1"
 rosc = "~0.5"
+text_io = "0.1.8"
