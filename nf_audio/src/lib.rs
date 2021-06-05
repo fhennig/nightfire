@@ -1,48 +1,9 @@
-//! This module takes care of audio processing.
-//!
-//! There is support generical audio recording support through CPAL,
-//! as well as support for JACK.
+//! This module takes care of audio interfacing using cpal.
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::platform::Host;
 use cpal::{SupportedStreamConfig, SampleFormat, StreamConfig, BufferSize};
 use log::{info, debug};
 use stoppable_thread::spawn;
-
-/// Which audio backend to use, and specific backend parameters
-pub enum AudioParameters {
-    Cpal,
-}
-
-/// A handler that periodically receives audio frames.
-pub trait ValsHandler: Send + Sync {
-    fn take_frame(&mut self, frame: &[f32]);
-}
-
-pub trait AudioGetter {
-    fn get_sample_rate(&self) -> f32;
-    fn start_processing(&mut self, vals_handler: Box<dyn ValsHandler>);
-    fn stop_processing(&mut self);
-}
-
-impl dyn AudioGetter {
-    /// Creates a new audio input with the given parameters
-    pub fn new(params: &AudioParameters) -> Box<dyn AudioGetter> {
-        match params {
-            AudioParameters::Cpal => AudioGetter::new_cpal("LALALA".to_string()),
-        }
-    }
-
-    pub fn new_cpal(dev_name: String) -> Box<dyn AudioGetter> {
-        Box::new(CpalAudioGetter::new(dev_name))
-    }
-}
-
-pub struct CpalAudioGetter {
-    host: cpal::Host,
-    dev: cpal::Device,
-    config: SupportedStreamConfig,
-    stream: Option<cpal::Stream>,
-}
 
 #[cfg(target_os = "windows")]
 fn get_host() -> Host {
@@ -62,8 +23,18 @@ pub fn list_devices() {
     }
 }
 
+/// A handler that periodically receives audio frames.
+pub trait ValsHandler: Send + Sync {
+    fn take_frame(&mut self, frame: &[f32]);
+}
+
+pub struct CpalAudioGetter {
+    dev: cpal::Device,
+    config: SupportedStreamConfig,
+    stream: Option<cpal::Stream>,
+}
+
 impl CpalAudioGetter {
-    #[cfg(target_os = "windows")]  // asio
     pub fn new(dev_name: String) -> CpalAudioGetter {
         let host = get_host();
         // Setup the input device and stream with the default input config.
@@ -78,36 +49,18 @@ impl CpalAudioGetter {
         let config = device.default_input_config().expect("Failed to get default input config");
         info!("Selected config: {:?}", config);
         CpalAudioGetter {
-            host: host,
             dev: device,
             config: config,
             stream: None,
         }
     }
 
-    #[cfg(target_os = "linux")]
-    pub fn new(dev_name: String) -> CpalAudioGetter {
-        let host = get_host();
-        let dev = host.default_input_device().expect("failed to find input device");
-        println!("Device: {}", dev.name().unwrap());
-        let config = dev.default_input_config().expect("Failed to get default input config");
-        println!("config: {:?}", config);
-        CpalAudioGetter {
-            host: host,
-            dev: dev,
-            config: config.into(),
-            stream: None,
-        }
-    }
-}
-
-impl AudioGetter for CpalAudioGetter {
-    fn get_sample_rate(&self) -> f32 {
+    pub fn get_sample_rate(&self) -> f32 {
         println!("{}", self.config.channels());
         self.config.sample_rate().0 as f32
     }
 
-    fn start_processing(&mut self, mut vals_handler: Box<dyn ValsHandler>) {
+    pub fn start_processing(&mut self, mut vals_handler: Box<dyn ValsHandler>) {
         let err_fn = move |err| {
             eprintln!("an error occurred on stream: {}", err);
         };
@@ -172,7 +125,7 @@ impl AudioGetter for CpalAudioGetter {
         self.stream = Some(stream);
     }
 
-    fn stop_processing(&mut self) {
+    pub fn stop_processing(&mut self) {
         info!("Stopping processing.");
         let stream = std::mem::replace(&mut self.stream, None).unwrap();
     }

@@ -1,6 +1,6 @@
 use clap::{App, Arg, ArgMatches};
 use dualshock3::read_controller;
-use nf_audio::AudioGetter;
+use nf_audio::CpalAudioGetter;
 use nf_lichtspiel::conf::Conf;
 use nf_lichtspiel::mode::Main;
 use nf_lichtspiel::periodic_updater::start_periodic_update_thread;
@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let conf = Conf::new();
     // open audio client
     let mut audio_getter = match conf.audio_in {
-        Some(params) => AudioGetter::new(&params),
+        Some(dev_name) => CpalAudioGetter::new(dev_name),
         None => panic!("No audio-in option given!"),
     };
     let sample_rate = audio_getter.get_sample_rate();

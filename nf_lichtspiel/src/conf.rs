@@ -1,12 +1,11 @@
 use crate::lightid::LightId;
 use crate::piblaster as pb;
 use log;
-use nf_audio::AudioParameters;
 use std::path::Path;
 
 pub struct Conf {
     pub lights: pb::Lights,
-    pub audio_in: Option<nf_audio::AudioParameters>,
+    pub audio_in: Option<String>,
 }
 
 fn str_to_light_id(str: &str) -> LightId {
@@ -47,19 +46,19 @@ impl Conf {
             .collect();
         let lights = pb::Lights::new(lights, &pi_blaster_path);
         let audio_in = conf["audio-in"].as_str();
-        let mut audio_params = None;
-        match audio_in {
+        let audio_params = match audio_in {
             Some(s) => {
                 if s == "off" {
-                    audio_params = None;
-                } else if s == "default" {
-                    audio_params = Some(AudioParameters::Cpal);
+                    None
+                } else {
+                    Some(s.to_string())
                 }
             }
             None => {
-                log::warn!("No audio in port specified in config! Audio processing turned off.")
+                log::warn!("No audio in port specified in config! Audio processing turned off.");
+                None
             }
-        }
+        };
         Conf {
             lights: lights,
             audio_in: audio_params,

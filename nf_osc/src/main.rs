@@ -1,4 +1,4 @@
-use nf_audio::AudioGetter;
+use nf_audio::CpalAudioGetter;
 use nf_audio::ValsHandler;
 use nf_audio::list_devices;
 use nightfire::audio::{SignalProcessor, AudioEvent2 as AudioEvent, EdgeID};
@@ -110,7 +110,7 @@ struct RunCommand {
 
 fn run(device_name: String) {
     info!("Initializing Audio Settings.");
-    let mut audio_getter = AudioGetter::new_cpal(device_name);
+    let mut audio_getter = CpalAudioGetter::new(device_name);
     let sample_rate = audio_getter.get_sample_rate();
     let publisher = OSCPublisher::new(sample_rate);
     info!("Opening Audio Input Stream.");
