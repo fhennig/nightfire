@@ -18,7 +18,7 @@ fn main() {
         .map(|v| v.parse().unwrap())
         .unwrap_or(30);
     // open audio client
-    let mut audio_getter = AudioGetter::new_cpal();
+    let mut audio_getter = AudioGetter::new_cpal("this_will_be_ignored".to_string());
     let sample_rate = audio_getter.get_sample_rate();
     let mut monitor = monitor::SoundMonitor::new(sample_rate, q, n_filters);
     let data = monitor.get_shared_vals();

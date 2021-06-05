@@ -3,6 +3,7 @@
 //! There is support generical audio recording support through CPAL,
 //! as well as support for JACK.
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use cpal::platform::Host;
 use cpal::{SupportedStreamConfig, SampleFormat, StreamConfig, BufferSize};
 use log::{info, debug};
 use stoppable_thread::spawn;
@@ -43,8 +44,18 @@ pub struct CpalAudioGetter {
     stream: Option<cpal::Stream>,
 }
 
+#[cfg(target_os = "windows")]
+fn get_host() -> Host {
+    cpal::host_from_id(cpal::HostId::Asio).expect("failed to initialise ASIO host")
+}
+
+#[cfg(target_os = "linux")]
+fn get_host() -> Host {
+    cpal::default_host()
+}
+
 pub fn list_devices() {
-    let host = cpal::host_from_id(cpal::HostId::Asio).expect("failed to initialise ASIO host");
+    let host = get_host();
     for input_dev in host.input_devices().expect("Failed to get input devices") {
         let name = input_dev.name().unwrap_or("NO NAME".to_string());
         println!("Device: {:?}", name);
@@ -54,7 +65,7 @@ pub fn list_devices() {
 impl CpalAudioGetter {
     #[cfg(target_os = "windows")]  // asio
     pub fn new(dev_name: String) -> CpalAudioGetter {
-        let host = cpal::host_from_id(cpal::HostId::Asio).expect("failed to initialise ASIO host");
+        let host = get_host();
         // Setup the input device and stream with the default input config.
         let device = if dev_name == "default" {
             host.default_input_device()
@@ -76,7 +87,7 @@ impl CpalAudioGetter {
 
     #[cfg(target_os = "linux")]
     pub fn new(dev_name: String) -> CpalAudioGetter {
-        let host = cpal::default_host();  // whatever linux uses
+        let host = get_host();
         let dev = host.default_input_device().expect("failed to find input device");
         println!("Device: {}", dev.name().unwrap());
         let config = dev.default_input_config().expect("Failed to get default input config");
@@ -156,7 +167,7 @@ impl AudioGetter for CpalAudioGetter {
                 ).expect("Failed to open stream")
             },
         };
-        info!("Starting stream.")
+        info!("Starting stream.");
         stream.play().expect("Failed to start stream");
         self.stream = Some(stream);
     }

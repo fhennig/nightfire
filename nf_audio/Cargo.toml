@@ -12,4 +12,5 @@ log = "0.4"
 # stoppable thread
 stoppable_thread = "0.2.1"
 # audio
-cpal = { version = "0.13", features = [ "asio" ] }
+# cpal = { version = "0.13", features = [ "asio" ] }
+cpal = "0.13"
