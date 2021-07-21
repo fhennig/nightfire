@@ -4,7 +4,6 @@ use crate::light::cmap::{self, ColorMap};
 use crate::light::layer::{Layers, SolidLayer};
 use crate::light::mask::{self, Mask};
 use crate::light::ColorsExt;
-use crate::tapper::BpmTapper;
 use crate::inactivity::InactivityTracker;
 use palette::Mix;
 
@@ -38,8 +37,6 @@ pub struct State {
     /// Mask inverting
     invert: f64,
     // beat and other feature stuff
-    tapper: BpmTapper,
-    last_inactive_state: bool,
     inactivity: InactivityTracker,
 }
 
@@ -59,9 +56,6 @@ impl State {
             pulse_mask: mask::ActivatableMask::new(mask::EnvMask::new_random_pulse(), false),
             // invert
             invert: 0.,
-            // tapper
-            tapper: BpmTapper::new(),
-            last_inactive_state: true,
             inactivity: InactivityTracker::new(),
         }
     }
@@ -137,12 +131,6 @@ impl State {
         self.music_mask.mask.set_val(intensity.into());
     }
 
-    // bpm tapping
-
-    pub fn beat_tap(&mut self) {
-        self.tapper.tap_now();
-    }
-
     // general controller activity
     pub fn register_activity(&mut self) {
         self.inactivity.register_activity();
@@ -205,10 +193,6 @@ impl State {
         v = v.min(1.);
         // inverting
         color = color.mask(v).mix(&color.mask(1. - v), self.invert);
-        // multiplicative masks
-        if let Some(beat_grid) = self.tapper.get_beat_grid() {
-            color = color::Color::mask(&color, 1. - beat_grid.current_beat_fraction().1 as f64);
-        }
         color
     }
 }
