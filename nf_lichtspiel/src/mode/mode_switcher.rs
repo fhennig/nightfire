@@ -1,10 +1,10 @@
+use crate::light::color::{Color, ColorsExt};
+use crate::light::coord::Coordinate;
 use crate::mode::auto::AutoMode;
 use crate::mode::double_blob::DoubleBlob;
 use crate::mode::high_low::HighLow;
 use crate::mode::manual::DefaultMode;
 use crate::mode::Mode;
-use nightfire::light::color::{Color, ColorsExt};
-use nightfire::light::coord::Coordinate;
 
 #[derive(Debug, Copy, Clone)]
 pub enum ModeName {

@@ -1,14 +1,14 @@
+use crate::light::cmap::{ManualMode, StaticSolidMap};
+use crate::light::color::{Color, ColorsExt};
+/// Idea: 2 blobs of color, one red one blue, one controlled with each stick.
+///
+use crate::light::layer::{Layer, SolidLayer};
+use crate::light::mask::{DiscretePosMask, PosMask};
+use crate::light::Coordinate;
 use crate::mode::Mode;
 use crate::util::controller_coordinate_to_coordinate;
 use dualshock3::Controller;
 use nightfire::audio::{intensity::IntensityID, AudioEvent2, SignalProcessor};
-use nightfire::light::color::{Color, ColorsExt};
-use nightfire::light::cmap::{ManualMode, StaticSolidMap};
-/// Idea: 2 blobs of color, one red one blue, one controlled with each stick.
-///
-use nightfire::light::layer::{Layer, SolidLayer};
-use nightfire::light::mask::{DiscretePosMask, PosMask};
-use nightfire::light::Coordinate;
 use pi_ir_remote::Signal;
 
 pub struct HighLow {
@@ -65,8 +65,12 @@ impl Mode for HighLow {
     }
 
     fn controller_update(&mut self, controller: &Controller) {
-        self.left_blob.mask.set_pos(controller_coordinate_to_coordinate(&controller.left_pos()));
-        self.right_blob.mask.set_pos(controller_coordinate_to_coordinate(&controller.right_pos()));
+        self.left_blob
+            .mask
+            .set_pos(controller_coordinate_to_coordinate(&controller.left_pos()));
+        self.right_blob
+            .mask
+            .set_pos(controller_coordinate_to_coordinate(&controller.right_pos()));
     }
 
     fn ir_remote_signal(&mut self, signal: &Signal) {
@@ -92,7 +96,6 @@ impl Mode for HighLow {
                         bass_intensity = 1.0;
                     }
                     self.color.mask.set_bottom(bass_intensity.into());
-                    
                 }
                 AudioEvent2::SilenceStarted => self.is_silence = true,
                 AudioEvent2::SilenceEnded => self.is_silence = false,

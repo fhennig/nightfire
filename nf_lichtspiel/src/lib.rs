@@ -1,4 +1,6 @@
 pub mod conf;
+pub mod inactivity;
+pub mod light;
 pub mod lightid;
 pub mod mode;
 pub mod periodic_updater;

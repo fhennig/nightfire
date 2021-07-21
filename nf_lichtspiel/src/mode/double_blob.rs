@@ -1,13 +1,13 @@
-use crate::mode::Mode;
-use crate::util::controller_coordinate_to_coordinate;
-use dualshock3::{Controller, Button};
-use nightfire::light::color::{Color, ColorsExt};
-use nightfire::light::cmap::StaticSolidMap;
+use crate::light::cmap::StaticSolidMap;
+use crate::light::color::{Color, ColorsExt};
 /// Idea: 2 blobs of color, one red one blue, one controlled with each stick.
 ///
-use nightfire::light::layer::SolidLayer;
-use nightfire::light::mask::{EnvMask, PosMask, SolidMask};
-use nightfire::light::Coordinate;
+use crate::light::layer::SolidLayer;
+use crate::light::mask::{EnvMask, PosMask, SolidMask};
+use crate::light::Coordinate;
+use crate::mode::Mode;
+use crate::util::controller_coordinate_to_coordinate;
+use dualshock3::{Button, Controller};
 use pi_ir_remote::Signal;
 use splines::{Interpolation, Key, Spline};
 
@@ -52,19 +52,19 @@ pub struct Palette {
 impl Palette {
     pub fn new_sunglow() -> Palette {
         Palette {
-            c1: Color::new(32./255., 138./255., 174./255.),
-            c2: Color::new(253./255., 202./255., 64./255.),
-            c3: Color::new(156./255., 255./255., 250./255.),
-            c4: Color::new(249./255., 87./255., 56./255.),
+            c1: Color::new(32. / 255., 138. / 255., 174. / 255.),
+            c2: Color::new(253. / 255., 202. / 255., 64. / 255.),
+            c3: Color::new(156. / 255., 255. / 255., 250. / 255.),
+            c4: Color::new(249. / 255., 87. / 255., 56. / 255.),
         }
     }
 
     pub fn new_screaming() -> Palette {
         Palette {
-            c1: Color::new(255./255., 0./255., 102./255.),
-            c2: Color::new(48./255., 122./255., 207./255.),
-            c3: Color::new(252./255., 165./255., 3./255.),
-            c4: Color::new(128./255., 255./255., 114./255.),
+            c1: Color::new(255. / 255., 0. / 255., 102. / 255.),
+            c2: Color::new(48. / 255., 122. / 255., 207. / 255.),
+            c3: Color::new(252. / 255., 165. / 255., 3. / 255.),
+            c4: Color::new(128. / 255., 255. / 255., 114. / 255.),
         }
     }
 }
@@ -131,8 +131,12 @@ impl Mode for DoubleBlob {
 
     fn controller_update(&mut self, controller: &Controller) {
         self.ltrigger_layer.mask.set_val(controller.left_trigger());
-        self.left_blob.mask.set_pos(controller_coordinate_to_coordinate(&controller.left_pos()));
-        self.right_blob.mask.set_pos(controller_coordinate_to_coordinate(&controller.right_pos()));
+        self.left_blob
+            .mask
+            .set_pos(controller_coordinate_to_coordinate(&controller.left_pos()));
+        self.right_blob
+            .mask
+            .set_pos(controller_coordinate_to_coordinate(&controller.right_pos()));
         if controller.is_pressed(Button::Left) {
             self.dpad_layer.mask.reset_left();
         }

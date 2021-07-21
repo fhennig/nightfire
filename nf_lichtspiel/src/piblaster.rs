@@ -1,4 +1,5 @@
-use nightfire::light::{Color, PinValue};
+use crate::light::cmap::ColorMap;
+use crate::light::{Color, PinValue};
 use crate::lightid::LightId;
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
@@ -7,7 +8,6 @@ use std::thread;
 use std::time::Duration;
 use std::vec::Vec;
 use stoppable_thread::{spawn, StoppableHandle};
-use nightfire::light::cmap::ColorMap;
 
 pub type Pin = i64;
 

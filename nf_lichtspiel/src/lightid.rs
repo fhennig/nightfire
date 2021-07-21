@@ -1,4 +1,4 @@
-use nightfire::light;
+use crate::light;
 
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum LightId {

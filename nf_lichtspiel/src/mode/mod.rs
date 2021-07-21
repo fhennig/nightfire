@@ -3,13 +3,13 @@ pub mod double_blob;
 pub mod high_low;
 pub mod manual;
 pub mod mode_switcher;
+use crate::light::cmap::ColorMap;
+use crate::light::color::Color;
+use crate::light::coord::Coordinate;
 use crate::periodic_updater::PeriodicUpdateHandler;
 use dualshock3::{Controller, ControllerHandler};
 use mode_switcher::{ModeName, ModeSwitcher};
 use nf_audio::ValsHandler;
-use nightfire::light::color::Color;
-use nightfire::light::coord::Coordinate;
-use nightfire::light::cmap::ColorMap;
 use pi_ir_remote::Signal as IRSignal;
 use pi_ir_remote::SignalHandler as IRSignalHandler;
 use std::sync::{Arc, Mutex};
@@ -32,10 +32,7 @@ pub struct Main {
 impl Main {
     pub fn new(sample_rate: f32) -> Main {
         Main {
-            mode_switcher: Arc::new(Mutex::new(ModeSwitcher::new(
-                ModeName::Auto1,
-                sample_rate,
-            ))),
+            mode_switcher: Arc::new(Mutex::new(ModeSwitcher::new(ModeName::Auto1, sample_rate))),
         }
     }
 

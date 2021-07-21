@@ -1,8 +1,8 @@
+use crate::light::{hue_from_angle, Color, Coordinate, Mode as LMode, Quadrant, State};
 use crate::mode::Mode;
 use crate::util::controller_coordinate_to_coordinate;
 use dualshock3::{Button, Controller};
 use nightfire::audio::{intensity::IntensityID, AudioEvent2, EdgeID, SignalProcessor};
-use nightfire::light::{hue_from_angle, Color, Coordinate, Mode as LMode, Quadrant, State};
 use palette::Hsv;
 use palette::RgbHue;
 use pi_ir_remote::Signal;

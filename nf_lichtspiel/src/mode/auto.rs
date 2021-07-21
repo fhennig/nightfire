@@ -1,11 +1,11 @@
+use crate::light::cmap::{ManualMode, StaticSolidMap};
+use crate::light::coord::Quadrant;
+use crate::light::layer::Layer;
+use crate::light::mask::{EnvMask, SolidMask};
+use crate::light::{Color, ColorProvider, ColorsExt, Coordinate};
 use crate::mode::Mode;
 use dualshock3::Controller;
 use nightfire::audio::{intensity::IntensityID, AudioEvent2, EdgeID, SignalProcessor};
-use nightfire::light::cmap::{ManualMode, StaticSolidMap};
-use nightfire::light::coord::Quadrant;
-use nightfire::light::layer::Layer;
-use nightfire::light::mask::{EnvMask, SolidMask};
-use nightfire::light::{Color, ColorProvider, ColorsExt, Coordinate};
 use pi_ir_remote::Signal;
 
 pub struct AutoMode {
