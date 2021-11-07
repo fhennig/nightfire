@@ -1,6 +1,5 @@
 use clap::{App, Arg, ArgMatches};
 use dualshock3::read_controller;
-use nf_audio::CpalAudioGetter;
 use nf_lichtspiel::conf::Conf;
 use nf_lichtspiel::mode::Main;
 use nf_lichtspiel::periodic_updater::start_periodic_update_thread;
@@ -9,6 +8,7 @@ use nf_lichtspiel::piblaster::start_piblaster_thread;
 use nf_lichtspiel::ui::piston::run_piston_thread;
 use pi_ir_remote::read_ir_remote;
 use std::{error, thread, time};
+use std::net::{Ipv4Addr, SocketAddrV4};
 
 fn get_args() -> ArgMatches<'static> {
     App::new("lumi")
@@ -24,16 +24,12 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let matches = get_args();
     // read config
     let conf = Conf::new();
-    // open audio client
-    let mut audio_getter = match conf.audio_in {
-        Some(dev_name) => CpalAudioGetter::new(dev_name),
-        None => panic!("No audio-in option given!"),
-    };
-    let sample_rate = audio_getter.get_sample_rate();
     // setup state
-    let mut main = Main::new(sample_rate);
+    let mut main = Main::new();
     let controller = read_controller(main.new_controller_handler());
-    audio_getter.start_processing(main.new_audio_handler());
+    // OSC Receiver
+    let addr = SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), 4242);
+    let osc_receiver = beatbot_client::OscReceiverThread::new(addr, main.new_audio_event_handler());
     if cfg!(feature = "pi-blaster") {
         let piblaster = start_piblaster_thread(conf.lights, main.new_color_map(), 50);
     }

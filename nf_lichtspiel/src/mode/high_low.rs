@@ -8,33 +8,30 @@ use crate::light::Coordinate;
 use crate::mode::Mode;
 use crate::util::controller_coordinate_to_coordinate;
 use dualshock3::Controller;
-use nightfire::audio::{intensity::IntensityID, AudioEvent2, SignalProcessor};
+use beatbot_client::{AudioEvent, IntensityID};
 use pi_ir_remote::Signal;
 
 pub struct HighLow {
     color: Layer<ManualMode, DiscretePosMask>,
     left_blob: SolidLayer<PosMask>,
     right_blob: SolidLayer<PosMask>,
-    signal_processor: SignalProcessor,
     speed_no: usize,
     various_speed_intensity_ids: Vec<IntensityID>,
     is_silence: bool,
 }
 
 impl HighLow {
-    pub fn new(sample_rate: f32) -> HighLow {
+    pub fn new() -> HighLow {
         // setup color
         let mut m = ManualMode::new();
         m.set_top(Color::blue());
         m.set_bottom(Color::red());
         // setup audio
-        let fps = 50.;
         let blob_color = Color::new(1., 0.8, 0.05);
         HighLow {
             color: Layer::new(m, DiscretePosMask::new(1., 1., 1., 1.)),
             left_blob: SolidLayer::new(StaticSolidMap::new(blob_color), PosMask::new()),
             right_blob: SolidLayer::new(StaticSolidMap::new(blob_color), PosMask::new()),
-            signal_processor: SignalProcessor::new(sample_rate, fps),
             speed_no: 1,
             various_speed_intensity_ids: vec![
                 IntensityID::get("bass_speed01"),
@@ -81,11 +78,10 @@ impl Mode for HighLow {
         }
     }
 
-    fn audio_update(&mut self, frame: &[f32]) {
-        let events = self.signal_processor.add_audio_frame(frame);
+    fn audio_events(&mut self, events: &Vec<AudioEvent>) {
         for event in events {
             match event {
-                AudioEvent2::Intensities(intensities) => {
+                AudioEvent::Intensities(intensities) => {
                     let mut highs_intensity = *intensities.get(&IntensityID::get("highs")).unwrap();
                     if self.is_silence {
                         highs_intensity = 1.0;
@@ -97,8 +93,8 @@ impl Mode for HighLow {
                     }
                     self.color.mask.set_bottom(bass_intensity.into());
                 }
-                AudioEvent2::SilenceStarted => self.is_silence = true,
-                AudioEvent2::SilenceEnded => self.is_silence = false,
+                AudioEvent::SilenceStarted => self.is_silence = true,
+                AudioEvent::SilenceEnded => self.is_silence = false,
                 _ => (),
             }
         }

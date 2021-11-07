@@ -9,7 +9,7 @@ use crate::light::coord::Coordinate;
 use crate::periodic_updater::PeriodicUpdateHandler;
 use dualshock3::{Controller, ControllerHandler};
 use mode_switcher::{ModeName, ModeSwitcher};
-use nf_audio::ValsHandler;
+use beatbot_client::{AudioEvent, AudioEventHandler};
 use pi_ir_remote::Signal as IRSignal;
 use pi_ir_remote::SignalHandler as IRSignalHandler;
 use std::sync::{Arc, Mutex};
@@ -21,7 +21,7 @@ pub trait Mode: Send + Sync {
     fn get_color(&self, coordinate: &Coordinate) -> Color;
     fn controller_update(&mut self, controller: &Controller);
     fn ir_remote_signal(&mut self, signal: &IRSignal);
-    fn audio_update(&mut self, frame: &[f32]);
+    fn audio_events(&mut self, events: &Vec<AudioEvent>);
     fn periodic_update(&mut self);
 }
 
@@ -30,9 +30,9 @@ pub struct Main {
 }
 
 impl Main {
-    pub fn new(sample_rate: f32) -> Main {
+    pub fn new() -> Main {
         Main {
-            mode_switcher: Arc::new(Mutex::new(ModeSwitcher::new(ModeName::Auto1, sample_rate))),
+            mode_switcher: Arc::new(Mutex::new(ModeSwitcher::new(ModeName::Auto1))),
         }
     }
 
@@ -42,7 +42,7 @@ impl Main {
         })
     }
 
-    pub fn new_audio_handler(&mut self) -> Box<dyn ValsHandler + Send + Sync> {
+    pub fn new_audio_event_handler(&mut self) -> Box<dyn AudioEventHandler + Send + Sync> {
         Box::new(Main {
             mode_switcher: Arc::clone(&self.mode_switcher),
         })
@@ -74,10 +74,10 @@ impl ControllerHandler for Main {
     }
 }
 
-impl ValsHandler for Main {
-    fn take_frame(&mut self, frame: &[f32]) {
+impl AudioEventHandler for Main {
+    fn receive_events(&mut self, events: &Vec<AudioEvent>) {
         let mut ms = self.mode_switcher.lock().unwrap();
-        ms.current_mode().audio_update(&frame);
+        ms.current_mode().audio_events(&events);
     }
 }
 

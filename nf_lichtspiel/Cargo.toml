@@ -13,8 +13,7 @@ piston-ui = ["piston_window"]
 
 [dependencies]
 # internal
-nightfire = { path = "../nightfire" }
-nf_audio = { path = "../nf_audio" }
+beatbot_client = { path = "beatbot_client" }
 dualshock3 = "0.1"
 # commandline parsing
 clap = "2.33.0"

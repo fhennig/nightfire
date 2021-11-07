@@ -5,7 +5,7 @@ use crate::light::mask::{EnvMask, SolidMask};
 use crate::light::{Color, ColorProvider, ColorsExt, Coordinate};
 use crate::mode::Mode;
 use dualshock3::Controller;
-use nightfire::audio::{intensity::IntensityID, AudioEvent2, EdgeID, SignalProcessor};
+use beatbot_client::{AudioEvent, OnsetID, IntensityID};
 use pi_ir_remote::Signal;
 
 pub struct AutoMode {
@@ -13,24 +13,20 @@ pub struct AutoMode {
     change_all: bool,
     flash_layer: Layer<StaticSolidMap, EnvMask>,
     flash_active: bool,
-    signal_processor: SignalProcessor,
     color_provider: ColorProvider,
     is_silence: bool,
 }
 
 impl AutoMode {
-    pub fn new(sample_rate: f32, change_all: bool, flash: bool) -> AutoMode {
+    pub fn new(change_all: bool, flash: bool) -> AutoMode {
         let base_layer = Layer::new(ManualMode::new(), SolidMask::new());
         let flash_color = StaticSolidMap::new(Color::white());
         let layer = Layer::new(flash_color, EnvMask::new_linear_decay(250, false));
-        let fps = 50.;
-        let proc = SignalProcessor::new(sample_rate, fps);
         AutoMode {
             base_layer: base_layer,
             change_all: change_all,
             flash_layer: layer,
             flash_active: flash,
-            signal_processor: proc,
             color_provider: ColorProvider::new(),
             is_silence: true,
         }
@@ -71,13 +67,12 @@ impl Mode for AutoMode {
         }
     }
 
-    fn audio_update(&mut self, frame: &[f32]) {
-        let events = self.signal_processor.add_audio_frame(frame);
+    fn audio_events(&mut self, events: &Vec<AudioEvent>) {
         // if we get a significant onset score, we flash
         for event in events {
             match event {
-                AudioEvent2::Onset(edge_id) => {
-                    if edge_id == EdgeID::get("bass") {
+                AudioEvent::Onset(edge_id) => {
+                    if edge_id == &OnsetID::get("bass") {
                         self.flash_layer.mask.reset_bottom();
                         if self.change_all {
                             self.base_layer
@@ -88,7 +83,7 @@ impl Mode for AutoMode {
                             self.base_layer.map.set_color(Quadrant::random(), c);
                             self.base_layer.map.set_color(Quadrant::random(), c);
                         }
-                    } else if edge_id == EdgeID::get("highs") {
+                    } else if edge_id == &OnsetID::get("highs") {
                         self.flash_layer.mask.reset_top();
                         if self.change_all {
                             self.base_layer
@@ -101,7 +96,7 @@ impl Mode for AutoMode {
                         }
                     }
                 }
-                AudioEvent2::Intensities(intensities) => {
+                AudioEvent::Intensities(intensities) => {
                     if let Some(bass_intensity) = intensities.get(&IntensityID::get("bass")) {
                         let intensity: f64 = if self.is_silence {
                             1.0
@@ -111,9 +106,9 @@ impl Mode for AutoMode {
                         self.base_layer.mask.set_val(intensity);
                     }
                 }
-                AudioEvent2::SilenceEnded => self.is_silence = false,
-                AudioEvent2::SilenceStarted => self.is_silence = true,
-                AudioEvent2::PhraseEnded => self.color_provider.set_random_color_set(),
+                AudioEvent::SilenceEnded => self.is_silence = false,
+                AudioEvent::SilenceStarted => self.is_silence = true,
+                AudioEvent::PhraseEnded => self.color_provider.set_random_color_set(),
             }
         }
     }

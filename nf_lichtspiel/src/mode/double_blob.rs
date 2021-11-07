@@ -7,6 +7,7 @@ use crate::light::mask::{EnvMask, PosMask, SolidMask};
 use crate::light::Coordinate;
 use crate::mode::Mode;
 use crate::util::controller_coordinate_to_coordinate;
+use beatbot_client::AudioEvent;
 use dualshock3::{Button, Controller};
 use pi_ir_remote::Signal;
 use splines::{Interpolation, Key, Spline};
@@ -166,6 +167,6 @@ impl Mode for DoubleBlob {
             _ => {}
         }
     }
-    fn audio_update(&mut self, _frame: &[f32]) {}
+    fn audio_events(&mut self, _events: &Vec<AudioEvent>) {}
     fn periodic_update(&mut self) {}
 }

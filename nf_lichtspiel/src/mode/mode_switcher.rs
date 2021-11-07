@@ -28,14 +28,14 @@ pub struct ModeSwitcher {
 }
 
 impl ModeSwitcher {
-    pub fn new(initial_mode: ModeName, sample_rate: f32) -> ModeSwitcher {
+    pub fn new(initial_mode: ModeName) -> ModeSwitcher {
         ModeSwitcher {
-            auto1_mode: Box::new(AutoMode::new(sample_rate, true, true)),
-            auto2_mode: Box::new(AutoMode::new(sample_rate, false, false)),
-            manual1_mode: Box::new(DefaultMode::new(sample_rate)),
-            manual2_mode: Box::new(DefaultMode::new(sample_rate)),
+            auto1_mode: Box::new(AutoMode::new(true, true)),
+            auto2_mode: Box::new(AutoMode::new(false, false)),
+            manual1_mode: Box::new(DefaultMode::new()),
+            manual2_mode: Box::new(DefaultMode::new()),
             double_blob: Box::new(DoubleBlob::new()),
-            high_low: Box::new(HighLow::new(sample_rate)),
+            high_low: Box::new(HighLow::new()),
             c_mode: initial_mode,
             off: false,
         }

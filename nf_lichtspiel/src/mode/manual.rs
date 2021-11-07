@@ -2,14 +2,13 @@ use crate::light::{hue_from_angle, Color, Coordinate, Mode as LMode, Quadrant, S
 use crate::mode::Mode;
 use crate::util::controller_coordinate_to_coordinate;
 use dualshock3::{Button, Controller};
-use nightfire::audio::{intensity::IntensityID, AudioEvent2, EdgeID, SignalProcessor};
+use beatbot_client::{AudioEvent, OnsetID, IntensityID};
 use palette::Hsv;
 use palette::RgbHue;
 use pi_ir_remote::Signal;
 
 pub struct DefaultMode {
     state: State,
-    signal_processor: SignalProcessor,
     speed_no: usize,
     various_speed_intensity_ids: Vec<IntensityID>,
     auto_rotate: bool,
@@ -17,11 +16,9 @@ pub struct DefaultMode {
 }
 
 impl DefaultMode {
-    pub fn new(sample_rate: f32) -> DefaultMode {
-        let fps = 50.;
+    pub fn new() -> DefaultMode {
         DefaultMode {
             state: State::new(),
-            signal_processor: SignalProcessor::new(sample_rate, fps),
             speed_no: 1,
             various_speed_intensity_ids: vec![
                 IntensityID::get("bass_speed01"),
@@ -152,16 +149,15 @@ impl Mode for DefaultMode {
         }
     }
 
-    fn audio_update(&mut self, frame: &[f32]) {
-        let events = self.signal_processor.add_audio_frame(frame);
+    fn audio_events(&mut self, events: &Vec<AudioEvent>) {
         for event in events {
             match event {
-                AudioEvent2::Onset(onset_id) => {
-                    if self.auto_rotate && onset_id == EdgeID::get("bass") {
+                AudioEvent::Onset(onset_id) => {
+                    if self.auto_rotate && onset_id == &OnsetID::get("bass") {
                         self.state.manual_mode().rotate_cw();
                     }
                 }
-                AudioEvent2::Intensities(intensities) => {
+                AudioEvent::Intensities(intensities) => {
                     let int_id = &self.various_speed_intensity_ids[self.speed_no];
                     if let Some(bass_intensity) = intensities.get(int_id) {
                         let intensity = if self.is_silence {
@@ -172,8 +168,8 @@ impl Mode for DefaultMode {
                         self.state.set_intensity(intensity);
                     }
                 }
-                AudioEvent2::SilenceEnded => self.is_silence = false,
-                AudioEvent2::SilenceStarted => self.is_silence = true,
+                AudioEvent::SilenceEnded => self.is_silence = false,
+                AudioEvent::SilenceStarted => self.is_silence = true,
                 _ => (),
             }
         }
